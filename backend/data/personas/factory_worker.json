@@ -1,0 +1,29 @@
+{
+  "id": "factory_worker",
+  "name": "Factory / Shift Worker",
+  "role": "factory_worker",
+  "shift_pattern": "rotating_8h",
+  "typical_shift_hours": 8,
+  "typical_commute_minutes": 25,
+  "risk_profile": {
+    "rapid_flip_sensitivity": "high",
+    "sleep_minimum_hours": 7,
+    "nap_tolerance": "moderate",
+    "consecutive_nights_max": 5
+  },
+  "plan_tone": "grounded_direct",
+  "clinical_context": "Works 8h rotating shifts in manufacturing or industrial environments where fatigue-related errors cause machinery accidents and repetitive strain injuries. Weekly or bi-weekly rotation between day, evening, and night shifts creates chronic circadian disruption. Physical labor accelerates fatigue accumulation compared to sedentary roles.",
+  "priority_interventions": [
+    "post_night_sleep_protection",
+    "bright_light_after_wake",
+    "caffeine_cutoff",
+    "meal_timing",
+    "movement"
+  ],
+  "avoid_patterns": [
+    "Operating heavy machinery within 2h of waking from day sleep after night shift",
+    "Rotating shifts more frequently than once per week",
+    "Skipping meals during transition between shift rotations"
+  ],
+  "recovery_notes": "Rotating 8h shifts in manufacturing cause slower circadian adaptation than 12h shifts because the body never fully adjusts before rotation occurs. Bright light exposure is the most powerful re-entrainment tool — morning light for day shift, avoiding light after night shift. Meal timing anchors the metabolic circadian clock independently of the light cycle."
+}

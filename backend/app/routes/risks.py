@@ -1,7 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.models.schemas import RiskComputeRequest, RiskComputeResponse
-from app.personas.mock_nurse import get_mock_nurse_blocks
 from app.risk_engine.engine import RiskEngine
 from app.services.persistence import save_risk_episodes
 
@@ -11,6 +10,9 @@ engine = RiskEngine()
 
 @router.post("/compute", response_model=RiskComputeResponse)
 def compute_risks(request: RiskComputeRequest) -> RiskComputeResponse:
+    if not request.user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+
     # If block commute values are empty, apply request default.
     normalized = []
     for b in request.blocks:
@@ -18,14 +20,5 @@ def compute_risks(request: RiskComputeRequest) -> RiskComputeResponse:
         b.commute_after_minutes = b.commute_after_minutes or request.commute_minutes
         normalized.append(b)
     result = engine.compute(normalized)
-    try:
-        save_risk_episodes(request.user_id, result)
-    except Exception:
-        pass
+    save_risk_episodes(request.user_id, result)
     return result
-
-
-@router.get("/compute/mock-nurse", response_model=RiskComputeResponse)
-def compute_mock_nurse_risks() -> RiskComputeResponse:
-    blocks = get_mock_nurse_blocks()
-    return engine.compute(blocks)
