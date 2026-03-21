@@ -74,3 +74,18 @@ create table if not exists plan_tasks (
   sort_order integer default 0,
   created_at timestamptz default now()
 );
+
+create table if not exists wearable_summaries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  date date not null,
+  sleep_duration_hours numeric,
+  sleep_start timestamptz,
+  sleep_end timestamptz,
+  restlessness_score numeric,
+  resting_hr numeric,
+  source text default 'mock',
+  raw_data jsonb,
+  created_at timestamptz default now(),
+  unique(user_id, date)
+);

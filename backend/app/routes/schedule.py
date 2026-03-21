@@ -9,6 +9,7 @@ from app.models.schemas import (
     ScheduleImportRequest,
     ScheduleImportResponse,
 )
+from app.services.persistence import save_schedule_blocks
 
 router = APIRouter(prefix="/schedule", tags=["Schedule"])
 
@@ -19,6 +20,10 @@ def import_schedule(request: ScheduleImportRequest) -> ScheduleImportResponse:
 
     if request.blocks:
         normalized = [_normalize_block(b, request.commute_minutes) for b in request.blocks]
+        try:
+            save_schedule_blocks(request.user_id, normalized)
+        except Exception:
+            pass
         return ScheduleImportResponse(blocks=normalized, warnings=warnings, parse_confidence=1.0)
 
     if request.raw_text:
@@ -48,6 +53,10 @@ def import_schedule(request: ScheduleImportRequest) -> ScheduleImportResponse:
         if not blocks:
             raise HTTPException(status_code=400, detail="No valid schedule blocks parsed")
         confidence = 0.8 if warnings else 0.95
+        try:
+            save_schedule_blocks(request.user_id, blocks)
+        except Exception:
+            pass
         return ScheduleImportResponse(blocks=blocks, warnings=warnings, parse_confidence=confidence)
 
     raise HTTPException(status_code=400, detail="Provide either blocks or raw_text")
