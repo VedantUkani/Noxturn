@@ -19,7 +19,12 @@ from app.services.token_tracker import get_global_usage, get_recent_calls, get_u
 router = APIRouter(prefix="/plans", tags=["Plans"])
 risk_engine = RiskEngine()
 planner = RulePlanner()
-claude_planner = ClaudePlanner()
+
+# Only instantiate ClaudePlanner if the key is present — fall back to rule planner otherwise
+try:
+    claude_planner = ClaudePlanner()
+except RuntimeError:
+    claude_planner = None
 
 
 @router.post("/generate", response_model=PlanGenerateResponse)
@@ -56,17 +61,21 @@ def generate_plan_claude(request: PlanGenerateRequest) -> PlanGenerateResponse:
 
     risk_result = risk_engine.compute(normalized)
     persona = get_persona(request.persona_id) if request.persona_id else None
-    try:
-        plan = claude_planner.generate(
-            risk_result,
-            plan_hours=request.plan_hours,
-            user_id=str(request.user_id),
-            persona=persona,
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Claude planner error: {str(e)}")
+    if claude_planner is None:
+        # No API key — fall back to rule planner silently
+        plan = planner.generate(risk_result)
+    else:
+        try:
+            plan = claude_planner.generate(
+                risk_result,
+                plan_hours=request.plan_hours,
+                user_id=str(request.user_id),
+                persona=persona,
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Claude planner error: {str(e)}")
 
     set_active_plan(plan)
     save_plan(request.user_id, plan)
@@ -99,7 +108,7 @@ def replan(request: ReplanRequest) -> ReplanResponse:
     what_changed = []
     used_claude = False
 
-    if request.use_claude:
+    if request.use_claude and claude_planner is not None:
         claude_limiter.check(str(request.user_id))
         persona = get_persona(request.persona_id) if request.persona_id else None
         try:
@@ -133,7 +142,7 @@ def replan(request: ReplanRequest) -> ReplanResponse:
         if completed:
             new_plan.tasks = completed + new_plan.tasks[:3]
             next_planned = [t for t in new_plan.tasks if t.status == TaskStatus.planned]
-            nba_fn = claude_planner._parse_response if used_claude else None
+            nba_fn = (claude_planner._parse_response if (used_claude and claude_planner) else None)
             new_plan.next_best_action = planner._next_best_action(next_planned)
             what_changed.append("Preserved completed tasks and replaced next 1-3 upcoming actions.")
 

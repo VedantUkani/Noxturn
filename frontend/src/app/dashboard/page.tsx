@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { getJson, postJson } from "@/lib/api";
 import { getOrCreateUserId, getStoredScheduleBlocks } from "@/lib/session";
+import { supabase, signOut } from "@/lib/supabase";
 import {
   type PlanResponse, type DashboardResponse, type RiskResponse,
   type WearableResponse, type RagResponse, type PlanTask, type Severity,
@@ -27,6 +29,25 @@ import { useA11y } from "@/contexts/AccessibilityContext";
 
 export default function DashboardPage() {
   const { t } = useA11y();
+  const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  // Auth guard — redirect to /login if not signed in
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        router.replace("/login");
+      } else {
+        setUserEmail(data.session.user.email ?? null);
+      }
+    });
+  }, [router]);
+
+  async function handleSignOut() {
+    await signOut();
+    router.replace("/login");
+  }
+
   const [userId]         = useState(() => typeof window === "undefined" ? "" : getOrCreateUserId());
   const [scheduleBlocks] = useState(() => typeof window === "undefined" ? [] : getStoredScheduleBlocks());
   const [commuteMinutes] = useState(() => {
@@ -202,6 +223,9 @@ export default function DashboardPage() {
       title={t("dashboard", "title")}
       actions={
         <div className="flex items-center gap-2">
+          {userEmail && (
+            <span className="hidden text-xs text-gray-400 sm:inline">{userEmail}</span>
+          )}
           <Button variant="ghost" size="sm" onClick={loadDashboard} loading={dashLoading}>
             <IconDownload size={14} />
             <span className="hidden sm:inline">{t("actions", "load")}</span>
@@ -210,6 +234,9 @@ export default function DashboardPage() {
             <IconRefresh size={14} />
             <span className="hidden sm:inline">{t("dashboard", "generatePlan")}</span>
             <span className="sm:hidden">{t("actions", "generate")}</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            Sign out
           </Button>
         </div>
       }
