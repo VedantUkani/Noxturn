@@ -84,7 +84,7 @@ create table if not exists wearable_summaries (
   sleep_end timestamptz,
   restlessness_score numeric,
   resting_hr numeric,
-  source text default 'mock',
+  source text default 'wearable_import',
   raw_data jsonb,
   created_at timestamptz default now(),
   unique(user_id, date)

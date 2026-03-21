@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { postJson } from "@/lib/api";
+import { getOrCreateUserId, storeScheduleBlocks } from "@/lib/session";
 
 type ImportResponse = {
   blocks: Array<{ id: string; block_type: string; start_time: string; end_time: string }>;
@@ -19,31 +20,47 @@ type ManualBlock = {
 };
 
 export default function OnboardPage() {
+  const [userId] = useState(() => (typeof window === "undefined" ? "" : getOrCreateUserId()));
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("nurse");
   const [commute, setCommute] = useState(45);
   const [sleepConstraint, setSleepConstraint] = useState("cant_sleep_before_9am");
   const [buddyOptIn, setBuddyOptIn] = useState(true);
-  const [text, setText] = useState("night_shift,2026-03-21T19:00:00,2026-03-22T07:00:00,ICU Night");
+  const [text, setText] = useState("");
   const [manualBlocks, setManualBlocks] = useState<ManualBlock[]>([]);
   const [form, setForm] = useState<ManualBlock>({
     block_type: "night_shift",
-    title: "Manual Shift",
-    date: "2026-03-21",
-    start: "19:00",
-    end: "07:00",
+    title: "",
+    date: "",
+    start: "",
+    end: "",
   });
   const [result, setResult] = useState<ImportResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function onParse() {
+    if (!userId) {
+      setError("Session not ready yet. Retry in a moment.");
+      return;
+    }
     try {
       setError(null);
       const data = await postJson<ImportResponse>("/schedule/import", {
+        user_id: userId,
         raw_text: text,
         commute_minutes: commute,
       });
       setResult(data);
+      storeScheduleBlocks(
+        data.blocks.map((b) => ({
+          id: b.id,
+          block_type: b.block_type as "day_shift" | "night_shift" | "evening_shift" | "off_day" | "transition_day",
+          start_time: b.start_time,
+          end_time: b.end_time,
+          commute_before_minutes: commute,
+          commute_after_minutes: commute,
+        })),
+      );
       setStep(4);
     } catch (e) {
       setError((e as Error).message);
@@ -51,6 +68,10 @@ export default function OnboardPage() {
   }
 
   async function onSubmitManual() {
+    if (!userId) {
+      setError("Session not ready yet. Retry in a moment.");
+      return;
+    }
     try {
       setError(null);
       const blocks = manualBlocks.map((b) => {
@@ -66,10 +87,21 @@ export default function OnboardPage() {
         };
       });
       const data = await postJson<ImportResponse>("/schedule/import", {
+        user_id: userId,
         blocks,
         commute_minutes: commute,
       });
       setResult(data);
+      storeScheduleBlocks(
+        data.blocks.map((b) => ({
+          id: b.id,
+          block_type: b.block_type as "day_shift" | "night_shift" | "evening_shift" | "off_day" | "transition_day",
+          start_time: b.start_time,
+          end_time: b.end_time,
+          commute_before_minutes: commute,
+          commute_after_minutes: commute,
+        })),
+      );
     } catch (e) {
       setError((e as Error).message);
     }

@@ -10,21 +10,24 @@ from app.models.schemas import (
     ScheduleImportResponse,
 )
 from app.services.persistence import save_schedule_blocks
+from app.services.schedule_change_detector import detect_changes
 
 router = APIRouter(prefix="/schedule", tags=["Schedule"])
 
 
 @router.post("/import", response_model=ScheduleImportResponse)
 def import_schedule(request: ScheduleImportRequest) -> ScheduleImportResponse:
+    if not request.user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+
     warnings: List[str] = []
 
     if request.blocks:
         normalized = [_normalize_block(b, request.commute_minutes) for b in request.blocks]
-        try:
-            save_schedule_blocks(request.user_id, normalized)
-        except Exception:
-            pass
-        return ScheduleImportResponse(blocks=normalized, warnings=warnings, parse_confidence=1.0)
+        report = detect_changes(request.user_id, normalized)
+        save_schedule_blocks(request.user_id, normalized)
+        return ScheduleImportResponse(blocks=normalized, warnings=warnings, parse_confidence=1.0,
+            replan_recommended=report.replan_recommended, change_summary=report.changes)
 
     if request.raw_text:
         # Minimal parser placeholder. Team can replace with Claude parser.
@@ -53,11 +56,10 @@ def import_schedule(request: ScheduleImportRequest) -> ScheduleImportResponse:
         if not blocks:
             raise HTTPException(status_code=400, detail="No valid schedule blocks parsed")
         confidence = 0.8 if warnings else 0.95
-        try:
-            save_schedule_blocks(request.user_id, blocks)
-        except Exception:
-            pass
-        return ScheduleImportResponse(blocks=blocks, warnings=warnings, parse_confidence=confidence)
+        report = detect_changes(request.user_id, blocks)
+        save_schedule_blocks(request.user_id, blocks)
+        return ScheduleImportResponse(blocks=blocks, warnings=warnings, parse_confidence=confidence,
+            replan_recommended=report.replan_recommended, change_summary=report.changes)
 
     raise HTTPException(status_code=400, detail="Provide either blocks or raw_text")
 

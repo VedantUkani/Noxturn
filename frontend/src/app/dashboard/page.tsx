@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { getJson, postJson } from "@/lib/api";
+import { getOrCreateUserId, getStoredScheduleBlocks, type ScheduleBlockInput } from "@/lib/session";
 
 type Task = {
   id: string;
@@ -50,33 +51,15 @@ type RagResponse = {
 };
 
 export default function DashboardPage() {
-  const demoBlocks = [
-    {
-      block_type: "night_shift",
-      title: "Night 1",
-      start_time: "2026-03-21T19:00:00",
-      end_time: "2026-03-22T07:00:00",
-      commute_before_minutes: 45,
-      commute_after_minutes: 45,
-    },
-    {
-      block_type: "night_shift",
-      title: "Night 2",
-      start_time: "2026-03-22T19:00:00",
-      end_time: "2026-03-23T07:00:00",
-      commute_before_minutes: 45,
-      commute_after_minutes: 45,
-    },
-    {
-      block_type: "day_shift",
-      title: "Day Flip",
-      start_time: "2026-03-23T15:00:00",
-      end_time: "2026-03-23T23:00:00",
-      commute_before_minutes: 45,
-      commute_after_minutes: 45,
-    },
-  ];
-
+  const [userId] = useState(() => (typeof window === "undefined" ? "" : getOrCreateUserId()));
+  const [scheduleBlocks] = useState<ScheduleBlockInput[]>(() =>
+    typeof window === "undefined" ? [] : getStoredScheduleBlocks(),
+  );
+  const [commuteMinutes] = useState(() => {
+    if (typeof window === "undefined") return 45;
+    const stored = getStoredScheduleBlocks();
+    return stored[0]?.commute_before_minutes || 45;
+  });
   const [plan, setPlan] = useState<PlanResponse | null>(null);
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [weeklyRisk, setWeeklyRisk] = useState<Record<string, { severity: string; label: string }>>({});
@@ -92,20 +75,30 @@ export default function DashboardPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function createDemoPlan() {
+  async function generatePlan() {
+    if (!userId) {
+      setError("Session not ready yet. Retry in a moment.");
+      return;
+    }
+    if (!scheduleBlocks.length) {
+      setError("No schedule found. Import your schedule from Onboarding first.");
+      return;
+    }
     try {
       setError(null);
       const p = await postJson<PlanResponse>("/plans/generate", {
-        blocks: demoBlocks,
-        commute_minutes: 45,
+        user_id: userId,
+        blocks: scheduleBlocks,
+        commute_minutes: commuteMinutes,
         plan_hours: 48,
       });
       setPlan(p);
       setToast("Plan generated");
 
       const risks = await postJson<RiskResponse>("/risks/compute", {
-        blocks: demoBlocks,
-        commute_minutes: 45,
+        user_id: userId,
+        blocks: scheduleBlocks,
+        commute_minutes: commuteMinutes,
       });
       const byDate: Record<string, { severity: string; label: string }> = {};
       risks.risk_episodes.forEach((ep) => {
@@ -122,9 +115,13 @@ export default function DashboardPage() {
   }
 
   async function loadDashboard() {
+    if (!userId) {
+      setError("Session not ready yet. Retry in a moment.");
+      return;
+    }
     try {
       setError(null);
-      const resp = await getJson<DashboardResponse>("/dashboard/today");
+      const resp = await getJson<DashboardResponse>(`/dashboard/today?user_id=${encodeURIComponent(userId)}`);
       setData(resp);
     } catch (e) {
       setError((e as Error).message);
@@ -132,13 +129,26 @@ export default function DashboardPage() {
   }
 
   async function updateTask(taskId: string, status: "completed" | "skipped") {
+    if (!userId) {
+      setError("Session not ready yet. Retry in a moment.");
+      return;
+    }
+    if (!scheduleBlocks.length) {
+      setError("No schedule loaded for replanning.");
+      return;
+    }
     try {
       setError(null);
-      const ev = await postJson<{ trigger_replan: boolean }>("/tasks/event", { task_id: taskId, status });
+      const ev = await postJson<{ trigger_replan: boolean }>("/tasks/event", {
+        user_id: userId,
+        task_id: taskId,
+        status,
+      });
       if (ev.trigger_replan) {
         const rep = await postJson<{ updated_plan: PlanResponse }>("/plans/replan", {
-          blocks: demoBlocks,
-          commute_minutes: 45,
+          user_id: userId,
+          blocks: scheduleBlocks,
+          commute_minutes: commuteMinutes,
           trigger: "task_event",
           task_event: { task_id: taskId, status },
         });
@@ -153,11 +163,16 @@ export default function DashboardPage() {
   }
 
   async function importWearable() {
+    if (!userId) {
+      setError("Session not ready yet. Retry in a moment.");
+      return;
+    }
     try {
       setError(null);
       const now = new Date();
       const start = new Date(now.getTime() - sleepHrs * 60 * 60 * 1000);
       const w = await postJson<WearableResponse>("/wearables/import", {
+        user_id: userId,
         sleep_hrs: sleepHrs,
         sleep_start: start.toISOString(),
         sleep_end: now.toISOString(),
@@ -197,12 +212,29 @@ export default function DashboardPage() {
         ? "bg-amber-100 text-amber-700"
         : "bg-emerald-100 text-emerald-700";
 
+  const weekDates = useMemo(() => {
+    if (!scheduleBlocks.length) return [];
+    const sorted = [...scheduleBlocks].sort((a, b) => a.start_time.localeCompare(b.start_time));
+    const start = new Date(sorted[0].start_time);
+    const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date(startDay);
+      d.setDate(startDay.getDate() + i);
+      return d.toISOString().slice(0, 10);
+    });
+  }, [scheduleBlocks]);
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-4 p-8">
       <h1 className="text-2xl font-bold">Dashboard</h1>
+      {scheduleBlocks.length === 0 && (
+        <p className="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          No imported schedule found. Complete onboarding first to generate a real plan.
+        </p>
+      )}
       <div className="flex gap-3">
-        <button className="rounded bg-black px-4 py-2 text-white" onClick={createDemoPlan}>
-          Generate Demo Plan
+        <button className="rounded bg-black px-4 py-2 text-white" onClick={generatePlan}>
+          Generate Plan
         </button>
         <button className="rounded border px-4 py-2" onClick={loadDashboard}>
           Load Dashboard
@@ -213,8 +245,8 @@ export default function DashboardPage() {
       <section className="rounded border p-4">
         <h2 className="mb-3 font-semibold">Weekly Risk Map</h2>
         <div className="grid grid-cols-7 gap-2 text-center text-xs">
-          {Array.from({ length: 7 }).map((_, i) => {
-            const day = `2026-03-${String(21 + i).padStart(2, "0")}`;
+          {(weekDates.length ? weekDates : Array.from({ length: 7 }).map(() => "")).map((day, i) => {
+            const key = day || `day-${i + 1}`;
             const risk = weeklyRisk[day];
             const color = !risk
               ? "bg-green-100 text-green-700"
@@ -222,8 +254,8 @@ export default function DashboardPage() {
                 ? "bg-red-100 text-red-700"
                 : "bg-amber-100 text-amber-700";
             return (
-              <div key={day} className={`rounded p-2 ${color}`} title={risk ? risk.label : "low risk"}>
-                <div>{day.slice(8)}</div>
+              <div key={key} className={`rounded p-2 ${color}`} title={risk ? risk.label : "low risk"}>
+                <div>{day ? day.slice(8) : i + 1}</div>
                 <div>{risk ? risk.label.replace("_", " ") : "ok"}</div>
               </div>
             );

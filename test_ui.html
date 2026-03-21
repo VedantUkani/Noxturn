@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Noxturn API Test UI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    header { background: #1e293b; border-bottom: 1px solid #334155; padding: 16px 24px; display: flex; align-items: center; gap: 16px; }
+    header h1 { font-size: 18px; font-weight: 700; color: #f8fafc; }
+    header span { font-size: 12px; color: #64748b; background: #0f172a; padding: 2px 8px; border-radius: 4px; font-family: monospace; }
+    .layout { display: grid; grid-template-columns: 220px 1fr 380px; height: calc(100vh - 57px); }
+    nav { background: #1e293b; border-right: 1px solid #334155; overflow-y: auto; padding: 12px 0; }
+    nav .section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; color: #475569; padding: 12px 16px 4px; letter-spacing: 0.08em; }
+    nav button { display: block; width: 100%; text-align: left; padding: 8px 16px; font-size: 13px; color: #94a3b8; background: none; border: none; cursor: pointer; border-left: 3px solid transparent; }
+    nav button:hover { background: #0f172a; color: #e2e8f0; }
+    nav button.active { background: #0f172a; color: #38bdf8; border-left-color: #38bdf8; font-weight: 600; }
+    .main { overflow-y: auto; padding: 24px; }
+    .panel { background: #1e293b; border: 1px solid #334155; border-radius: 8px; margin-bottom: 20px; }
+    .panel-header { padding: 14px 18px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+    .panel-header h2 { font-size: 14px; font-weight: 600; }
+    .method { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .post { background: #164e63; color: #67e8f9; }
+    .get { background: #14532d; color: #86efac; }
+    .path { font-size: 12px; color: #64748b; font-family: monospace; }
+    .panel-body { padding: 16px 18px; }
+    label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; margin-top: 12px; }
+    label:first-child { margin-top: 0; }
+    input, textarea, select { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 13px; padding: 8px 10px; font-family: monospace; }
+    textarea { resize: vertical; min-height: 120px; }
+    input:focus, textarea:focus { outline: none; border-color: #38bdf8; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+    .btn-primary { background: #0284c7; color: white; }
+    .btn-primary:hover { background: #0369a1; }
+    .btn-secondary { background: #334155; color: #e2e8f0; }
+    .btn-secondary:hover { background: #475569; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-row { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
+    .sidebar { background: #0f172a; border-left: 1px solid #334155; overflow-y: auto; display: flex; flex-direction: column; }
+    .sidebar-header { padding: 14px 18px; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; }
+    .sidebar-header h3 { font-size: 13px; font-weight: 600; color: #94a3b8; }
+    .response-area { flex: 1; padding: 14px; overflow-y: auto; }
+    pre { font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+    .status-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .status-ok { background: #14532d; color: #86efac; }
+    .status-err { background: #7f1d1d; color: #fca5a5; }
+    .spinner { width: 14px; height: 14px; border: 2px solid #334155; border-top-color: #38bdf8; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .claude-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #4c1d95; color: #c4b5fd; }
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .compare-box { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 14px; }
+    .compare-box h4 { font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+    .compare-box pre { font-size: 11px; max-height: 360px; overflow-y: auto; }
+    .rule-color { color: #67e8f9; }
+    .claude-color { color: #c4b5fd; }
+    .user-bar { background: #1e3a5f; border: 1px solid #1d4ed8; border-radius: 6px; padding: 10px 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .user-bar span { font-size: 12px; color: #93c5fd; }
+    .user-bar code { font-family: monospace; font-size: 11px; color: #bfdbfe; background: #0f172a; padding: 2px 6px; border-radius: 4px; word-break: break-all; }
+    .hint { font-size: 11px; color: #64748b; margin-top: 6px; }
+    .tag { font-size: 11px; background: #1e3a5f; color: #93c5fd; border-radius: 3px; padding: 1px 6px; }
+    .section-view { display: none; }
+    .section-view.active { display: block; }
+    .quick-ref { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .ref-card { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 12px; }
+    .ref-card h4 { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
+    .ref-card p { font-size: 11px; color: #64748b; }
+    .ref-card .endpoint { font-family: monospace; font-size: 11px; color: #38bdf8; }
+    .checklist { list-style: none; }
+    .checklist li { font-size: 13px; padding: 4px 0; display: flex; align-items: center; gap: 8px; }
+    .checklist li::before { content: "○"; color: #64748b; }
+    .checklist li.done::before { content: "✓"; color: #86efac; }
+    .checklist li.warn::before { content: "⚠"; color: #fbbf24; }
+    .checklist li.fail::before { content: "✗"; color: #f87171; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Noxturn API Test UI</h1>
+  <span id="api-base-display">http://127.0.0.1:8000</span>
+  <input id="api-base-input" style="width:220px;padding:4px 8px;font-size:12px;margin-left:8px;" value="http://127.0.0.1:8000" placeholder="API base URL" />
+</header>
+
+<div class="layout">
+  <!-- Nav -->
+  <nav>
+    <div class="section-label">Overview</div>
+    <button class="active" onclick="showSection('overview')">Status Checklist</button>
+
+    <div class="section-label">Core APIs</div>
+    <button onclick="showSection('health')">GET /health</button>
+    <button onclick="showSection('schedule')">POST /schedule/import</button>
+    <button onclick="showSection('upload')">📎 Upload Excel / CSV</button>
+    <button onclick="showSection('ical')">📅 Upload iCal / .ics</button>
+    <button onclick="showSection('gcal')">🔗 Google Calendar</button>
+    <button onclick="showSection('outlook')">🪟 Outlook / M365</button>
+    <button onclick="showSection('risks')">POST /risks/compute</button>
+    <button onclick="showSection('plans')">POST /plans/generate</button>
+    <button onclick="showSection('claude')">✦ Claude Planner (compare)</button>
+    <button onclick="showSection('dashboard')">GET /dashboard/today</button>
+
+    <div class="section-label">Actions</div>
+    <button onclick="showSection('tasks')">POST /tasks/event</button>
+    <button onclick="showSection('replan')">POST /plans/replan</button>
+    <button onclick="showSection('wearables')">POST /wearables/import</button>
+
+    <div class="section-label">Explore</div>
+    <button onclick="showSection('sandbox')">POST /simulate/shift-sandbox</button>
+    <button onclick="showSection('rag')">GET /rag/retrieve</button>
+    <button onclick="showSection('personas')">GET /personas/list</button>
+
+    <div class="section-label">Settings</div>
+    <button onclick="showSection('usage')">Token Usage & Limits</button>
+    <button onclick="showSection('settings')">User ID & Config</button>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- USER BAR (always visible) -->
+    <div class="user-bar">
+      <span>User ID:</span>
+      <code id="uid-display">—</code>
+      <button class="btn btn-secondary" style="font-size:11px;padding:4px 10px;" onclick="resetUserId()">New ID</button>
+      <button class="btn btn-secondary" style="font-size:11px;padding:4px 10px;" onclick="copyUid()">Copy</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div id="section-overview" class="section-view active">
+      <div class="panel">
+        <div class="panel-header"><h2>Backend Status Checklist</h2></div>
+        <div class="panel-body">
+          <p style="font-size:13px;color:#94a3b8;margin-bottom:16px;">Run through these in order. Click the endpoint buttons in the nav to test each one.</p>
+          <ul class="checklist" id="checklist">
+            <li id="check-health">GET /health — server is running</li>
+            <li id="check-schedule">POST /schedule/import — schedule saved to DB</li>
+            <li id="check-risks">POST /risks/compute — risk engine returns episodes</li>
+            <li id="check-plans">POST /plans/generate — rule planner returns tasks</li>
+            <li id="check-claude">POST /plans/generate-claude — Claude AI returns tasks</li>
+            <li id="check-dashboard">GET /dashboard/today — active plan loaded</li>
+            <li id="check-wearables">POST /wearables/import — recovery score computed</li>
+            <li id="check-tasks">POST /tasks/event — task marked complete</li>
+            <li id="check-sandbox">POST /simulate/shift-sandbox — strain delta computed</li>
+            <li id="check-rag">GET /rag/retrieve — evidence cards returned</li>
+          </ul>
+          <div class="btn-row" style="margin-top:20px;">
+            <button class="btn btn-primary" onclick="runAllChecks()">Run All Checks</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h2>Quick Reference</h2></div>
+        <div class="panel-body quick-ref">
+          <div class="ref-card">
+            <h4>Call Order (Happy Path)</h4>
+            <p>1. /schedule/import<br>2. /risks/compute<br>3. /plans/generate<br>4. /dashboard/today<br>5. /wearables/import<br>6. /tasks/event<br>7. /plans/replan (if anchor missed)<br>8. /rag/retrieve</p>
+          </div>
+          <div class="ref-card">
+            <h4>No Supabase Needed</h4>
+            <p>/health<br>/simulate/shift-sandbox<br>/rag/retrieve<br><br>All other endpoints require user_id and a working Supabase connection.</p>
+          </div>
+          <div class="ref-card">
+            <h4>Block Types</h4>
+            <p class="endpoint">night_shift<br>day_shift<br>evening_shift<br>off_day<br>transition_day</p>
+          </div>
+          <div class="ref-card">
+            <h4>Risk Labels</h4>
+            <p class="endpoint">rapid_flip<br>short_turnaround<br>low_recovery<br>unsafe_drive</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEALTH -->
+    <div id="section-health" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method get">GET</span>
+          <h2>/health</h2>
+          <span class="path">No auth needed</span>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Checks if the FastAPI server is running. No Supabase needed.</p>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callHealth()">Send Request</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div id="section-schedule" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method post">POST</span>
+          <h2>/schedule/import</h2>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Import a schedule as structured blocks. user_id auto-filled from your current ID above.</p>
+          <label>commute_minutes</label>
+          <input id="schedule-commute" type="number" value="30" style="width:100px;" />
+          <label>blocks (JSON array)</label>
+          <textarea id="schedule-blocks">[
+  {
+    "block_type": "night_shift",
+    "start_time": "2026-03-22T19:00:00",
+    "end_time": "2026-03-23T07:00:00",
+    "title": "ICU Night"
+  },
+  {
+    "block_type": "day_shift",
+    "start_time": "2026-03-23T09:00:00",
+    "end_time": "2026-03-23T17:00:00",
+    "title": "Day Follow-up"
+  },
+  {
+    "block_type": "night_shift",
+    "start_time": "2026-03-24T19:00:00",
+    "end_time": "2026-03-25T07:00:00",
+    "title": "ICU Night 2"
+  }
+]</textarea>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callSchedule()">Send Request</button>
+            <button class="btn btn-secondary" onclick="copyScheduleBlocks()">Copy blocks for next steps</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPLOAD (Feature 1: Excel / CSV) -->
+    <div id="section-upload" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method post">POST</span>
+          <h2>/schedule/upload</h2>
+          <span style="font-size:11px;background:#166534;color:#bbf7d0;padding:2px 8px;border-radius:4px;font-weight:600;">Feature 1</span>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Upload an Excel (.xlsx) or CSV (.csv) file containing your shift schedule. Columns detected automatically by header name or position.</p>
+
+          <div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:12px;margin-bottom:14px;font-size:12px;color:#94a3b8;line-height:1.8;">
+            <b style="color:#e2e8f0;">Required columns</b> (header name or position):<br>
+            &nbsp;&nbsp;<code>block_type</code> / <code>type</code> / <code>shift</code> — night_shift, day_shift, evening_shift, off_day, transition_day<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;Aliases: <code>night</code>, <code>day</code>, <code>eve</code>, <code>off</code>, <code>transition</code><br>
+            &nbsp;&nbsp;<code>start_time</code> / <code>start</code> / <code>from</code> — ISO datetime e.g. 2026-03-22T19:00:00<br>
+            &nbsp;&nbsp;<code>end_time</code> / <code>end</code> / <code>to</code> — ISO datetime<br>
+            <b style="color:#e2e8f0;">Optional column:</b><br>
+            &nbsp;&nbsp;<code>title</code> / <code>name</code> / <code>description</code> — label for the shift
+          </div>
+
+          <label>commute_minutes</label>
+          <input id="upload-commute" type="number" value="30" style="width:100px;" />
+
+          <label>schedule file (.xlsx or .csv)</label>
+          <div style="margin-top:6px;margin-bottom:14px;">
+            <input type="file" id="upload-file" accept=".csv,.xlsx,.xls"
+              style="color:#e2e8f0;font-size:13px;" />
+          </div>
+
+          <div style="margin-bottom:14px;">
+            <b style="font-size:12px;color:#94a3b8;">Sample CSV format:</b>
+            <pre style="background:#0f172a;border:1px solid #334155;border-radius:4px;padding:10px;font-size:11px;color:#67e8f9;margin-top:6px;">block_type,start_time,end_time,title
+night_shift,2026-03-22T19:00:00,2026-03-23T07:00:00,ICU Night
+day_shift,2026-03-23T09:00:00,2026-03-23T17:00:00,Day Follow-up
+night_shift,2026-03-24T19:00:00,2026-03-25T07:00:00,ICU Night 2</pre>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callUpload()">Upload File</button>
+            <span id="upload-status" style="font-size:12px;color:#64748b;margin-left:10px;"></span>
+          </div>
+
+          <div id="upload-warnings" style="display:none;margin-top:12px;background:#1c1407;border:1px solid #78350f;border-radius:6px;padding:12px;font-size:12px;color:#fbbf24;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ICAL UPLOAD (Feature 2) -->
+    <div id="section-ical" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method post">POST</span>
+          <h2>/schedule/upload-ical</h2>
+          <span style="font-size:11px;background:#166534;color:#bbf7d0;padding:2px 8px;border-radius:4px;font-weight:600;">Feature 2</span>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Upload a .ics / .ical calendar file exported from Google Calendar, Apple Calendar, Outlook, NurseGrid, AMiON, HotSchedules, or Kronos. Each event becomes one schedule block.</p>
+
+          <div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:12px;margin-bottom:14px;font-size:12px;color:#94a3b8;line-height:1.8;">
+            <b style="color:#e2e8f0;">Block type is inferred from event title keywords:</b><br>
+            &nbsp;&nbsp;<code>night</code> → night_shift<br>
+            &nbsp;&nbsp;<code>day</code> / <code>morning</code> / <code>am shift</code> → day_shift<br>
+            &nbsp;&nbsp;<code>eve</code> / <code>afternoon</code> / <code>pm shift</code> → evening_shift<br>
+            &nbsp;&nbsp;<code>off</code> / <code>rest</code> / <code>leave</code> / <code>holiday</code> → off_day<br>
+            &nbsp;&nbsp;<code>transition</code> / <code>orient</code> / <code>train</code> → transition_day<br>
+            &nbsp;&nbsp;Unrecognized → defaults to day_shift (warning added)
+          </div>
+
+          <label>commute_minutes</label>
+          <input id="ical-commute" type="number" value="30" style="width:100px;" />
+
+          <label>.ics / .ical file</label>
+          <div style="margin-top:6px;margin-bottom:14px;">
+            <input type="file" id="ical-file" accept=".ics,.ical" style="color:#e2e8f0;font-size:13px;" />
+          </div>
+
+          <div style="margin-bottom:14px;">
+            <b style="font-size:12px;color:#94a3b8;">How to export from common systems:</b>
+            <ul style="font-size:12px;color:#94a3b8;margin:6px 0 0 16px;line-height:2;">
+              <li><b>Google Calendar</b> → Settings → Import &amp; Export → Export</li>
+              <li><b>Apple Calendar</b> → File → Export → Export…</li>
+              <li><b>Outlook</b> → File → Open &amp; Export → Import/Export → Export to file → iCalendar</li>
+              <li><b>NurseGrid / AMiON</b> → Schedule → Export / Sync → iCal link → download</li>
+            </ul>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callIcalUpload()">Upload .ics File</button>
+            <span id="ical-status" style="font-size:12px;color:#64748b;margin-left:10px;"></span>
+          </div>
+          <div id="ical-warnings" style="display:none;margin-top:12px;background:#1c1407;border:1px solid #78350f;border-radius:6px;padding:12px;font-size:12px;color:#fbbf24;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOOGLE CALENDAR (Feature 3) -->
+    <div id="section-gcal" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method get">GET</span>
+          <h2>/schedule/google/auth → /callback</h2>
+          <span style="font-size:11px;background:#166534;color:#bbf7d0;padding:2px 8px;border-radius:4px;font-weight:600;">Feature 3</span>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Two-step OAuth2 flow. Step 1 gets an auth URL. Step 2 (automatic via browser redirect) exchanges the code, fetches your Google Calendar events for the next N days, and imports them as schedule blocks.</p>
+
+          <div id="gcal-status-box" style="margin-bottom:14px;"></div>
+
+          <div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:12px;margin-bottom:14px;font-size:12px;color:#94a3b8;line-height:1.8;">
+            <b style="color:#e2e8f0;">Setup required (one-time):</b><br>
+            1. Go to <b>console.cloud.google.com</b> → APIs &amp; Services → Credentials<br>
+            2. Create an <b>OAuth 2.0 Client ID</b> (Web application type)<br>
+            3. Add Authorized redirect URI: <code>http://localhost:8000/schedule/google/callback</code><br>
+            4. Set <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code> in your <code>.env</code><br>
+            5. Enable the <b>Google Calendar API</b> in the Google Cloud project
+          </div>
+
+          <label>commute_minutes</label>
+          <input id="gcal-commute" type="number" value="30" style="width:100px;" />
+          <label>days_ahead (how many days of calendar to fetch)</label>
+          <input id="gcal-days" type="number" value="14" style="width:100px;" />
+
+          <div class="btn-row" style="margin-top:14px;">
+            <button class="btn" onclick="checkGcalStatus()" style="background:#1e293b;border:1px solid #334155;">Check Config Status</button>
+            <button class="btn btn-primary" onclick="startGcalAuth()" style="margin-left:8px;">Step 1 — Get Auth URL</button>
+          </div>
+
+          <div id="gcal-auth-result" style="display:none;margin-top:14px;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:14px;">
+            <p style="font-size:12px;color:#94a3b8;margin-bottom:8px;">Open this URL in your browser to grant Google Calendar access:</p>
+            <a id="gcal-auth-link" href="#" target="_blank" style="font-size:12px;color:#818cf8;word-break:break-all;"></a>
+            <p style="font-size:11px;color:#64748b;margin-top:10px;">After granting access, Google will redirect to the callback URL on your local server and automatically import your schedule.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OUTLOOK (Feature 4) -->
+    <div id="section-outlook" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method get">GET</span>
+          <h2>/schedule/outlook/auth → /callback</h2>
+          <span style="font-size:11px;background:#166534;color:#bbf7d0;padding:2px 8px;border-radius:4px;font-weight:600;">Feature 4</span>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Two-step Microsoft OAuth2 flow using MSAL + Microsoft Graph API. Works with personal Outlook.com accounts and work/school Microsoft 365 accounts.</p>
+
+          <div id="outlook-status-box" style="margin-bottom:14px;"></div>
+
+          <div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:12px;margin-bottom:14px;font-size:12px;color:#94a3b8;line-height:1.8;">
+            <b style="color:#e2e8f0;">Setup required (one-time):</b><br>
+            1. Go to <b>portal.azure.com</b> → App registrations → New registration<br>
+            2. Name: Noxturn, Supported accounts: <b>Personal + work/school</b><br>
+            3. Redirect URI: <b>Web</b> → <code>http://localhost:8000/schedule/outlook/callback</code><br>
+            4. Certificates &amp; secrets → New client secret → copy the Value<br>
+            5. API permissions → Add → Microsoft Graph → Delegated → <b>Calendars.Read</b><br>
+            6. Set <code>MICROSOFT_CLIENT_ID</code> and <code>MICROSOFT_CLIENT_SECRET</code> in <code>.env</code>
+          </div>
+
+          <label>commute_minutes</label>
+          <input id="outlook-commute" type="number" value="30" style="width:100px;" />
+          <label>days_ahead</label>
+          <input id="outlook-days" type="number" value="14" style="width:100px;" />
+
+          <div class="btn-row" style="margin-top:14px;">
+            <button class="btn" onclick="checkOutlookStatus()" style="background:#1e293b;border:1px solid #334155;">Check Config Status</button>
+            <button class="btn btn-primary" onclick="startOutlookAuth()" style="margin-left:8px;">Step 1 — Get Auth URL</button>
+          </div>
+
+          <div id="outlook-auth-result" style="display:none;margin-top:14px;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:14px;">
+            <p style="font-size:12px;color:#94a3b8;margin-bottom:8px;">Open this URL in your browser to sign in with Microsoft:</p>
+            <a id="outlook-auth-link" href="#" target="_blank" style="font-size:12px;color:#818cf8;word-break:break-all;"></a>
+            <p style="font-size:11px;color:#64748b;margin-top:10px;">After signing in, Microsoft will redirect to the callback URL and automatically import your Outlook calendar events.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RISKS -->
+    <div id="section-risks" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method post">POST</span>
+          <h2>/risks/compute</h2>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Analyzes blocks for circadian risks. Paste the blocks array from schedule/import response, or use the saved blocks below.</p>
+          <label>commute_minutes</label>
+          <input id="risks-commute" type="number" value="45" style="width:100px;" />
+          <label>blocks (JSON array)</label>
+          <textarea id="risks-blocks">[
+  {
+    "block_type": "night_shift",
+    "start_time": "2026-03-22T19:00:00",
+    "end_time": "2026-03-23T07:00:00"
+  },
+  {
+    "block_type": "day_shift",
+    "start_time": "2026-03-23T09:00:00",
+    "end_time": "2026-03-23T17:00:00"
+  },
+  {
+    "block_type": "night_shift",
+    "start_time": "2026-03-24T19:00:00",
+    "end_time": "2026-03-25T07:00:00"
+  }
+]</textarea>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callRisks()">Send Request</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLANS -->
+    <div id="section-plans" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method post">POST</span>
+          <h2>/plans/generate</h2>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Generates a recovery plan. Returns plan_mode, tasks list, avoid_list, and next_best_action. Saves to Supabase.</p>
+          <label>commute_minutes</label>
+          <input id="plans-commute" type="number" value="45" style="width:100px;" />
+          <label>plan_hours (look-ahead window)</label>
+          <input id="plans-hours" type="number" value="48" style="width:100px;" />
+          <label>blocks (JSON array)</label>
+          <textarea id="plans-blocks">[
+  {
+    "block_type": "night_shift",
+    "start_time": "2026-03-22T19:00:00",
+    "end_time": "2026-03-23T07:00:00"
+  },
+  {
+    "block_type": "day_shift",
+    "start_time": "2026-03-23T09:00:00",
+    "end_time": "2026-03-23T17:00:00"
+  },
+  {
+    "block_type": "night_shift",
+    "start_time": "2026-03-24T19:00:00",
+    "end_time": "2026-03-25T07:00:00"
+  }
+]</textarea>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callPlans()">Send Request</button>
+          </div>
+          <p class="hint" id="plan-task-hint" style="margin-top:10px;"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLAUDE PLANNER COMPARE -->
+    <div id="section-claude" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method post">POST</span>
+          <h2>/plans/generate</h2>
+          <span style="font-size:11px;color:#64748b;">vs</span>
+          <span class="method post" style="background:#4c1d95;color:#c4b5fd;">POST</span>
+          <h2>/plans/generate-claude</h2>
+          <span class="claude-badge">Claude Haiku</span>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Runs both planners on the same blocks simultaneously so you can compare rule-based vs Claude AI output.</p>
+
+          <label>commute_minutes</label>
+          <input id="cmp-commute" type="number" value="45" style="width:100px;" />
+          <label>plan_hours</label>
+          <input id="cmp-hours" type="number" value="48" style="width:100px;" />
+          <label>persona (optional — injects role context into Claude only)</label>
+          <select id="cmp-persona" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:4px;padding:6px 8px;font-size:13px;width:100%;max-width:320px;">
+            <option value="">— no persona (generic) —</option>
+            <option value="nurse_icu">ICU / ER Nurse</option>
+            <option value="paramedic">Paramedic / EMT</option>
+            <option value="factory_worker">Factory / Shift Worker</option>
+          </select>
+          <label>blocks (JSON array)</label>
+          <textarea id="cmp-blocks">[
+  {
+    "block_type": "night_shift",
+    "start_time": "2026-03-22T19:00:00",
+    "end_time": "2026-03-23T07:00:00",
+    "title": "ICU Night"
+  },
+  {
+    "block_type": "day_shift",
+    "start_time": "2026-03-23T09:00:00",
+    "end_time": "2026-03-23T17:00:00",
+    "title": "Day Follow-up"
+  },
+  {
+    "block_type": "night_shift",
+    "start_time": "2026-03-24T19:00:00",
+    "end_time": "2026-03-25T07:00:00",
+    "title": "ICU Night 2"
+  }
+]</textarea>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callComparePlans()" id="cmp-btn">Run Both Planners</button>
+            <span id="cmp-status" style="font-size:12px;color:#64748b;"></span>
+          </div>
+
+          <div class="compare-grid" id="cmp-grid" style="margin-top:18px;display:none;">
+            <div class="compare-box">
+              <h4 class="rule-color">Rule Planner — /plans/generate</h4>
+              <div id="cmp-rule-badge" style="margin-bottom:8px;"></div>
+              <pre id="cmp-rule-out" style="color:#67e8f9;">—</pre>
+            </div>
+            <div class="compare-box">
+              <h4 class="claude-color">Claude Planner — /plans/generate-claude</h4>
+              <div id="cmp-claude-badge" style="margin-bottom:8px;"></div>
+              <pre id="cmp-claude-out" style="color:#c4b5fd;">—</pre>
+            </div>
+          </div>
+
+          <!-- Diff summary -->
+          <div id="cmp-diff" style="display:none;margin-top:16px;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:14px;">
+            <h4 style="font-size:12px;font-weight:700;color:#94a3b8;margin-bottom:10px;">Comparison Summary</h4>
+            <div id="cmp-diff-content" style="font-size:12px;color:#94a3b8;line-height:1.8;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="section-dashboard" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method get">GET</span>
+          <h2>/dashboard/today</h2>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Returns plan_mode, next_best_action, anchor_tasks, recovery_rhythm_label. Reads from in-memory state (generate a plan first).</p>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callDashboard()">Send Request</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div id="section-tasks" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method post">POST</span>
+          <h2>/tasks/event</h2>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Mark a task as completed, skipped, or expired. Copy a task_id from the /plans/generate response.</p>
+          <label>task_id (UUID from plan response)</label>
+          <input id="task-id" placeholder="paste task UUID here" />
+          <label>status</label>
+          <select id="task-status">
+            <option value="completed">completed</option>
+            <option value="skipped">skipped</option>
+            <option value="expired">expired</option>
+          </select>
+          <label>notes (optional)</label>
+          <input id="task-notes" placeholder="e.g. slept through alarm" />
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callTaskEvent()">Send Request</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPLAN -->
+    <div id="section-replan" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method post">POST</span>
+          <h2>/plans/replan</h2>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Regenerates next 1-3 actions after an anchor task is missed. Provide the same blocks used in generate.</p>
+          <label>commute_minutes</label>
+          <input id="replan-commute" type="number" value="45" style="width:100px;" />
+          <label>trigger</label>
+          <input id="replan-trigger" value="task_event" style="width:160px;" />
+          <label>task_id that triggered replan</label>
+          <input id="replan-task-id" placeholder="paste task UUID here" />
+          <label>task_status</label>
+          <select id="replan-task-status">
+            <option value="skipped">skipped</option>
+            <option value="expired">expired</option>
+          </select>
+          <label>use_claude</label>
+          <select id="replan-use-claude" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:4px;padding:6px 8px;font-size:13px;width:160px;">
+            <option value="false">false (rule planner)</option>
+            <option value="true">true (Claude AI)</option>
+          </select>
+          <label>persona (only applies when use_claude=true)</label>
+          <select id="replan-persona" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:4px;padding:6px 8px;font-size:13px;width:100%;max-width:320px;">
+            <option value="">— no persona —</option>
+            <option value="nurse_icu">ICU / ER Nurse</option>
+            <option value="paramedic">Paramedic / EMT</option>
+            <option value="factory_worker">Factory / Shift Worker</option>
+          </select>
+          <label>blocks (same as plan generate)</label>
+          <textarea id="replan-blocks">[
+  {
+    "block_type": "night_shift",
+    "start_time": "2026-03-22T19:00:00",
+    "end_time": "2026-03-23T07:00:00"
+  },
+  {
+    "block_type": "day_shift",
+    "start_time": "2026-03-23T09:00:00",
+    "end_time": "2026-03-23T17:00:00"
+  }
+]</textarea>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callReplan()">Send Request</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEARABLES -->
+    <div id="section-wearables" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method post">POST</span>
+          <h2>/wearables/import</h2>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Imports sleep metrics and computes recovery score. Upserts on date — safe to call multiple times.</p>
+          <label>sleep_hrs</label>
+          <input id="wear-sleep-hrs" type="number" step="0.5" value="6.5" style="width:100px;" />
+          <label>sleep_start (ISO datetime)</label>
+          <input id="wear-sleep-start" value="2026-03-22T23:00:00" />
+          <label>sleep_end (ISO datetime)</label>
+          <input id="wear-sleep-end" value="2026-03-23T05:30:00" />
+          <label>restlessness (0–100, optional)</label>
+          <input id="wear-restlessness" type="number" value="20" style="width:100px;" />
+          <label>resting_hr (bpm, optional)</label>
+          <input id="wear-hr" type="number" value="62" style="width:100px;" />
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callWearables()">Send Request</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SANDBOX -->
+    <div id="section-sandbox" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method post">POST</span>
+          <h2>/simulate/shift-sandbox</h2>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Tests impact of adding a hypothetical shift. No Supabase required — purely computational.</p>
+          <label>commute_minutes</label>
+          <input id="sandbox-commute" type="number" value="30" style="width:100px;" />
+          <label>current_blocks (JSON array)</label>
+          <textarea id="sandbox-current">[
+  {
+    "block_type": "night_shift",
+    "start_time": "2026-03-22T19:00:00",
+    "end_time": "2026-03-23T07:00:00"
+  }
+]</textarea>
+          <label>hypothetical_shifts (JSON array)</label>
+          <textarea id="sandbox-hypo">[
+  {
+    "block_type": "day_shift",
+    "start_time": "2026-03-23T08:00:00",
+    "end_time": "2026-03-23T16:00:00"
+  }
+]</textarea>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callSandbox()">Send Request</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERSONAS -->
+    <div id="section-personas" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method get">GET</span>
+          <h2>/personas/list &amp; /personas/{id}</h2>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Browse all available worker personas. Persona context is injected into Claude to tailor task descriptions and priorities to the worker's role.</p>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callPersonaList()">List All Personas</button>
+            <button class="btn" onclick="callPersonaById()" style="margin-left:8px;">Get By ID</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+            <label style="margin:0;">persona_id</label>
+            <select id="persona-id-select" style="background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:4px;padding:6px 8px;font-size:13px;">
+              <option value="nurse_icu">nurse_icu</option>
+              <option value="paramedic">paramedic</option>
+              <option value="factory_worker">factory_worker</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RAG -->
+    <div id="section-rag" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method get">GET</span>
+          <h2>/rag/retrieve</h2>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Token-overlap search over intervention cards and evidence chunks. No Supabase required.</p>
+          <label>query</label>
+          <input id="rag-query" value="night shift sleep protection" />
+          <label>top_k (1–10)</label>
+          <input id="rag-topk" type="number" value="3" style="width:80px;" />
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callRag()">Send Request</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOKEN USAGE -->
+    <div id="section-usage" class="section-view">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="method get">GET</span>
+          <h2>/plans/claude-usage</h2>
+          <span class="claude-badge">Claude Haiku</span>
+        </div>
+        <div class="panel-body">
+          <p class="hint">Live token usage and estimated cost for the Claude planner. Rate limit: <b>10 calls / user / 60 min</b>. Resets automatically.</p>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:14px 0;" id="usage-cards">
+            <div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:14px;text-align:center;">
+              <div style="font-size:22px;font-weight:700;color:#c4b5fd;" id="u-calls">—</div>
+              <div style="font-size:11px;color:#64748b;margin-top:4px;">Total Claude Calls</div>
+            </div>
+            <div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:14px;text-align:center;">
+              <div style="font-size:22px;font-weight:700;color:#67e8f9;" id="u-tokens">—</div>
+              <div style="font-size:11px;color:#64748b;margin-top:4px;">Total Tokens Used</div>
+            </div>
+            <div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:14px;text-align:center;">
+              <div style="font-size:22px;font-weight:700;color:#86efac;" id="u-cost">—</div>
+              <div style="font-size:11px;color:#64748b;margin-top:4px;">Est. Cost (USD)</div>
+            </div>
+          </div>
+
+          <div style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:12px;margin-bottom:12px;" id="u-ratelimit" style="display:none;">
+            <div style="font-size:11px;font-weight:600;color:#94a3b8;margin-bottom:6px;">YOUR RATE LIMIT STATUS</div>
+            <div id="u-ratelimit-body" style="font-size:12px;color:#e2e8f0;"></div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="callUsage()">Refresh</button>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div style="font-size:11px;font-weight:600;color:#475569;margin-bottom:8px;">RECENT CALLS</div>
+            <div id="u-recent" style="font-size:12px;color:#64748b;">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="section-settings" class="section-view">
+      <div class="panel">
+        <div class="panel-header"><h2>Settings</h2></div>
+        <div class="panel-body">
+          <label>API Base URL</label>
+          <input id="settings-api-base" value="http://127.0.0.1:8000" />
+          <label style="margin-top:16px;">User ID (UUID)</label>
+          <input id="settings-uid" placeholder="paste or generate" />
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="applySettings()">Apply</button>
+            <button class="btn btn-secondary" onclick="generateNewUid()">Generate New UUID</button>
+          </div>
+          <p class="hint" style="margin-top:12px;">User ID is stored in localStorage and auto-injected into all POST requests.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Response Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3>Response</h3>
+      <div id="status-badge"></div>
+    </div>
+    <div class="response-area">
+      <div id="loading" style="display:none;padding:20px;text-align:center;">
+        <div class="spinner" style="margin:0 auto;"></div>
+        <p style="margin-top:8px;font-size:12px;color:#64748b;">Sending request…</p>
+      </div>
+      <pre id="response-output" style="color:#94a3b8;font-size:12px;">Response will appear here.</pre>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── State ───────────────────────────────────────────────────────────────
+  let USER_ID = localStorage.getItem('noxturn_uid') || crypto.randomUUID();
+  let API_BASE = localStorage.getItem('noxturn_api_base') || 'http://127.0.0.1:8000';
+  let lastPlanTasks = [];
+
+  function saveState() {
+    localStorage.setItem('noxturn_uid', USER_ID);
+    localStorage.setItem('noxturn_api_base', API_BASE);
+  }
+
+  function refreshUidDisplay() {
+    document.getElementById('uid-display').textContent = USER_ID;
+    document.getElementById('settings-uid').value = USER_ID;
+    document.getElementById('api-base-display').textContent = API_BASE;
+    document.getElementById('api-base-input').value = API_BASE;
+    document.getElementById('settings-api-base').value = API_BASE;
+  }
+
+  // Sync API base from header input
+  document.getElementById('api-base-input').addEventListener('change', e => {
+    API_BASE = e.target.value.replace(/\/$/, '');
+    saveState();
+    refreshUidDisplay();
+  });
+
+  function resetUserId() {
+    USER_ID = crypto.randomUUID();
+    saveState();
+    refreshUidDisplay();
+  }
+
+  function copyUid() {
+    navigator.clipboard.writeText(USER_ID);
+  }
+
+  function generateNewUid() {
+    document.getElementById('settings-uid').value = crypto.randomUUID();
+  }
+
+  function applySettings() {
+    const newBase = document.getElementById('settings-api-base').value.replace(/\/$/, '');
+    const newUid = document.getElementById('settings-uid').value.trim();
+    if (newBase) API_BASE = newBase;
+    if (newUid) USER_ID = newUid;
+    saveState();
+    refreshUidDisplay();
+    showResponse({ message: 'Settings applied.' }, 200);
+  }
+
+  // ─── Nav ─────────────────────────────────────────────────────────────────
+  function showSection(id) {
+    document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+    document.getElementById('section-' + id).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  // ─── HTTP helpers ─────────────────────────────────────────────────────────
+  function showLoading() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('response-output').textContent = '';
+    document.getElementById('status-badge').innerHTML = '';
+  }
+
+  function showResponse(data, status) {
+    document.getElementById('loading').style.display = 'none';
+    const ok = status >= 200 && status < 300;
+    document.getElementById('status-badge').innerHTML =
+      `<span class="status-badge ${ok ? 'status-ok' : 'status-err'}">${status}</span>`;
+    document.getElementById('response-output').textContent = JSON.stringify(data, null, 2);
+    document.getElementById('response-output').style.color = ok ? '#86efac' : '#fca5a5';
+  }
+
+  async function apiPost(path, body) {
+    showLoading();
+    try {
+      const res = await fetch(API_BASE + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      showResponse(data, res.status);
+      return { ok: res.ok, data, status: res.status };
+    } catch (e) {
+      showResponse({ error: e.message, hint: 'Is the backend running? Check ' + API_BASE }, 0);
+      return { ok: false, data: null, status: 0 };
+    }
+  }
+
+  async function apiGet(path) {
+    showLoading();
+    try {
+      const res = await fetch(API_BASE + path);
+      const data = await res.json();
+      showResponse(data, res.status);
+      return { ok: res.ok, data, status: res.status };
+    } catch (e) {
+      showResponse({ error: e.message, hint: 'Is the backend running? Check ' + API_BASE }, 0);
+      return { ok: false, data: null, status: 0 };
+    }
+  }
+
+  // ─── Endpoint Handlers ────────────────────────────────────────────────────
+  async function callHealth() {
+    const r = await apiGet('/health');
+    markCheck('health', r.ok);
+  }
+
+  async function callUpload() {
+    const fileInput = document.getElementById('upload-file');
+    const statusEl  = document.getElementById('upload-status');
+    const warnEl    = document.getElementById('upload-warnings');
+
+    if (!fileInput.files || !fileInput.files[0]) {
+      showResponse({ error: 'No file selected' }, 400);
+      return;
+    }
+    const file = fileInput.files[0];
+    const commute = parseInt(document.getElementById('upload-commute').value) || 30;
+
+    statusEl.textContent = 'Uploading…';
+    warnEl.style.display = 'none';
+
+    const form = new FormData();
+    form.append('file', file);
+    form.append('user_id', USER_ID);
+    form.append('commute_minutes', commute);
+
+    try {
+      const res = await fetch(API_BASE + '/schedule/upload', { method: 'POST', body: form });
+      const data = await res.json();
+      showResponse(data, res.status);
+      statusEl.textContent = res.ok
+        ? `✓ ${data.blocks?.length || 0} blocks imported (confidence: ${data.parse_confidence})`
+        : '✗ Upload failed';
+
+      if (res.ok && data.warnings && data.warnings.length > 0) {
+        warnEl.style.display = 'block';
+        warnEl.innerHTML = '<b>Warnings:</b><br>' + data.warnings.map(w => `• ${w}`).join('<br>');
+      }
+    } catch (e) {
+      showResponse({ error: e.message }, 0);
+      statusEl.textContent = '✗ Network error';
+    }
+  }
+
+  async function checkOutlookStatus() {
+    const r = await fetch(API_BASE + '/schedule/outlook/status');
+    const d = await r.json();
+    const box = document.getElementById('outlook-status-box');
+    const ok = d.configured;
+    box.innerHTML = `<div style="padding:10px 14px;border-radius:6px;font-size:12px;background:${ok?'#052e16':'#1c0a09'};border:1px solid ${ok?'#166534':'#7f1d1d'};color:${ok?'#bbf7d0':'#fca5a5'};">
+      ${ok ? '✓ Outlook is configured. Redirect URI: <code>' + d.redirect_uri + '</code>' : '✗ Not configured — set MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET in .env'}
+    </div>`;
+    showResponse(d, r.status);
+  }
+
+  async function startOutlookAuth() {
+    const commute = parseInt(document.getElementById('outlook-commute').value) || 30;
+    const days    = parseInt(document.getElementById('outlook-days').value) || 14;
+    const url     = `${API_BASE}/schedule/outlook/auth?user_id=${USER_ID}&commute_minutes=${commute}&days_ahead=${days}`;
+    const r       = await fetch(url);
+    const d       = await r.json();
+    showResponse(d, r.status);
+    if (r.ok && d.auth_url) {
+      const result = document.getElementById('outlook-auth-result');
+      const link   = document.getElementById('outlook-auth-link');
+      result.style.display = 'block';
+      link.href = d.auth_url;
+      link.textContent = d.auth_url;
+    }
+  }
+
+  async function checkGcalStatus() {
+    const r = await fetch(API_BASE + '/schedule/google/status');
+    const d = await r.json();
+    const box = document.getElementById('gcal-status-box');
+    const ok = d.configured;
+    box.innerHTML = `<div style="padding:10px 14px;border-radius:6px;font-size:12px;background:${ok?'#052e16':'#1c0a09'};border:1px solid ${ok?'#166534':'#7f1d1d'};color:${ok?'#bbf7d0':'#fca5a5'};">
+      ${ok ? '✓ Google Calendar is configured. Redirect URI: <code>' + d.redirect_uri + '</code>' : '✗ Not configured — set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env'}
+    </div>`;
+    showResponse(d, r.status);
+  }
+
+  async function startGcalAuth() {
+    const commute  = parseInt(document.getElementById('gcal-commute').value) || 30;
+    const days     = parseInt(document.getElementById('gcal-days').value) || 14;
+    const url      = `${API_BASE}/schedule/google/auth?user_id=${USER_ID}&commute_minutes=${commute}&days_ahead=${days}`;
+    const r        = await fetch(url);
+    const d        = await r.json();
+    showResponse(d, r.status);
+    if (r.ok && d.auth_url) {
+      const result = document.getElementById('gcal-auth-result');
+      const link   = document.getElementById('gcal-auth-link');
+      result.style.display = 'block';
+      link.href = d.auth_url;
+      link.textContent = d.auth_url;
+    }
+  }
+
+  async function callIcalUpload() {
+    const fileInput = document.getElementById('ical-file');
+    const statusEl  = document.getElementById('ical-status');
+    const warnEl    = document.getElementById('ical-warnings');
+
+    if (!fileInput.files || !fileInput.files[0]) {
+      showResponse({ error: 'No file selected' }, 400); return;
+    }
+    const commute = parseInt(document.getElementById('ical-commute').value) || 30;
+    statusEl.textContent = 'Uploading…';
+    warnEl.style.display = 'none';
+
+    const form = new FormData();
+    form.append('file', fileInput.files[0]);
+    form.append('user_id', USER_ID);
+    form.append('commute_minutes', commute);
+
+    try {
+      const res = await fetch(API_BASE + '/schedule/upload-ical', { method: 'POST', body: form });
+      const data = await res.json();
+      showResponse(data, res.status);
+      statusEl.textContent = res.ok
+        ? `✓ ${data.blocks?.length || 0} events imported (confidence: ${data.parse_confidence})`
+        : '✗ Upload failed';
+      if (res.ok && data.warnings && data.warnings.length > 0) {
+        warnEl.style.display = 'block';
+        warnEl.innerHTML = '<b>Warnings:</b><br>' + data.warnings.map(w => `• ${w}`).join('<br>');
+      }
+    } catch (e) {
+      showResponse({ error: e.message }, 0);
+      statusEl.textContent = '✗ Network error';
+    }
+  }
+
+  async function callSchedule() {
+    let blocks;
+    try { blocks = JSON.parse(document.getElementById('schedule-blocks').value); }
+    catch { showResponse({ error: 'Invalid JSON in blocks field' }, 400); return; }
+    const r = await apiPost('/schedule/import', {
+      user_id: USER_ID,
+      commute_minutes: parseInt(document.getElementById('schedule-commute').value) || 30,
+      blocks,
+    });
+    markCheck('schedule', r.ok);
+  }
+
+  function copyScheduleBlocks() {
+    const val = document.getElementById('schedule-blocks').value;
+    navigator.clipboard.writeText(val);
+    alert('Blocks copied to clipboard! Paste into risks or plans fields.');
+  }
+
+  async function callRisks() {
+    let blocks;
+    try { blocks = JSON.parse(document.getElementById('risks-blocks').value); }
+    catch { showResponse({ error: 'Invalid JSON in blocks field' }, 400); return; }
+    const r = await apiPost('/risks/compute', {
+      user_id: USER_ID,
+      commute_minutes: parseInt(document.getElementById('risks-commute').value) || 30,
+      blocks,
+    });
+    markCheck('risks', r.ok);
+  }
+
+  async function callPlans() {
+    let blocks;
+    try { blocks = JSON.parse(document.getElementById('plans-blocks').value); }
+    catch { showResponse({ error: 'Invalid JSON in blocks field' }, 400); return; }
+    const r = await apiPost('/plans/generate', {
+      user_id: USER_ID,
+      commute_minutes: parseInt(document.getElementById('plans-commute').value) || 30,
+      plan_hours: parseInt(document.getElementById('plans-hours').value) || 48,
+      blocks,
+    });
+    markCheck('plans', r.ok);
+    if (r.ok && r.data.tasks && r.data.tasks.length > 0) {
+      lastPlanTasks = r.data.tasks;
+      const firstId = r.data.tasks[0].id;
+      document.getElementById('task-id').value = firstId;
+      document.getElementById('replan-task-id').value = firstId;
+      document.getElementById('plan-task-hint').textContent =
+        `✓ ${r.data.tasks.length} tasks generated. First task ID auto-filled in Tasks & Replan tabs.`;
+    }
+  }
+
+  async function callDashboard() {
+    const r = await apiGet(`/dashboard/today?user_id=${USER_ID}`);
+    markCheck('dashboard', r.ok);
+  }
+
+  async function callTaskEvent() {
+    const taskId = document.getElementById('task-id').value.trim();
+    if (!taskId) { showResponse({ error: 'task_id is required' }, 400); return; }
+    const r = await apiPost('/tasks/event', {
+      user_id: USER_ID,
+      task_id: taskId,
+      status: document.getElementById('task-status').value,
+      notes: document.getElementById('task-notes').value || null,
+    });
+    markCheck('tasks', r.ok);
+  }
+
+  async function callReplan() {
+    let blocks;
+    try { blocks = JSON.parse(document.getElementById('replan-blocks').value); }
+    catch { showResponse({ error: 'Invalid JSON in blocks field' }, 400); return; }
+    const taskId = document.getElementById('replan-task-id').value.trim();
+    const useClaude = document.getElementById('replan-use-claude').value === 'true';
+    const personaId = document.getElementById('replan-persona').value;
+    const body = {
+      user_id: USER_ID,
+      commute_minutes: parseInt(document.getElementById('replan-commute').value) || 30,
+      trigger: document.getElementById('replan-trigger').value,
+      blocks,
+      use_claude: useClaude,
+    };
+    if (useClaude && personaId) body.persona_id = personaId;
+    if (taskId) {
+      body.task_event = {
+        user_id: USER_ID,
+        task_id: taskId,
+        status: document.getElementById('replan-task-status').value,
+      };
+    }
+    await apiPost('/plans/replan', body);
+  }
+
+  async function callWearables() {
+    const r = await apiPost('/wearables/import', {
+      user_id: USER_ID,
+      sleep_hrs: parseFloat(document.getElementById('wear-sleep-hrs').value) || 7,
+      sleep_start: document.getElementById('wear-sleep-start').value,
+      sleep_end: document.getElementById('wear-sleep-end').value,
+      restlessness: parseFloat(document.getElementById('wear-restlessness').value) || null,
+      resting_hr: parseFloat(document.getElementById('wear-hr').value) || null,
+    });
+    markCheck('wearables', r.ok);
+  }
+
+  async function callComparePlans() {
+    let blocks;
+    try { blocks = JSON.parse(document.getElementById('cmp-blocks').value); }
+    catch { showResponse({ error: 'Invalid JSON in blocks field' }, 400); return; }
+
+    const personaId = document.getElementById('cmp-persona').value;
+    const baseBody = {
+      user_id: USER_ID,
+      commute_minutes: parseInt(document.getElementById('cmp-commute').value) || 45,
+      plan_hours: parseInt(document.getElementById('cmp-hours').value) || 48,
+      blocks,
+    };
+    const claudeBody = personaId ? { ...baseBody, persona_id: personaId } : baseBody;
+
+    const btn = document.getElementById('cmp-btn');
+    const status = document.getElementById('cmp-status');
+    btn.disabled = true;
+    document.getElementById('cmp-grid').style.display = 'none';
+    document.getElementById('cmp-diff').style.display = 'none';
+    status.textContent = 'Running rule planner…';
+
+    // Run rule planner
+    let ruleResult = null, claudeResult = null;
+    try {
+      const res = await fetch(API_BASE + '/plans/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(baseBody),
+      });
+      ruleResult = { ok: res.ok, status: res.status, data: await res.json() };
+    } catch (e) { ruleResult = { ok: false, status: 0, data: { error: e.message } }; }
+
+    const personaLabel = personaId ? ` [persona: ${personaId}]` : '';
+    status.textContent = `Running Claude planner${personaLabel}… (may take 2–4s)`;
+
+    // Run Claude planner
+    try {
+      const res = await fetch(API_BASE + '/plans/generate-claude', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(claudeBody),
+      });
+      claudeResult = { ok: res.ok, status: res.status, data: await res.json() };
+    } catch (e) { claudeResult = { ok: false, status: 0, data: { error: e.message } }; }
+
+    btn.disabled = false;
+    status.textContent = 'Done';
+
+    // Show results
+    document.getElementById('cmp-grid').style.display = 'grid';
+
+    const ruleOut = document.getElementById('cmp-rule-out');
+    const claudeOut = document.getElementById('cmp-claude-out');
+    const ruleBadge = document.getElementById('cmp-rule-badge');
+    const claudeBadge = document.getElementById('cmp-claude-badge');
+
+    ruleBadge.innerHTML = `<span class="status-badge ${ruleResult.ok ? 'status-ok' : 'status-err'}">${ruleResult.status}</span>`;
+    claudeBadge.innerHTML = `<span class="status-badge ${claudeResult.ok ? 'status-ok' : 'status-err'}">${claudeResult.status}</span>`;
+    ruleOut.textContent = JSON.stringify(ruleResult.data, null, 2);
+    claudeOut.textContent = JSON.stringify(claudeResult.data, null, 2);
+
+    // Diff summary
+    if (ruleResult.ok && claudeResult.ok) {
+      const r = ruleResult.data, c = claudeResult.data;
+      const rTasks = r.tasks || [], cTasks = c.tasks || [];
+      const rStrain = r.risk_summary?.circadian_strain_score ?? '?';
+      const rMode = r.plan_mode, cMode = c.plan_mode;
+      const rAvoid = (r.avoid_list || []).length, cAvoid = (c.avoid_list || []).length;
+
+      const personaUsed = document.getElementById('cmp-persona').value;
+      const lines = [
+        `<b>Strain score:</b> ${rStrain}/100 (same input for both)`,
+        `<b>Persona:</b> ${personaUsed ? `<span style="color:#fbbf24">${personaUsed}</span> (injected into Claude only)` : 'none (generic)'}`,
+        `<b>Plan mode:</b> Rule = <span style="color:#67e8f9">${rMode}</span> | Claude = <span style="color:#c4b5fd">${cMode}</span>`,
+        `<b>Tasks generated:</b> Rule = ${rTasks.length} | Claude = ${cTasks.length}`,
+        `<b>Avoid list items:</b> Rule = ${rAvoid} | Claude = ${cAvoid}`,
+        `<b>Rule NBA:</b> "${r.next_best_action?.title}"`,
+        `<b>Claude NBA:</b> "${c.next_best_action?.title}"`,
+        `<b>Claude task titles:</b><br>${cTasks.map(t => `&nbsp;&nbsp;• [${t.category}] ${t.title}`).join('<br>')}`,
+      ];
+      document.getElementById('cmp-diff-content').innerHTML = lines.join('<br>');
+      document.getElementById('cmp-diff').style.display = 'block';
+    }
+
+    // Also update the main sidebar with the Claude response
+    showResponse(claudeResult.data, claudeResult.status);
+  }
+
+  async function callSandbox() {
+    let current, hypo;
+    try {
+      current = JSON.parse(document.getElementById('sandbox-current').value);
+      hypo = JSON.parse(document.getElementById('sandbox-hypo').value);
+    } catch { showResponse({ error: 'Invalid JSON in blocks fields' }, 400); return; }
+    const r = await apiPost('/simulate/shift-sandbox', {
+      current_blocks: current,
+      hypothetical_shifts: hypo,
+      commute_minutes: parseInt(document.getElementById('sandbox-commute').value) || 30,
+    });
+    markCheck('sandbox', r.ok);
+  }
+
+  async function callUsage() {
+    const r = await apiGet(`/plans/claude-usage?user_id=${USER_ID}`);
+    if (!r.ok || !r.data) return;
+    const d = r.data;
+    const g = d.global || {};
+    const u = d.user || {};
+    const rl = d.rate_limit || {};
+
+    document.getElementById('u-calls').textContent = g.total_calls ?? 0;
+    document.getElementById('u-tokens').textContent =
+      ((g.total_input_tokens || 0) + (g.total_output_tokens || 0)).toLocaleString();
+    document.getElementById('u-cost').textContent = '$' + (g.est_cost_usd ?? 0).toFixed(4);
+
+    // Rate limit bar
+    const used = rl.used ?? 0;
+    const limit = rl.limit ?? 10;
+    const pct = Math.round((used / limit) * 100);
+    const color = pct >= 90 ? '#f87171' : pct >= 60 ? '#fbbf24' : '#86efac';
+    document.getElementById('u-ratelimit').style.display = 'block';
+    document.getElementById('u-ratelimit-body').innerHTML = `
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span>Used: <b style="color:${color}">${used}/${limit}</b> calls this hour</span>
+        <span>Remaining: <b>${rl.remaining ?? limit}</b></span>
+      </div>
+      <div style="background:#1e293b;border-radius:4px;height:6px;">
+        <div style="background:${color};height:6px;border-radius:4px;width:${pct}%;transition:width 0.3s;"></div>
+      </div>
+      ${rl.reset_at ? `<div style="margin-top:4px;font-size:10px;color:#64748b;">Resets at ${new Date(rl.reset_at).toLocaleTimeString()}</div>` : ''}
+      <div style="margin-top:8px;font-size:11px;color:#64748b;">Your totals: ${u.calls||0} calls · ${(u.input_tokens||0)+(u.output_tokens||0)} tokens · $${(u.est_cost_usd||0).toFixed(4)}</div>
+    `;
+
+    // Recent calls table
+    const recent = d.recent_calls || [];
+    if (recent.length === 0) {
+      document.getElementById('u-recent').textContent = 'No Claude calls recorded yet.';
+    } else {
+      const rows = recent.map(c =>
+        `<tr>
+          <td style="padding:4px 8px;color:#94a3b8;">${new Date(c.timestamp).toLocaleTimeString()}</td>
+          <td style="padding:4px 8px;font-family:monospace;font-size:10px;">${c.user_id.slice(0,8)}…</td>
+          <td style="padding:4px 8px;color:#67e8f9;">${c.input_tokens}</td>
+          <td style="padding:4px 8px;color:#c4b5fd;">${c.output_tokens}</td>
+          <td style="padding:4px 8px;color:#86efac;">$${c.est_cost_usd.toFixed(4)}</td>
+        </tr>`
+      ).join('');
+      document.getElementById('u-recent').innerHTML = `
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="font-size:10px;color:#475569;text-transform:uppercase;">
+            <th style="padding:4px 8px;text-align:left;">Time</th>
+            <th style="padding:4px 8px;text-align:left;">User</th>
+            <th style="padding:4px 8px;text-align:left;">In tokens</th>
+            <th style="padding:4px 8px;text-align:left;">Out tokens</th>
+            <th style="padding:4px 8px;text-align:left;">Cost</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+  }
+
+  async function callPersonaList() {
+    const res = await fetch(API_BASE + '/personas/list');
+    showResponse(await res.json(), res.status);
+  }
+
+  async function callPersonaById() {
+    const id = document.getElementById('persona-id-select').value;
+    const res = await fetch(API_BASE + '/personas/' + id);
+    showResponse(await res.json(), res.status);
+  }
+
+  async function callRag() {
+    const query = encodeURIComponent(document.getElementById('rag-query').value);
+    const topk = document.getElementById('rag-topk').value || 3;
+    const r = await apiGet(`/rag/retrieve?query=${query}&top_k=${topk}`);
+    markCheck('rag', r.ok);
+  }
+
+  // ─── Checklist ───────────────────────────────────────────────────────────
+  function markCheck(id, ok) {
+    const el = document.getElementById('check-' + id);
+    if (!el) return;
+    el.className = ok ? 'done' : 'fail';
+  }
+
+  async function runAllChecks() {
+    // Health
+    let r = await apiGet('/health');
+    markCheck('health', r.ok);
+
+    // Sandbox (no DB)
+    r = await apiPost('/simulate/shift-sandbox', {
+      current_blocks: [{ block_type: 'night_shift', start_time: '2026-03-22T19:00:00', end_time: '2026-03-23T07:00:00' }],
+      hypothetical_shifts: [{ block_type: 'day_shift', start_time: '2026-03-23T09:00:00', end_time: '2026-03-23T17:00:00' }],
+      commute_minutes: 30,
+    });
+    markCheck('sandbox', r.ok);
+
+    // RAG (no DB)
+    r = await apiGet('/rag/retrieve?query=night+shift+sleep&top_k=3');
+    markCheck('rag', r.ok);
+
+    // DB-dependent checks
+    const blocks = [
+      { block_type: 'night_shift', start_time: '2026-03-22T19:00:00', end_time: '2026-03-23T07:00:00' },
+      { block_type: 'day_shift', start_time: '2026-03-23T09:00:00', end_time: '2026-03-23T17:00:00' },
+    ];
+
+    r = await apiPost('/schedule/import', { user_id: USER_ID, blocks, commute_minutes: 30 });
+    markCheck('schedule', r.ok);
+
+    r = await apiPost('/risks/compute', { user_id: USER_ID, blocks, commute_minutes: 45 });
+    markCheck('risks', r.ok);
+
+    r = await apiPost('/plans/generate', { user_id: USER_ID, blocks, commute_minutes: 45, plan_hours: 48 });
+    markCheck('plans', r.ok);
+    let taskId = null;
+    if (r.ok && r.data.tasks && r.data.tasks.length > 0) {
+      taskId = r.data.tasks[0].id;
+      lastPlanTasks = r.data.tasks;
+    }
+
+    // Claude planner check
+    r = await apiPost('/plans/generate-claude', { user_id: USER_ID, blocks, commute_minutes: 45, plan_hours: 48 });
+    markCheck('claude', r.ok);
+
+    r = await apiGet(`/dashboard/today?user_id=${USER_ID}`);
+    markCheck('dashboard', r.ok);
+
+    r = await apiPost('/wearables/import', {
+      user_id: USER_ID, sleep_hrs: 6.5,
+      sleep_start: '2026-03-22T23:00:00', sleep_end: '2026-03-23T05:30:00',
+      restlessness: 20, resting_hr: 62,
+    });
+    markCheck('wearables', r.ok);
+
+    if (taskId) {
+      r = await apiPost('/tasks/event', { user_id: USER_ID, task_id: taskId, status: 'completed' });
+      markCheck('tasks', r.ok);
+    } else {
+      markCheck('tasks', false);
+    }
+
+    showResponse({ message: 'All checks complete. See checklist for results.' }, 200);
+  }
+
+  // ─── Init ────────────────────────────────────────────────────────────────
+  saveState();
+  refreshUidDisplay();
+</script>
+</body>
+</html>

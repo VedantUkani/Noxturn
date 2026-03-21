@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.models.schemas import WearableImportRequest, WearableImportResponse
 from app.services.persistence import save_wearable
@@ -9,6 +9,9 @@ router = APIRouter(prefix="/wearables", tags=["Wearables"])
 
 @router.post("/import", response_model=WearableImportResponse)
 def import_wearable(payload: WearableImportRequest) -> WearableImportResponse:
+    if not payload.user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+
     # Basic scoring heuristic for MVP:
     # sleep contributes most, then restlessness and resting_hr fine-tuning.
     sleep_score = min(100.0, max(0.0, (payload.sleep_hrs / 8.0) * 100.0))
@@ -23,11 +26,8 @@ def import_wearable(payload: WearableImportRequest) -> WearableImportResponse:
         restlessness=payload.restlessness,
         resting_hr=payload.resting_hr,
         recovery_score=round(recovery, 1),
-        source="mock",
+        source="wearable_import",
     )
     set_latest_wearable(result)
-    try:
-        save_wearable(payload.user_id, result)
-    except Exception:
-        pass
+    save_wearable(payload.user_id, result)
     return result
