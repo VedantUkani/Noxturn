@@ -1,0 +1,87 @@
+{
+  "persona_id": "persona-nurse-001",
+  "name": "Sarah Chen",
+  "role": "ICU Nurse",
+  "timezone": "America/Phoenix",
+  "commute_minutes": 45,
+  "schedule": [
+    {
+      "id": "shift-1",
+      "block_type": "night_shift",
+      "title": "ICU Night Shift",
+      "start_time": "2026-03-23T19:00:00",
+      "end_time": "2026-03-24T07:00:00",
+      "commute_before_minutes": 45,
+      "commute_after_minutes": 45
+    },
+    {
+      "id": "shift-2",
+      "block_type": "night_shift",
+      "title": "ICU Night Shift",
+      "start_time": "2026-03-24T19:00:00",
+      "end_time": "2026-03-25T07:00:00",
+      "commute_before_minutes": 45,
+      "commute_after_minutes": 45
+    },
+    {
+      "id": "shift-3",
+      "block_type": "night_shift",
+      "title": "ICU Night Shift",
+      "start_time": "2026-03-25T19:00:00",
+      "end_time": "2026-03-26T07:00:00",
+      "commute_before_minutes": 45,
+      "commute_after_minutes": 45
+    },
+    {
+      "id": "shift-4",
+      "block_type": "day_shift",
+      "title": "ICU Day Shift (Rapid Flip)",
+      "start_time": "2026-03-26T15:00:00",
+      "end_time": "2026-03-26T23:00:00",
+      "commute_before_minutes": 45,
+      "commute_after_minutes": 45
+    }
+  ],
+  "obligations": [
+    {
+      "id": "obl-1",
+      "title": "School pickup",
+      "obligation_type": "childcare",
+      "start_time": "2026-03-26T15:00:00",
+      "end_time": "2026-03-26T16:00:00",
+      "priority": 10
+    }
+  ],
+  "wearable_summary": {
+    "sleep_hrs": 4.2,
+    "sleep_start": "2026-03-26T08:40:00",
+    "sleep_end": "2026-03-26T12:52:00",
+    "restlessness": 34.0,
+    "resting_hr": 72.0,
+    "source": "mock"
+  },
+  "precomputed_risk_episodes": [
+    {
+      "id": "risk-rapid-flip",
+      "label": "rapid_flip",
+      "severity": "critical",
+      "severity_score": 95.0,
+      "start_time": "2026-03-26T07:00:00",
+      "end_time": "2026-03-26T15:00:00",
+      "explanation": {
+        "message": "Rapid night-to-day flip with only 8h transition."
+      }
+    },
+    {
+      "id": "risk-low-recovery",
+      "label": "low_recovery",
+      "severity": "high",
+      "severity_score": 70.0,
+      "start_time": "2026-03-26T07:00:00",
+      "end_time": "2026-03-26T15:00:00",
+      "explanation": {
+        "message": "Very low recovery opportunity due to short sleep and daytime obligation."
+      }
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+[
+  {
+    "id": "card-001",
+    "name": "Post-night sleep protection",
+    "when_it_applies": "After a night shift ends, especially before a rapid flip.",
+    "when_not_to_use": "If there is an unavoidable critical obligation within 2 hours.",
+    "duration_min": 480,
+    "tone": "supportive",
+    "evidence_note": "NIOSH notes protected recovery sleep reduces fatigue accumulation."
+  },
+  {
+    "id": "card-002",
+    "name": "Strategic nap window",
+    "when_it_applies": "When sleep opportunity is short or before a high-risk commute.",
+    "when_not_to_use": "Within 3 hours of planned main sleep if not urgently needed.",
+    "duration_min": 25,
+    "tone": "practical",
+    "evidence_note": "Short naps improve alertness with limited sleep inertia."
+  },
+  {
+    "id": "card-003",
+    "name": "Caffeine cutoff",
+    "when_it_applies": "During shift to preserve later sleep quality.",
+    "when_not_to_use": "Within 6 hours before planned sleep.",
+    "duration_min": 5,
+    "tone": "firm",
+    "evidence_note": "Caffeine close to sleep reduces sleep depth and duration."
+  },
+  {
+    "id": "card-004",
+    "name": "Bright light after wake",
+    "when_it_applies": "Within 30 minutes of waking for alertness and phase support.",
+    "when_not_to_use": "Immediately after shift if planning to sleep soon.",
+    "duration_min": 20,
+    "tone": "energizing",
+    "evidence_note": "Timed bright light is a strong circadian cue."
+  },
+  {
+    "id": "card-005",
+    "name": "Dim light before sleep",
+    "when_it_applies": "Final hour before planned sleep after evening/night activity.",
+    "when_not_to_use": "If immediate safety tasks require full alertness.",
+    "duration_min": 60,
+    "tone": "calm",
+    "evidence_note": "Light reduction supports melatonin signaling and sleep onset."
+  },
+  {
+    "id": "card-006",
+    "name": "Decompression walk",
+    "when_it_applies": "After stressful shift before entering sleep routine.",
+    "when_not_to_use": "If very sleep deprived and unsafe outdoors alone.",
+    "duration_min": 15,
+    "tone": "grounding",
+    "evidence_note": "Brief decompression improves transition from work stress to recovery."
+  },
+  {
+    "id": "card-007",
+    "name": "Three-minute wind-down",
+    "when_it_applies": "When there is little time but stress is high.",
+    "when_not_to_use": "Not a replacement for core sleep blocks.",
+    "duration_min": 3,
+    "tone": "soothing",
+    "evidence_note": "Short breathing/relaxation lowers arousal and improves sleep readiness."
+  },
+  {
+    "id": "card-008",
+    "name": "Protect-this-block message",
+    "when_it_applies": "Before anchor sleep to reduce interruptions from family/team.",
+    "when_not_to_use": "If social support system is unavailable.",
+    "duration_min": 2,
+    "tone": "clear",
+    "evidence_note": "Pre-commitment and communication reduce sleep disruption."
+  },
+  {
+    "id": "card-009",
+    "name": "Buddy check-in",
+    "when_it_applies": "High strain days, post-night commute, or missed anchors.",
+    "when_not_to_use": "If user opts out of buddy sharing.",
+    "duration_min": 5,
+    "tone": "supportive",
+    "evidence_note": "Social support buffers stress and improves adherence."
+  },
+  {
+    "id": "card-010",
+    "name": "Unsafe drive-home alert",
+    "when_it_applies": "After night shift with long commute or severe sleep debt.",
+    "when_not_to_use": "When not driving and safe transport is already arranged.",
+    "duration_min": 10,
+    "tone": "urgent",
+    "evidence_note": "Post-night driving carries elevated drowsy driving risk."
+  },
+  {
+    "id": "card-011",
+    "name": "Anchor block recovery",
+    "when_it_applies": "When plan mode is Protect and anchors are at risk.",
+    "when_not_to_use": "If anchors already completed and risk is low.",
+    "duration_min": 90,
+    "tone": "protective",
+    "evidence_note": "Anchor sleep and recovery habits stabilize high-strain windows."
+  },
+  {
+    "id": "card-012",
+    "name": "Meal timing reset",
+    "when_it_applies": "Transitioning between nights and days with GI disruption.",
+    "when_not_to_use": "If fasting/medical constraints conflict.",
+    "duration_min": 20,
+    "tone": "practical",
+    "evidence_note": "Meal timing consistency supports circadian adaptation."
+  }
+]
