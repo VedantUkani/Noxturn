@@ -5,7 +5,7 @@ from uuid import uuid4
 from app.models.schemas import RiskEpisode, RiskLabel, ScheduleBlock, Severity
 
 
-def detect_rapid_flip(blocks: List[ScheduleBlock]) -> List[RiskEpisode]:
+def detect_rapid_flip(blocks: List[ScheduleBlock], rapid_flip_sensitivity: str = "normal") -> List[RiskEpisode]:
     episodes: List[RiskEpisode] = []
     ordered = sorted(blocks, key=lambda b: b.start_time)
 
@@ -29,12 +29,16 @@ def detect_rapid_flip(blocks: List[ScheduleBlock]) -> List[RiskEpisode]:
         else:
             severity, score = Severity.moderate, 50.0
 
+        # 4d: personalize severity score based on sensitivity setting
+        sensitivity_multiplier = {"high": 1.2, "normal": 1.0, "low": 0.8}.get(rapid_flip_sensitivity, 1.0)
+        adjusted_score = min(100.0, round(score * sensitivity_multiplier, 1))
+
         episodes.append(
             RiskEpisode(
                 id=uuid4(),
                 label=RiskLabel.rapid_flip,
                 severity=severity,
-                severity_score=score,
+                severity_score=adjusted_score,
                 start_time=current.end_time,
                 end_time=nxt.start_time,
                 explanation={"message": f"Rapid shift flip with only {round(gap_hours, 1)}h transition."},
@@ -81,7 +85,10 @@ def detect_short_turnaround(blocks: List[ScheduleBlock]) -> List[RiskEpisode]:
     return episodes
 
 
-def detect_low_recovery(blocks: List[ScheduleBlock]) -> List[RiskEpisode]:
+def detect_low_recovery(
+    blocks: List[ScheduleBlock],
+    sleep_minimum_hours: float = 7.0,
+) -> List[RiskEpisode]:
     episodes: List[RiskEpisode] = []
     ordered = sorted([b for b in blocks if b.block_type.value != "off_day"], key=lambda b: b.start_time)
 
@@ -89,8 +96,14 @@ def detect_low_recovery(blocks: List[ScheduleBlock]) -> List[RiskEpisode]:
         current = ordered[i]
         nxt = ordered[i + 1]
         total_gap_hours = (nxt.start_time - current.end_time).total_seconds() / 3600
-        available_sleep = total_gap_hours - 1.5  # personal baseline buffer
-        if available_sleep >= 7:
+
+        # 4b: commute-aware sleep buffer (replaces hardcoded 1.5h)
+        total_commute_min = (current.commute_after_minutes or 0) + (nxt.commute_before_minutes or 0)
+        sleep_buffer_hours = max(1.0, total_commute_min / 60 * 0.75)
+        available_sleep = total_gap_hours - sleep_buffer_hours
+
+        # 4d: respect personalized sleep minimum (default 7h)
+        if available_sleep >= sleep_minimum_hours:
             continue
 
         if available_sleep < 4:
@@ -109,7 +122,10 @@ def detect_low_recovery(blocks: List[ScheduleBlock]) -> List[RiskEpisode]:
                 start_time=current.end_time,
                 end_time=nxt.start_time,
                 explanation={"message": f"Only {round(available_sleep, 1)}h realistic sleep opportunity."},
-                contributing_features={"block_ids": [str(current.id), str(nxt.id)]},
+                contributing_features={
+                    "block_ids": [str(current.id), str(nxt.id)],
+                    "computed_sleep_buffer_hours": round(sleep_buffer_hours, 2),
+                },
                 suggested_interventions=["int_post_night_sleep_protection", "int_warm_shower_wind_down"],
             )
         )

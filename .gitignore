@@ -67,3 +67,20 @@ BACKEND_IMPLEMENTATION.md
 
 # Local test scripts and dev tools
 backend/run_full_test.py
+backend/run_test.py
+BACKEND_REPORT.md
+backend/test_ui.html
+backend/test_part*.py
+
+# Local data
+backend/data/
+backend/data/personas/
+backend/data/personas/nurse_icu.json
+backend/data/personas/nurse_icu.json
+
+BACKEND_REPORT.md
+BACKEND_IMPLEMENTATION.md
+BACKEND_FIXES_V2.md
+Backend_Report_V2.md
+BACKEND_FIXES.md
+

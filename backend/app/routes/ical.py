@@ -25,7 +25,13 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+import os
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+
+from app.middleware.auth import require_user
+
+ALL_DAY_START_HOUR = int(os.getenv("ALL_DAY_START_HOUR", "8"))  # 5d: configurable all-day event start
 
 from app.models.schemas import ScheduleBlock, ScheduleImportResponse
 from app.services.persistence import save_schedule_blocks
@@ -62,9 +68,9 @@ def _to_utc_datetime(dt_value) -> Optional[datetime]:
     if dt_value is None:
         return None
     dt = dt_value.dt
-    # All-day event → date object, not datetime
+    # All-day event → date object, not datetime; 5d: use ALL_DAY_START_HOUR from env
     if not isinstance(dt, datetime):
-        dt = datetime(dt.year, dt.month, dt.day, 8, 0, 0)
+        dt = datetime(dt.year, dt.month, dt.day, ALL_DAY_START_HOUR, 0, 0)
     # Strip timezone info for our schema (stored as naive ISO strings)
     if hasattr(dt, "tzinfo") and dt.tzinfo is not None:
         dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
@@ -144,9 +150,10 @@ def _parse_ical(content: bytes, commute_minutes: int) -> tuple[List[ScheduleBloc
 @router.post("/upload-ical", response_model=ScheduleImportResponse)
 async def upload_ical(
     file: UploadFile = File(...),
-    user_id: UUID = Form(...),
     commute_minutes: int = Form(30),
+    token_user_id: str = Depends(require_user),
 ) -> ScheduleImportResponse:
+    user_id = UUID(token_user_id)
     """
     Upload a schedule as an iCal (.ics) file.
 
@@ -169,6 +176,8 @@ async def upload_ical(
     content = await file.read()
     if not content:
         raise HTTPException(status_code=422, detail="Uploaded file is empty")
+    if len(content) > 5 * 1024 * 1024:  # 5 MB hard limit
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 5 MB.")
 
     blocks, warnings = _parse_ical(content, commute_minutes)
 

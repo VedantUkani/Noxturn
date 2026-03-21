@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.middleware.auth import require_user
 from app.models.schemas import ShiftSandboxRequest, ShiftSandboxResponse
 from app.risk_engine.engine import RiskEngine
 
@@ -8,7 +9,7 @@ engine = RiskEngine()
 
 
 @router.post("/shift-sandbox", response_model=ShiftSandboxResponse)
-def shift_sandbox(request: ShiftSandboxRequest) -> ShiftSandboxResponse:
+def shift_sandbox(request: ShiftSandboxRequest, _: str = Depends(require_user)) -> ShiftSandboxResponse:
     current = _normalize_commute(request.current_blocks, request.commute_minutes)
     original = engine.compute(current)
 

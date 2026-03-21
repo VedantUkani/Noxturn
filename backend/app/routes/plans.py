@@ -1,5 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from typing import Optional
+from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException
+
+from app.middleware.auth import require_user
 from app.models.schemas import (
     PlanGenerateRequest,
     PlanGenerateResponse,
@@ -11,6 +15,7 @@ from app.planner.claude_planner import ClaudePlanner
 from app.planner.rule_planner import RulePlanner
 from app.routes.personas import get_persona
 from app.risk_engine.engine import RiskEngine
+from app.services.db import get_supabase
 from app.services.persistence import save_plan
 from app.services.plan_state import get_active_plan, set_active_plan
 from app.services.rate_limiter import claude_limiter
@@ -27,10 +32,43 @@ except RuntimeError:
     claude_planner = None
 
 
+def _compute_plan_diff(old: Optional[PlanGenerateResponse], new: PlanGenerateResponse) -> list[str]:
+    """
+    3e: Compute a human-readable list of what changed between the old and new plan.
+    Returns ["New plan generated"] if no prior plan exists.
+    """
+    if not old:
+        return ["New plan generated"]
+
+    diff = []
+
+    # Mode change
+    if old.plan_mode != new.plan_mode:
+        diff.append(f"Mode changed: {old.plan_mode} \u2192 {new.plan_mode}")
+
+    # Category comparison
+    old_cats = {t.category.value for t in old.tasks}
+    new_cats = {t.category.value for t in new.tasks}
+    added = new_cats - old_cats
+    removed = old_cats - new_cats
+    if added:
+        diff.append(f"Added: {', '.join(sorted(added))}")
+    if removed:
+        diff.append(f"Removed: {', '.join(sorted(removed))}")
+
+    # Task count change
+    if len(old.tasks) != len(new.tasks):
+        diff.append(f"Task count: {len(old.tasks)} \u2192 {len(new.tasks)}")
+
+    if not diff:
+        diff.append("Plan regenerated with same structure")
+
+    return diff
+
+
 @router.post("/generate", response_model=PlanGenerateResponse)
-def generate_plan(request: PlanGenerateRequest) -> PlanGenerateResponse:
-    if not request.user_id:
-        raise HTTPException(status_code=400, detail="user_id is required")
+def generate_plan(request: PlanGenerateRequest, token_user_id: str = Depends(require_user)) -> PlanGenerateResponse:
+    request.user_id = UUID(token_user_id)
 
     normalized = []
     for b in request.blocks:
@@ -39,16 +77,17 @@ def generate_plan(request: PlanGenerateRequest) -> PlanGenerateResponse:
         normalized.append(b)
 
     risk_result = risk_engine.compute(normalized)
+    old_plan = get_active_plan(str(request.user_id))
     plan = planner.generate(risk_result, plan_hours=request.plan_hours)
-    set_active_plan(plan)
+    plan.plan_diff = _compute_plan_diff(old_plan, plan)
+    set_active_plan(str(request.user_id), plan)
     save_plan(request.user_id, plan)
     return plan
 
 
 @router.post("/generate-claude", response_model=PlanGenerateResponse)
-def generate_plan_claude(request: PlanGenerateRequest) -> PlanGenerateResponse:
-    if not request.user_id:
-        raise HTTPException(status_code=400, detail="user_id is required")
+def generate_plan_claude(request: PlanGenerateRequest, token_user_id: str = Depends(require_user)) -> PlanGenerateResponse:
+    request.user_id = UUID(token_user_id)
 
     # Rate limit: 10 Claude calls per user per hour
     claude_limiter.check(str(request.user_id))
@@ -61,25 +100,51 @@ def generate_plan_claude(request: PlanGenerateRequest) -> PlanGenerateResponse:
 
     risk_result = risk_engine.compute(normalized)
     persona = get_persona(request.persona_id) if request.persona_id else None
-    if claude_planner is None:
-        # No API key — fall back to rule planner silently
-        plan = planner.generate(risk_result)
-    else:
-        try:
-            plan = claude_planner.generate(
-                risk_result,
-                plan_hours=request.plan_hours,
-                user_id=str(request.user_id),
-                persona=persona,
-            )
-        except HTTPException:
-            raise
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Claude planner error: {str(e)}")
+    old_plan = get_active_plan(str(request.user_id))
+    try:
+        plan = claude_planner.generate(
+            risk_result,
+            plan_hours=request.plan_hours,
+            user_id=str(request.user_id),
+            persona=persona,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Claude planner error: {str(e)}")
 
-    set_active_plan(plan)
+    plan.plan_diff = _compute_plan_diff(old_plan, plan)
+    set_active_plan(str(request.user_id), plan)
     save_plan(request.user_id, plan)
     return plan
+
+
+@router.post("/activate-latest")
+def activate_latest_plan(user_id: UUID) -> dict:
+    """
+    Recovery endpoint: re-activates the most recent plan for a user.
+    Use when a broken state leaves the user with zero active plans
+    (e.g. plan insert failed after deactivate mid-flight).
+    """
+    uid = str(user_id)
+    db = get_supabase()
+    # First deactivate any stale active plans (safety)
+    try:
+        db.table("plans").update({"is_active": False}).eq("user_id", uid).eq("is_active", True).execute()
+    except Exception:
+        pass
+    # Re-activate the most recently created plan
+    result = (
+        db.table("plans")
+        .update({"is_active": True})
+        .eq("user_id", uid)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    if not result.data:
+        raise HTTPException(status_code=404, detail="No plans found for this user. Generate a plan first.")
+    return {"activated_plan_id": result.data[0]["id"], "detail": "Plan re-activated successfully."}
 
 
 @router.get("/claude-usage", tags=["Plans"])
@@ -94,9 +159,8 @@ def claude_usage(user_id: str = None):
 
 
 @router.post("/replan", response_model=ReplanResponse)
-def replan(request: ReplanRequest) -> ReplanResponse:
-    if not request.user_id:
-        raise HTTPException(status_code=400, detail="user_id is required")
+def replan(request: ReplanRequest, token_user_id: str = Depends(require_user)) -> ReplanResponse:
+    request.user_id = UUID(token_user_id)
 
     normalized = []
     for b in request.blocks:
@@ -129,7 +193,7 @@ def replan(request: ReplanRequest) -> ReplanResponse:
     else:
         new_plan = planner.generate(risk_result, plan_hours=24)
 
-    old_plan = get_active_plan()
+    old_plan = get_active_plan(str(request.user_id))
 
     if request.task_event:
         what_changed.append(
@@ -146,7 +210,10 @@ def replan(request: ReplanRequest) -> ReplanResponse:
             new_plan.next_best_action = planner._next_best_action(next_planned)
             what_changed.append("Preserved completed tasks and replaced next 1-3 upcoming actions.")
 
-    set_active_plan(new_plan)
+    new_plan.plan_diff = _compute_plan_diff(old_plan, new_plan)
+    if new_plan.plan_diff:
+        what_changed.extend(new_plan.plan_diff)
+    set_active_plan(str(request.user_id), new_plan)
     save_plan(request.user_id, new_plan)
     return ReplanResponse(
         updated_plan=new_plan,
