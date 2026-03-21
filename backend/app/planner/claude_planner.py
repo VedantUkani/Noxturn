@@ -27,12 +27,28 @@ Clinical priorities (in order):
 4. Bright light exposure after waking, dim light 1-2h before sleep
 5. Meal timing reset to anchor the circadian clock
 6. Movement and decompression to reduce cortisol after shifts
+7. Mindfulness or relaxation to lower HPA-axis load after high-strain shifts
+8. Buddy check-in when rapid schedule flips or unsafe-drive risk is detected
+9. Social grounding contact on first off-day after a high-strain cluster
 
 Plan mode rules:
 - protect: strain ≥ 75 — severe disruption, prioritize sleep above everything
 - recover: strain 50–74 — active recovery phase, anchor sleep + naps
 - stabilize: strain 25–49 — moderate risk, prevention-focused
 - perform: strain < 25 — low risk, maintain good habits
+
+Allowed task categories and when to use each:
+- sleep: main sleep block — use when rapid_flip or low_recovery risk present; always anchor_flag=true
+- nap: strategic nap — use when short_turnaround risk present; anchor_flag=true
+- light_timing: bright light on waking, dim light pre-sleep — use after any night-shift block
+- caffeine_cutoff: stop caffeine ≥6h before sleep — use whenever any risk episode is present
+- meal: fixed meal time as circadian anchor — include at least once per plan
+- relaxation: decompression 10–15 min post-shift — use when shift end detected in risk window
+- movement: 20-min light exercise in recovery window — include in every plan, optional_flag=true
+- mindfulness: 10-min breathing/meditation — use when strain ≥ 75 or after high-strain cluster
+- safety: do-not-drive / safe-transport task — use for unsafe_drive risk; anchor_flag=true
+- buddy_checkin: welfare check with colleague — use when rapid_flip or unsafe_drive risk present
+- social: brief positive social contact on first off-day — use when strain ≥ 50 and off-day follows cluster
 
 You MUST respond with ONLY valid JSON — no markdown, no explanation, no code fences. Just the raw JSON object.
 
@@ -41,7 +57,7 @@ Schema:
   "plan_mode": "protect|recover|stabilize|perform",
   "tasks": [
     {
-      "category": "sleep|nap|light_timing|caffeine_cutoff|meal|relaxation|movement|mindfulness|safety|buddy_checkin",
+      "category": "sleep|nap|light_timing|caffeine_cutoff|meal|relaxation|movement|mindfulness|safety|buddy_checkin|social",
       "title": "short action title (max 8 words)",
       "description": "1-2 actionable sentences the worker can immediately follow",
       "scheduled_time": "ISO 8601 datetime e.g. 2026-03-22T08:00:00",
@@ -62,12 +78,21 @@ Schema:
   }
 }
 
-Rules:
-- Generate exactly 3–6 tasks, no more
-- Only set anchor_flag=true for sleep, critical safety, or nap tasks
+MANDATORY COVERAGE RULE — your response MUST include at least one task from EACH of these groups:
+  Group A: sleep OR nap
+  Group B: light_timing OR caffeine_cutoff
+  Group C: mindfulness OR relaxation
+  Group D: movement
+
+If any risk episode is present you MUST also include: meal, buddy_checkin (for rapid_flip/unsafe_drive).
+Failure to cover all four groups is a hard error.
+
+Additional rules:
+- Generate 5–10 tasks to ensure full category coverage
+- Only set anchor_flag=true for sleep, nap, and safety tasks
 - All scheduled_times must be in the future relative to the context date provided
 - Be specific: reference actual shift end times, commute durations, and risk labels from the input
-- Avoid generic advice — every task must be directly traceable to a detected risk
+- Avoid generic advice — every task must be directly traceable to a detected risk or clinical priority
 - When evidence is provided, populate evidence_ref using the [N] citation format — do not invent citations"""
 
 
@@ -215,20 +240,46 @@ def _extract_json(text: str) -> dict:
     return json.loads(text)
 
 
+_KNOWN_CATEGORIES = {c.value for c in TaskCategory}
+
+def _best_effort_category(raw_value: str) -> TaskCategory:
+    """
+    3d: When Claude returns an unrecognised category string, try a substring
+    match against known category values before falling back to relaxation.
+    """
+    raw_lower = raw_value.lower()
+    for cat in TaskCategory:
+        if cat.value in raw_lower or raw_lower in cat.value:
+            print(f"[Claude] Unknown category '{raw_value}' — matched to '{cat.value}'")
+            return cat
+    print(f"[Claude] Unknown category '{raw_value}' — defaulted to relaxation")
+    return TaskCategory.relaxation
+
+
 def _parse_response(raw: dict, risk_result: RiskComputeResponse, evidence_refs: list = None) -> PlanGenerateResponse:
+    from datetime import timedelta
+    now = datetime.now(timezone.utc)
     tasks: List[PlanTask] = []
-    for idx, t in enumerate(raw.get("tasks", [])[:6]):
+    for idx, t in enumerate(raw.get("tasks", [])[:10]):
         try:
             category = TaskCategory(t["category"])
-        except ValueError:
-            category = TaskCategory.relaxation
+        except (ValueError, KeyError):
+            # 3d: smart fallback — try substring match before defaulting to relaxation
+            category = _best_effort_category(t.get("category", ""))
 
         try:
             scheduled_time = datetime.fromisoformat(t["scheduled_time"])
         except (KeyError, ValueError):
-            # Fallback: offset from now
-            from datetime import timedelta
-            scheduled_time = datetime.now(timezone.utc) + timedelta(hours=1 + idx)
+            scheduled_time = now + timedelta(hours=1 + idx)
+
+        # 3a: clamp past-dated tasks to the future
+        if scheduled_time.tzinfo is None:
+            cmp_now = datetime.now()
+        else:
+            cmp_now = now
+        if scheduled_time < cmp_now:
+            hours_behind = int((cmp_now - scheduled_time).total_seconds() / 3600) + 1
+            scheduled_time = scheduled_time + timedelta(hours=hours_behind)
 
         tasks.append(
             PlanTask(
@@ -333,5 +384,44 @@ class ClaudePlanner:
         )
 
         raw_text = message.content[0].text
-        raw = _extract_json(raw_text)
+
+        # 3c: retry once on JSON parse failure, then fall back to rule planner
+        try:
+            raw = _extract_json(raw_text)
+        except (json.JSONDecodeError, KeyError, ValueError):
+            print("[Claude] JSON parse failed, retrying...")
+            retry_messages = [
+                {"role": "user", "content": user_msg},
+                {"role": "assistant", "content": raw_text},
+                {
+                    "role": "user",
+                    "content": (
+                        "Your previous response was not valid JSON. "
+                        "Respond with ONLY the raw JSON object, no other text."
+                    ),
+                },
+            ]
+            retry_msg = self.client.messages.create(
+                model=self.model,
+                max_tokens=2500,
+                system=system_prompt,
+                messages=retry_messages,
+            )
+            track_tokens(
+                user_id=user_id,
+                input_tokens=retry_msg.usage.input_tokens,
+                output_tokens=retry_msg.usage.output_tokens,
+                model=self.model,
+            )
+            retry_text = retry_msg.content[0].text
+            try:
+                raw = _extract_json(retry_text)
+            except (json.JSONDecodeError, KeyError, ValueError):
+                # Both attempts failed — fall back to rule planner
+                print("[Claude] Retry also failed — falling back to rule planner")
+                from app.planner.rule_planner import RulePlanner
+                fallback_plan = RulePlanner().generate(risk_result, plan_hours=plan_hours)
+                fallback_plan.risk_summary["generated_by"] = "rule_planner_fallback"
+                return fallback_plan
+
         return _parse_response(raw, risk_result, evidence_refs)

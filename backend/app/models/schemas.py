@@ -70,6 +70,7 @@ class RiskEpisode(BaseModel):
     explanation: Dict
     contributing_features: Optional[Dict] = None
     suggested_interventions: List[str] = []
+    cluster_flag: bool = False  # 4a: True if part of a ≥3-episode cluster in 7 days
 
 
 class PlanTask(BaseModel):
@@ -89,9 +90,10 @@ class PlanTask(BaseModel):
 
 class ScheduleImportRequest(BaseModel):
     user_id: Optional[UUID] = None
-    raw_text: Optional[str] = None
+    raw_text: Optional[str] = Field(None, max_length=50_000)  # 8b: input length limit
     blocks: Optional[List[ScheduleBlock]] = None
     commute_minutes: int = 30
+    merge_mode: str = Field("replace", pattern="^(replace|merge)$")  # 8c: replace or merge existing blocks
 
 
 class ScheduleImportResponse(BaseModel):
@@ -100,12 +102,14 @@ class ScheduleImportResponse(BaseModel):
     parse_confidence: float = 1.0
     replan_recommended: bool = False
     change_summary: List[str] = []
+    updated_plan: Optional["PlanGenerateResponse"] = None
 
 
 class RiskComputeRequest(BaseModel):
     user_id: Optional[UUID] = None
     blocks: List[ScheduleBlock]
     commute_minutes: int = 30
+    risk_profile: Optional[Dict] = None  # 4d: personalization — sleep_minimum_hours, rapid_flip_sensitivity
 
 
 class RiskComputeResponse(BaseModel):
@@ -138,6 +142,7 @@ class PlanGenerateResponse(BaseModel):
     avoid_list: List[str]
     next_best_action: NextBestAction
     evidence_refs: List[Dict] = []
+    plan_diff: Optional[List[str]] = None  # 3e: what changed vs previous plan
 
 
 class TaskEventType(str, Enum):
@@ -150,7 +155,7 @@ class TaskEventCreate(BaseModel):
     user_id: Optional[UUID] = None
     task_id: UUID
     status: TaskEventType
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(None, max_length=2_000)  # 8b: input length limit
 
 
 class TaskEventResponse(BaseModel):
@@ -159,6 +164,7 @@ class TaskEventResponse(BaseModel):
     new_status: TaskStatus
     trigger_replan: bool
     message: str
+    updated_plan: Optional["PlanGenerateResponse"] = None
 
 
 class ReplanRequest(BaseModel):
@@ -204,6 +210,34 @@ class DashboardTodayResponse(BaseModel):
     anchor_tasks: List[PlanTask]
     recovery_rhythm_label: str
     recovery_score: Optional[float] = None
+    data_source: str = "memory"  # 7b: "memory" | "db_fallback"
+
+
+class StreakResponse(BaseModel):
+    user_id: str
+    current_streak: int          # consecutive days with ≥1 anchor completed
+    longest_streak: int          # all-time longest
+    last_completed_date: Optional[str] = None  # ISO date string
+
+
+class WeeklySummaryResponse(BaseModel):
+    user_id: str
+    week_start: str              # ISO date of Monday
+    tasks_completed: int
+    tasks_skipped: int
+    tasks_expired: int
+    protected_blocks_held: int   # anchor tasks completed
+    recovery_rhythm_trend: str   # "improving" | "steady" | "declining" | "insufficient_data"
+    anomaly_flag: Optional[str] = None  # 6d: "sharp_drop" | "zero_anchors" | "streak_broken" | None
+
+
+class RecoveryConsistencyResponse(BaseModel):
+    user_id: str
+    period_days: int             # always 7
+    anchors_total: int
+    anchors_completed: int
+    consistency_pct: float       # 0-100
+    label: str                   # "strong" | "moderate" | "low" | "none"
 
 
 class ShiftSandboxRequest(BaseModel):
@@ -221,3 +255,24 @@ class ShiftSandboxResponse(BaseModel):
     recovery_bottleneck: Dict
     verdict: str
     explanation: str
+
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+
+class AuthRegisterRequest(BaseModel):
+    email: str
+    name: str
+    role: Optional[str] = "nurse"
+    commute_minutes: Optional[int] = 45
+    timezone: Optional[str] = "UTC"
+
+
+class AuthLoginRequest(BaseModel):
+    email: str
+
+
+class AuthTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: str
+    expires_in_days: int = 7
