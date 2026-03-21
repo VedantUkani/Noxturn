@@ -26,7 +26,9 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+
+from app.middleware.auth import require_user
 
 from app.models.schemas import ScheduleBlock, ScheduleImportResponse
 from app.services.persistence import save_schedule_blocks
@@ -235,9 +237,10 @@ def _parse_excel(content: bytes, commute_minutes: int) -> tuple[List[ScheduleBlo
 @router.post("/upload", response_model=ScheduleImportResponse)
 async def upload_schedule(
     file: UploadFile = File(...),
-    user_id: UUID = Form(...),
     commute_minutes: int = Form(30),
+    token_user_id: str = Depends(require_user),
 ) -> ScheduleImportResponse:
+    user_id = UUID(token_user_id)
     """
     Upload a schedule as an Excel (.xlsx) or CSV (.csv) file.
 
@@ -260,6 +263,8 @@ async def upload_schedule(
     content = await file.read()
     if not content:
         raise HTTPException(status_code=422, detail="Uploaded file is empty")
+    if len(content) > 10 * 1024 * 1024:  # 10 MB hard limit
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 10 MB.")
 
     if filename.endswith(".csv"):
         blocks, warnings = _parse_csv(content, commute_minutes)

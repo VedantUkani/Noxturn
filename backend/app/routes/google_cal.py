@@ -24,17 +24,29 @@ Block type inference: same keyword mapping as iCal route (night/day/eve/off/tran
 
 import json
 import os
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, HTTPException, Query
+_STATE_TTL_SECONDS = 600  # 5a: 10-minute OAuth state expiry
+ALL_DAY_START_HOUR = int(os.getenv("ALL_DAY_START_HOUR", "8"))  # 5d: configurable all-day start
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
 
+from app.middleware.auth import require_user
+
 from app.models.schemas import ScheduleBlock, ScheduleImportResponse
+from app.planner.rule_planner import RulePlanner
+from app.risk_engine.engine import RiskEngine
 from app.routes.ical import _infer_block_type   # reuse same keyword logic
-from app.services.persistence import save_schedule_blocks
+from app.services.persistence import save_plan, save_schedule_blocks
+from app.services.plan_state import set_active_plan
 from app.services.schedule_change_detector import detect_changes
+
+_risk_engine = RiskEngine()
+_rule_planner = RulePlanner()
 
 router = APIRouter(prefix="/schedule", tags=["Schedule"])
 
@@ -61,20 +73,37 @@ def _get_credentials() -> tuple[str, str, str]:
     return client_id, client_secret, redirect_uri
 
 
+def _purge_expired_states() -> None:
+    """5a: Remove state tokens older than STATE_TTL_SECONDS to prevent unbounded growth."""
+    now = time.time()
+    expired = [k for k, v in list(_pending_states.items()) if now - v.get("created_at", now) > _STATE_TTL_SECONDS]
+    for k in expired:
+        _pending_states.pop(k, None)
+
+
 def _to_datetime(value: str) -> Optional[datetime]:
-    """Parse Google Calendar event start/end (dateTime or date)."""
+    """
+    Parse Google Calendar event start/end (dateTime or all-day date string).
+    Google returns either:
+      - dateTime: "2026-03-22T19:00:00+05:30"  (RFC 3339 with offset)
+      - date:     "2026-03-22"                  (all-day event, uses ALL_DAY_START_HOUR)
+    """
     if not value:
         return None
-    # dateTime format: 2026-03-22T19:00:00+05:30
-    for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"):
+    # All-day event (date only) — 5d: use env-configurable ALL_DAY_START_HOUR
+    if len(value) == 10:
         try:
-            dt = datetime.strptime(value[:len(fmt) + 6], fmt)
-            if hasattr(dt, "tzinfo") and dt.tzinfo:
-                dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
-            return dt
+            return datetime.strptime(value, "%Y-%m-%d").replace(hour=ALL_DAY_START_HOUR)
         except ValueError:
-            continue
-    return None
+            return None
+    # dateTime — use fromisoformat which handles offsets correctly in Python 3.7+
+    try:
+        dt = datetime.fromisoformat(value)
+        if dt.tzinfo is not None:
+            dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+        return dt
+    except ValueError:
+        return None
 
 
 def _event_to_block(event: dict, commute_minutes: int) -> Optional[ScheduleBlock]:
@@ -109,15 +138,20 @@ def _event_to_block(event: dict, commute_minutes: int) -> Optional[ScheduleBlock
 
 @router.get("/google/auth")
 def google_auth(
-    user_id: UUID = Query(..., description="Your Noxturn user ID"),
     commute_minutes: int = Query(30),
     days_ahead: int = Query(14, description="How many days of calendar to fetch"),
+    calendar_id: str = Query("primary", description="5e: Google Calendar ID to import from"),  # 5e
+    token_user_id: str = Depends(require_user),
 ):
     """
     Step 1: Returns a Google OAuth2 authorization URL.
     Direct the user to open this URL in their browser.
     After granting access, Google will redirect to /schedule/google/callback automatically.
     """
+    user_id = UUID(token_user_id)
+    # 5a: purge expired states before adding new one
+    _purge_expired_states()
+
     from google_auth_oauthlib.flow import Flow
 
     client_id, client_secret, redirect_uri = _get_credentials()
@@ -143,6 +177,8 @@ def google_auth(
         "user_id": str(user_id),
         "commute_minutes": commute_minutes,
         "days_ahead": days_ahead,
+        "calendar_id": calendar_id,  # 5e
+        "created_at": time.time(),   # 5a: timestamp for expiry
     }
 
     auth_url, _ = flow.authorization_url(
@@ -180,6 +216,12 @@ def google_callback(
             status_code=400,
             detail="Invalid or expired state token. Restart the auth flow via /schedule/google/auth.",
         )
+    # 5a: check state token age
+    if time.time() - ctx.get("created_at", 0) > _STATE_TTL_SECONDS:
+        raise HTTPException(
+            status_code=400,
+            detail="Auth session expired. Restart the flow via /schedule/google/auth.",
+        )
 
     from google_auth_oauthlib.flow import Flow
     from googleapiclient.discovery import build
@@ -202,8 +244,10 @@ def google_callback(
     )
 
     try:
-        import os
-        os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"   # allow http for local dev
+        # Allow http only when OAUTHLIB_INSECURE_TRANSPORT=1 is explicitly set in .env
+        # (local dev only — never set this in production)
+        if os.getenv("OAUTHLIB_INSECURE_TRANSPORT") == "1":
+            os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
         flow.fetch_token(code=code)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Token exchange failed: {e}")
@@ -212,22 +256,41 @@ def google_callback(
     user_id = UUID(ctx["user_id"])
     commute_minutes = ctx["commute_minutes"]
     days_ahead = ctx.get("days_ahead", 14)
+    calendar_id = ctx.get("calendar_id", "primary")  # 5e
 
-    # Fetch calendar events
+    # Fetch calendar events with token refresh on 401 (5b)
     try:
         service = build("calendar", "v3", credentials=credentials)
         now = datetime.now(timezone.utc)
         time_max = now + timedelta(days=days_ahead)
 
-        events_result = service.events().list(
-            calendarId="primary",
-            timeMin=now.isoformat(),
-            timeMax=time_max.isoformat(),
-            maxResults=100,
-            singleEvents=True,
-            orderBy="startTime",
-        ).execute()
+        def _fetch_events():
+            return service.events().list(
+                calendarId=calendar_id,
+                timeMin=now.isoformat(),
+                timeMax=time_max.isoformat(),
+                maxResults=100,
+                singleEvents=True,
+                orderBy="startTime",
+            ).execute()
+
+        try:
+            events_result = _fetch_events()
+        except Exception as fetch_err:
+            # 5b: attempt token refresh if first call fails (handles expired access token)
+            try:
+                from google.auth.transport.requests import Request
+                credentials.refresh(Request())
+                service = build("calendar", "v3", credentials=credentials)
+                events_result = _fetch_events()
+            except Exception:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Calendar access expired. Please re-authorise via /schedule/google/auth.",
+                )
         events = events_result.get("items", [])
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Failed to fetch Google Calendar events: {e}")
 
@@ -258,6 +321,17 @@ def google_callback(
     report = detect_changes(user_id, blocks)
     save_schedule_blocks(user_id, blocks)
 
+    # Proactive replan if the schedule changed significantly
+    updated_plan = None
+    if report.replan_recommended:
+        try:
+            risk_result = _risk_engine.compute(blocks)
+            updated_plan = _rule_planner.generate(risk_result, plan_hours=24)
+            set_active_plan(str(user_id), updated_plan)
+            save_plan(user_id, updated_plan)
+        except Exception:
+            pass  # replan failure must not block the import response
+
     confidence = 1.0
     if guessed_count > 0:
         confidence = round(1.0 - (guessed_count / len(blocks)) * 0.4, 2)
@@ -270,6 +344,7 @@ def google_callback(
         parse_confidence=confidence,
         replan_recommended=report.replan_recommended,
         change_summary=report.changes,
+        updated_plan=updated_plan,
     )
 
 
@@ -286,5 +361,40 @@ def google_status():
         "client_id_set": bool(client_id),
         "client_secret_set": bool(client_secret),
         "redirect_uri": redirect_uri,
-        "setup_guide": "https://console.cloud.google.com → APIs & Services → Credentials → OAuth 2.0 Client ID",
+        "setup_guide": "https://console.cloud.google.com - APIs & Services - Credentials - OAuth 2.0 Client ID",
     }
+
+
+# ── 5e: List user's calendars ─────────────────────────────────────────────────
+
+@router.get("/google/calendars")
+def list_google_calendars(token_user_id: str = Depends(require_user)):
+    """
+    5e: List all Google calendars accessible with the user's current credentials.
+    Requires a pending (non-expired) state token — call /google/auth first.
+    Returns calendar IDs and names so the frontend can let users choose which
+    calendar to import from.
+    """
+    # Find the most recent non-expired state for this user
+    uid = str(UUID(token_user_id))
+    now_t = time.time()
+    ctx = next(
+        (v for v in _pending_states.values() if v.get("user_id") == uid and now_t - v.get("created_at", 0) <= _STATE_TTL_SECONDS),
+        None,
+    )
+    if not ctx or "credentials" not in ctx:
+        raise HTTPException(
+            status_code=400,
+            detail="No active calendar session. Call GET /schedule/google/auth first to start the OAuth flow.",
+        )
+    try:
+        from googleapiclient.discovery import build
+        service = build("calendar", "v3", credentials=ctx["credentials"])
+        cal_list = service.calendarList().list().execute()
+        calendars = [
+            {"id": c["id"], "name": c.get("summary", c["id"]), "primary": c.get("primary", False)}
+            for c in cal_list.get("items", [])
+        ]
+        return {"calendars": calendars}
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to list calendars: {e}")

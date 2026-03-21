@@ -2,8 +2,9 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.middleware.auth import require_user
 from app.models.schemas import DashboardTodayResponse, PlanTask, TaskCategory, TaskStatus
 from app.services.db import get_supabase
 from app.services.plan_state import get_active_plan
@@ -13,11 +14,12 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 
 @router.get("/today", response_model=DashboardTodayResponse)
-def get_today_dashboard(user_id: Optional[UUID] = None) -> DashboardTodayResponse:
-    plan = get_active_plan()
+def get_today_dashboard(token_user_id: str = Depends(require_user)) -> DashboardTodayResponse:
+    user_id = UUID(token_user_id)
+    plan = get_active_plan(token_user_id)
 
     # ── DB fallback: server restarted, rebuild from Supabase ─────────────────
-    if not plan and user_id:
+    if not plan:
         try:
             db = get_supabase()
             uid = str(user_id)
@@ -71,6 +73,7 @@ def get_today_dashboard(user_id: Optional[UUID] = None) -> DashboardTodayRespons
                 anchor_tasks=anchor_tasks,
                 recovery_rhythm_label=_recovery_label(recovery_score),
                 recovery_score=recovery_score,
+                data_source="db_fallback",  # 7b
             )
         except HTTPException:
             raise
@@ -81,7 +84,7 @@ def get_today_dashboard(user_id: Optional[UUID] = None) -> DashboardTodayRespons
         raise HTTPException(status_code=404, detail="No active plan found. Generate a plan first.")
 
     # ── Happy path: plan is in memory ────────────────────────────────────────
-    wearable = get_latest_wearable()
+    wearable = get_latest_wearable(token_user_id)
     recovery_score = wearable.recovery_score if wearable else None
     anchors = [t for t in plan.tasks if t.anchor_flag]
 
