@@ -58,3 +58,7 @@ chroma_db/
 # Logs
 logs/
 *.log
+
+# Local docs (do not commit)
+Noxturn_implementation_guide.md
+shared_contract.md
