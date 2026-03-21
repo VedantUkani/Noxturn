@@ -4,6 +4,7 @@ import {
   IconArrowRight, IconChevronRight,
 } from "@/components/icons";
 import { AccessibilityButton } from "@/components/ui/AccessibilityButton";
+import { NavAuthButtons } from "@/components/ui/NavAuthButtons";
 
 const FEATURES = [
   {
@@ -75,12 +76,7 @@ export default function HomePage() {
         </nav>
         <div className="flex items-center gap-2">
           <AccessibilityButton />
-          <Link
-            href="/onboard"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors"
-          >
-            Get started <IconArrowRight size={13} />
-          </Link>
+          <NavAuthButtons />
         </div>
       </header>
 

@@ -24,7 +24,12 @@ from app.services.token_tracker import get_global_usage, get_recent_calls, get_u
 router = APIRouter(prefix="/plans", tags=["Plans"])
 risk_engine = RiskEngine()
 planner = RulePlanner()
-claude_planner = ClaudePlanner()
+
+# Only instantiate ClaudePlanner if the key is present — fall back to rule planner otherwise
+try:
+    claude_planner = ClaudePlanner()
+except RuntimeError:
+    claude_planner = None
 
 
 def _compute_plan_diff(old: Optional[PlanGenerateResponse], new: PlanGenerateResponse) -> list[str]:
@@ -167,7 +172,7 @@ def replan(request: ReplanRequest, token_user_id: str = Depends(require_user)) -
     what_changed = []
     used_claude = False
 
-    if request.use_claude:
+    if request.use_claude and claude_planner is not None:
         claude_limiter.check(str(request.user_id))
         persona = get_persona(request.persona_id) if request.persona_id else None
         try:
@@ -201,7 +206,7 @@ def replan(request: ReplanRequest, token_user_id: str = Depends(require_user)) -
         if completed:
             new_plan.tasks = completed + new_plan.tasks[:3]
             next_planned = [t for t in new_plan.tasks if t.status == TaskStatus.planned]
-            nba_fn = claude_planner._parse_response if used_claude else None
+            nba_fn = (claude_planner._parse_response if (used_claude and claude_planner) else None)
             new_plan.next_best_action = planner._next_best_action(next_planned)
             what_changed.append("Preserved completed tasks and replaced next 1-3 upcoming actions.")
 
