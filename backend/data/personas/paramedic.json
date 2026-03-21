@@ -1,0 +1,29 @@
+{
+  "id": "paramedic",
+  "name": "Paramedic / EMT",
+  "role": "paramedic",
+  "shift_pattern": "24_on_48_off",
+  "typical_shift_hours": 24,
+  "typical_commute_minutes": 20,
+  "risk_profile": {
+    "rapid_flip_sensitivity": "high",
+    "sleep_minimum_hours": 6,
+    "nap_tolerance": "excellent",
+    "consecutive_nights_max": 2
+  },
+  "plan_tone": "direct_practical",
+  "clinical_context": "Works 24-on/48-off or 12h rotating shifts with frequent interrupted sleep during on-call periods. Physical demands of patient lifting combined with high-stakes decision-making under sleep deprivation create compounded fatigue risk. In-station naps during quiet periods are normal and should be protected.",
+  "priority_interventions": [
+    "strategic_nap",
+    "caffeine_cutoff",
+    "post_night_sleep_protection",
+    "unsafe_drive_alert",
+    "meal_timing"
+  ],
+  "avoid_patterns": [
+    "Skipping in-station nap opportunities during 24h shifts",
+    "Caffeine within 5 hours of off-duty sleep window",
+    "Driving home after a 24h shift without a nap or handoff"
+  ],
+  "recovery_notes": "The 48h off period after a 24h shift is a full recovery window — the first 24h should be treated as protected sleep/recovery. Social obligations in this window should be deferred. Strategic use of in-station naps (10-20 min) during slow periods significantly reduces overall fatigue accumulation."
+}

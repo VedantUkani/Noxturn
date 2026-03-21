@@ -98,6 +98,8 @@ class ScheduleImportResponse(BaseModel):
     blocks: List[ScheduleBlock]
     warnings: List[str] = []
     parse_confidence: float = 1.0
+    replan_recommended: bool = False
+    change_summary: List[str] = []
 
 
 class RiskComputeRequest(BaseModel):
@@ -117,6 +119,7 @@ class PlanGenerateRequest(BaseModel):
     blocks: List[ScheduleBlock]
     commute_minutes: int = 30
     plan_hours: int = 48
+    persona_id: Optional[str] = None
 
 
 class NextBestAction(BaseModel):
@@ -144,6 +147,7 @@ class TaskEventType(str, Enum):
 
 
 class TaskEventCreate(BaseModel):
+    user_id: Optional[UUID] = None
     task_id: UUID
     status: TaskEventType
     notes: Optional[str] = None
@@ -163,6 +167,8 @@ class ReplanRequest(BaseModel):
     commute_minutes: int = 30
     trigger: str = "task_event"
     task_event: Optional[TaskEventCreate] = None
+    use_claude: bool = False
+    persona_id: Optional[str] = None
 
 
 class ReplanResponse(BaseModel):
@@ -188,7 +194,7 @@ class WearableImportResponse(BaseModel):
     restlessness: Optional[float] = None
     resting_hr: Optional[float] = None
     recovery_score: float = Field(ge=0, le=100)
-    source: str = "mock"
+    source: str = "wearable_import"
 
 
 class DashboardTodayResponse(BaseModel):

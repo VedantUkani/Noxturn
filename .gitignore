@@ -58,3 +58,12 @@ chroma_db/
 # Logs
 logs/
 *.log
+
+# Local docs (do not commit)
+Noxturn_implementation_guide.md
+shared_contract.md
+BACKEND_REPORT.md
+BACKEND_IMPLEMENTATION.md
+
+# Local test scripts and dev tools
+backend/run_full_test.py

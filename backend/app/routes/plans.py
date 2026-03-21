@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.models.schemas import (
     PlanGenerateRequest,
@@ -7,18 +7,26 @@ from app.models.schemas import (
     ReplanResponse,
     TaskStatus,
 )
+from app.planner.claude_planner import ClaudePlanner
 from app.planner.rule_planner import RulePlanner
+from app.routes.personas import get_persona
 from app.risk_engine.engine import RiskEngine
 from app.services.persistence import save_plan
 from app.services.plan_state import get_active_plan, set_active_plan
+from app.services.rate_limiter import claude_limiter
+from app.services.token_tracker import get_global_usage, get_recent_calls, get_user_usage
 
 router = APIRouter(prefix="/plans", tags=["Plans"])
 risk_engine = RiskEngine()
 planner = RulePlanner()
+claude_planner = ClaudePlanner()
 
 
 @router.post("/generate", response_model=PlanGenerateResponse)
 def generate_plan(request: PlanGenerateRequest) -> PlanGenerateResponse:
+    if not request.user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+
     normalized = []
     for b in request.blocks:
         b.commute_before_minutes = b.commute_before_minutes or request.commute_minutes
@@ -28,15 +36,18 @@ def generate_plan(request: PlanGenerateRequest) -> PlanGenerateResponse:
     risk_result = risk_engine.compute(normalized)
     plan = planner.generate(risk_result, plan_hours=request.plan_hours)
     set_active_plan(plan)
-    try:
-        save_plan(request.user_id, plan)
-    except Exception:
-        pass
+    save_plan(request.user_id, plan)
     return plan
 
 
-@router.post("/replan", response_model=ReplanResponse)
-def replan(request: ReplanRequest) -> ReplanResponse:
+@router.post("/generate-claude", response_model=PlanGenerateResponse)
+def generate_plan_claude(request: PlanGenerateRequest) -> PlanGenerateResponse:
+    if not request.user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+
+    # Rate limit: 10 Claude calls per user per hour
+    claude_limiter.check(str(request.user_id))
+
     normalized = []
     for b in request.blocks:
         b.commute_before_minutes = b.commute_before_minutes or request.commute_minutes
@@ -44,31 +55,90 @@ def replan(request: ReplanRequest) -> ReplanResponse:
         normalized.append(b)
 
     risk_result = risk_engine.compute(normalized)
-    new_plan = planner.generate(risk_result, plan_hours=24)
-    old_plan = get_active_plan()
+    persona = get_persona(request.persona_id) if request.persona_id else None
+    try:
+        plan = claude_planner.generate(
+            risk_result,
+            plan_hours=request.plan_hours,
+            user_id=str(request.user_id),
+            persona=persona,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Claude planner error: {str(e)}")
+
+    set_active_plan(plan)
+    save_plan(request.user_id, plan)
+    return plan
+
+
+@router.get("/claude-usage", tags=["Plans"])
+def claude_usage(user_id: str = None):
+    """Check Claude API token usage and estimated cost."""
+    return {
+        "global": get_global_usage(),
+        "user": get_user_usage(user_id) if user_id else None,
+        "rate_limit": claude_limiter.status(user_id) if user_id else None,
+        "recent_calls": get_recent_calls(limit=10),
+    }
+
+
+@router.post("/replan", response_model=ReplanResponse)
+def replan(request: ReplanRequest) -> ReplanResponse:
+    if not request.user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+
+    normalized = []
+    for b in request.blocks:
+        b.commute_before_minutes = b.commute_before_minutes or request.commute_minutes
+        b.commute_after_minutes = b.commute_after_minutes or request.commute_minutes
+        normalized.append(b)
+
+    risk_result = risk_engine.compute(normalized)
     what_changed = []
+    used_claude = False
+
+    if request.use_claude:
+        claude_limiter.check(str(request.user_id))
+        persona = get_persona(request.persona_id) if request.persona_id else None
+        try:
+            new_plan = claude_planner.generate(
+                risk_result,
+                plan_hours=24,
+                user_id=str(request.user_id),
+                persona=persona,
+            )
+            used_claude = True
+            what_changed.append("Claude AI generated the updated near-term actions.")
+        except HTTPException:
+            raise
+        except Exception:
+            # Fall back to rule planner silently
+            new_plan = planner.generate(risk_result, plan_hours=24)
+            what_changed.append("Fell back to rule planner (Claude unavailable).")
+    else:
+        new_plan = planner.generate(risk_result, plan_hours=24)
+
+    old_plan = get_active_plan()
 
     if request.task_event:
         what_changed.append(
             f"Replan triggered by task event: {request.task_event.status.value} on {request.task_event.task_id}"
         )
 
-    # Keep completed tasks from previous plan so we only update next actions.
+    # Preserve completed tasks — only replace next 1-3 upcoming actions
     if old_plan:
         completed = [t for t in old_plan.tasks if t.status == TaskStatus.completed]
         if completed:
-            cutoff = 3
-            new_plan.tasks = completed + new_plan.tasks[:cutoff]
-            new_plan.next_best_action = planner._next_best_action(
-                [t for t in new_plan.tasks if t.status == TaskStatus.planned]
-            )
+            new_plan.tasks = completed + new_plan.tasks[:3]
+            next_planned = [t for t in new_plan.tasks if t.status == TaskStatus.planned]
+            nba_fn = claude_planner._parse_response if used_claude else None
+            new_plan.next_best_action = planner._next_best_action(next_planned)
             what_changed.append("Preserved completed tasks and replaced next 1-3 upcoming actions.")
 
     set_active_plan(new_plan)
-    try:
-        save_plan(request.user_id, new_plan)
-    except Exception:
-        pass
+    save_plan(request.user_id, new_plan)
     return ReplanResponse(
         updated_plan=new_plan,
         changes_summary="Updated near-term actions based on latest signal.",

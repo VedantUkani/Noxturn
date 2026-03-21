@@ -1,13 +1,20 @@
+import threading
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes.dashboard import router as dashboard_router
 from app.routes.health import router as health_router
+from app.routes.personas import router as personas_router
 from app.routes.plans import router as plans_router
 from app.routes.rag import router as rag_router
 from app.routes.risks import router as risks_router
 from app.routes.sandbox import router as sandbox_router
 from app.routes.schedule import router as schedule_router
+from app.routes.upload import router as upload_router
+from app.routes.ical import router as ical_router
+from app.routes.google_cal import router as google_cal_router
+from app.routes.outlook_cal import router as outlook_cal_router
 from app.routes.tasks import router as tasks_router
 from app.routes.wearables import router as wearables_router
 
@@ -16,6 +23,28 @@ app = FastAPI(
     description="Shift-worker fatigue and recovery planning API",
     version="0.1.0",
 )
+
+
+def _auto_ingest():
+    """Run in a background thread at startup — ingests embeddings if table is empty."""
+    try:
+        from app.services.db import get_supabase
+        db = get_supabase()
+        count = db.table("evidence_embeddings").select("item_id", count="exact").execute()
+        if (count.count or 0) > 0:
+            print(f"[RAG] {count.count} embeddings already in DB — skipping ingestion.")
+            return
+        print("[RAG] No embeddings found — running ingestion …")
+        from app.rag.ingest_embeddings import ingest_embeddings
+        result = ingest_embeddings()
+        print(f"[RAG] Ingestion complete: {result['count']} docs embedded ({result['model']}).")
+    except Exception as e:
+        print(f"[RAG] Auto-ingestion failed: {e}")
+
+
+@app.on_event("startup")
+def startup_event():
+    threading.Thread(target=_auto_ingest, daemon=True).start()
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,3 +63,8 @@ app.include_router(tasks_router)
 app.include_router(wearables_router)
 app.include_router(dashboard_router)
 app.include_router(sandbox_router)
+app.include_router(personas_router)
+app.include_router(upload_router)
+app.include_router(ical_router)
+app.include_router(google_cal_router)
+app.include_router(outlook_cal_router)
