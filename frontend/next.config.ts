@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
-  reactCompiler: true,
-};
+/**
+ * Dev uses Turbopack (`npm run dev`) — no webpack hook here, so Next won’t warn
+ * “Webpack is configured while Turbopack is not.”
+ *
+ * If you use `npm run dev:webpack` and see stale chunk errors, run `npm run dev:clean`.
+ */
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

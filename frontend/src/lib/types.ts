@@ -1,11 +1,56 @@
-// ─── Shared TypeScript types for Noxturn frontend ───
+/**
+ * Domain + API types — align with `backend/app/models/schemas.py` JSON shapes.
+ * Datetimes arrive as ISO strings over the wire.
+ */
 
-export type BlockType = "day_shift" | "night_shift" | "evening_shift" | "off_day" | "transition_day";
-export type Severity  = "low" | "moderate" | "high" | "critical";
-export type TaskStatus = "planned" | "completed" | "skipped" | "expired";
-export type PlanMode  = "protect" | "recover" | "stabilize" | "perform";
-export type RecoveryRhythm = "steady" | "rebuilding" | "interrupted" | "unknown";
+export type BlockType =
+  | "day_shift"
+  | "night_shift"
+  | "evening_shift"
+  | "off_day"
+  | "transition_day";
 
+export type TaskStatus =
+  | "planned"
+  | "completed"
+  | "skipped"
+  | "expired"
+  | "replaced";
+
+export type TaskCategory =
+  | "sleep"
+  | "nap"
+  | "light_timing"
+  | "caffeine_cutoff"
+  | "meal"
+  | "social"
+  | "relaxation"
+  | "movement"
+  | "mindfulness"
+  | "safety"
+  | "buddy_checkin";
+
+export type Severity = "low" | "moderate" | "high" | "critical";
+
+export type RecoveryRhythmLabel =
+  | "steady"
+  | "rebuilding"
+  | "interrupted"
+  | "unknown";
+
+export type PlanModeKey =
+  | "protect"
+  | "recover"
+  | "stabilize"
+  | "perform"
+  | string;
+
+export type NavPlanModeDisplay = {
+  key: PlanModeKey;
+  label: string;
+};
+
+/** Stored client-side and sent as `blocks` to `/plans/generate` (ISO datetimes). */
 export type ScheduleBlockInput = {
   id?: string;
   block_type: BlockType;
@@ -16,121 +61,99 @@ export type ScheduleBlockInput = {
   commute_after_minutes?: number;
 };
 
+export type PlanTask = {
+  id: string;
+  category: TaskCategory;
+  title: string;
+  description?: string | null;
+  scheduled_time: string;
+  duration_minutes: number;
+  anchor_flag: boolean;
+  optional_flag?: boolean;
+  source_reason?: string | null;
+  evidence_ref?: string | null;
+  status: TaskStatus;
+  sort_order?: number;
+};
+
+export type NextBestAction = {
+  task_id: string;
+  category: TaskCategory;
+  title: string;
+  description: string;
+  why_now: string;
+  duration_minutes: number;
+};
+
+export type PlanGenerateResponse = {
+  plan_mode: string;
+  risk_summary: Record<string, unknown>;
+  tasks: PlanTask[];
+  avoid_list: string[];
+  next_best_action: NextBestAction;
+  evidence_refs?: Record<string, unknown>[];
+};
+
+export type DashboardTodayResponse = {
+  user_id?: string | null;
+  plan_mode: string;
+  next_best_action: NextBestAction;
+  anchor_tasks: PlanTask[];
+  recovery_rhythm_label: string;
+  recovery_score?: number | null;
+};
+
 export type RiskEpisode = {
   id?: string;
   label: string;
   severity: Severity;
-  score?: number;
+  severity_score?: number;
   start_time: string;
-  end_time?: string;
-  explanation?: string;
+  end_time: string;
+  explanation?: Record<string, unknown>;
 };
 
-export type PlanTask = {
-  id: string;
-  title: string;
-  category?: string;
-  anchor_flag: boolean;
-  status: TaskStatus;
-  scheduled_time?: string;
-  duration_minutes?: number;
-  why_now?: string;
-  evidence_ref?: string;
-};
-
-export type NextBestAction = {
-  title: string;
-  why_now: string;
-  scheduled_time?: string;
-  category?: string;
-};
-
-export type PlanResponse = {
-  plan_id?: string;
-  plan_mode: PlanMode;
-  strain_score?: number;
-  next_best_action: NextBestAction;
-  avoid_list: string[];
-  tasks: PlanTask[];
-  evidence_refs?: string[];
-};
-
-export type DashboardResponse = PlanResponse & {
-  recovery_rhythm_label: RecoveryRhythm;
-  recovery_score?: number | null;
-  anchor_tasks: PlanTask[];
-};
-
-export type RiskResponse = {
+export type RiskComputeResponse = {
+  circadian_strain_score: number;
   risk_episodes: RiskEpisode[];
-  strain_score: number;
+  summary: string;
 };
 
-export type WearableResponse = {
-  recovery_score: number;
-  sleep_hrs: number;
-  recovery_rhythm_label?: RecoveryRhythm;
-};
-
-export type RagItem = {
-  id: string;
-  title?: string;
-  name?: string;
-  content?: string;
-  evidence_note?: string;
-  when_it_applies?: string;
-  score: number;
-  type?: "intervention" | "evidence";
+export type TaskEventResponse = {
+  task_id: string;
+  old_status: TaskStatus;
+  new_status: TaskStatus;
+  trigger_replan: boolean;
+  message: string;
 };
 
 export type RagResponse = {
-  cards: RagItem[];
-  evidence: RagItem[];
+  cards?: unknown[];
+  evidence?: unknown[];
 };
 
-export type ImportResponse = {
-  blocks: Array<{
-    id: string;
-    block_type: BlockType;
-    start_time: string;
-    end_time: string;
-    title?: string;
-  }>;
-  warnings: string[];
-  parse_confidence: number;
+export type WearableImportResponse = {
+  sleep_hrs: number;
+  sleep_start: string;
+  sleep_end: string;
+  restlessness?: number | null;
+  resting_hr?: number | null;
+  recovery_score: number;
+  source: string;
 };
 
-export type SandboxResponse = {
+export type ShiftSandboxResponse = {
   original_strain_score: number;
   projected_strain_score: number;
   strain_delta: number;
+  recovery_bottleneck: Record<string, unknown>;
   verdict: string;
   explanation: string;
 };
 
-// ─── UI helpers ───
-
 export const SEVERITY_RANK: Record<Severity, number> = {
-  low: 1, moderate: 2, high: 3, critical: 4,
-};
-
-export const PLAN_MODE_META: Record<PlanMode, { label: string; color: string; bg: string; description: string }> = {
-  protect:   { label: "Protect",   color: "text-red-400",    bg: "bg-red-950/60 border-red-800/50",    description: "High risk — sleep is the priority above all." },
-  recover:   { label: "Recover",   color: "text-amber-400",  bg: "bg-amber-950/60 border-amber-800/50", description: "Active recovery phase. Follow tasks closely." },
-  stabilize: { label: "Stabilize", color: "text-indigo-400", bg: "bg-indigo-950/60 border-indigo-800/50", description: "Prevention-focused. Maintain your rhythm." },
-  perform:   { label: "Perform",   color: "text-emerald-400", bg: "bg-emerald-950/60 border-emerald-800/50", description: "Low risk. Keep your habits consistent." },
-};
-
-export const SEVERITY_META: Record<Severity, { color: string; bg: string; dot: string }> = {
-  low:      { color: "text-emerald-400", bg: "bg-emerald-950/60 border-emerald-800/40", dot: "bg-emerald-400" },
-  moderate: { color: "text-amber-400",   bg: "bg-amber-950/60 border-amber-800/40",    dot: "bg-amber-400"   },
-  high:     { color: "text-orange-400",  bg: "bg-orange-950/60 border-orange-800/40",   dot: "bg-orange-400"  },
-  critical: { color: "text-red-400",     bg: "bg-red-950/60 border-red-800/40",         dot: "bg-red-400"     },
-};
-
-export const RHYTHM_META: Record<RecoveryRhythm, { label: string; color: string; icon: string }> = {
-  steady:      { label: "Steady",      color: "text-emerald-400", icon: "●" },
-  rebuilding:  { label: "Rebuilding",  color: "text-amber-400",   icon: "◑" },
-  interrupted: { label: "Interrupted", color: "text-red-400",     icon: "○" },
-  unknown:     { label: "Unknown",     color: "text-slate-400",   icon: "?" },
+  low: 1,
+  moderate: 2,
+  high: 3,
+  critical: 4,
 };
