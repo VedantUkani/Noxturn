@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { APP_NAME } from "@/lib/constants";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,23 +14,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Noxturn — Circadian Recovery Planner",
+  title: APP_NAME,
   description:
-    "AI-powered shift fatigue detection and recovery planning for healthcare and shift workers.",
+    "Schedule harm-reduction copilot for rotating shift workers — circadian risk, recovery, and humane next steps.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full bg-slate-950 text-slate-100">
-        <AccessibilityProvider>
-          {children}
-        </AccessibilityProvider>
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} bg-[#070b14] font-sans text-slate-100`}
+      >
+        {children}
       </body>
     </html>
   );
