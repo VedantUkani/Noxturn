@@ -111,6 +111,7 @@ export function ScheduleImportSection({
   };
 
   const googleLogin = useGoogleLogin({
+    flow: "implicit",
     scope: "https://www.googleapis.com/auth/calendar.readonly",
     onSuccess: async (tokenResponse) => {
       setBusy(true);

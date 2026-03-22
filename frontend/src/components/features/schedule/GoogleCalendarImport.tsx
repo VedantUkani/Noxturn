@@ -19,6 +19,7 @@ export function GoogleCalendarImport({ onImport }: Props) {
   const [count, setCount] = useState<number | null>(null);
 
   const login = useGoogleLogin({
+    flow: "implicit",
     scope: "https://www.googleapis.com/auth/calendar.readonly",
     onSuccess: async (tokenResponse) => {
       setLoading(true);
