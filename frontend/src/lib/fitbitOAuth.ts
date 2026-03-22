@@ -58,6 +58,7 @@ export async function connectFitbit(): Promise<FitbitTokenResult> {
     scope: SCOPES,
     redirect_uri: redirectUri,
     state,
+    prompt: "login",
   });
 
   const url = `${AUTH_URL}?${params.toString()}`;
