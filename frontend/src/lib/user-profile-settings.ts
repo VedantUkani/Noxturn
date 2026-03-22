@@ -33,9 +33,6 @@ export type UserProfileSettings = {
   anchorNote: string;
   sleepConstraint: SleepConstraint;
   caffeineHabit: CaffeineHabit;
-  buddyCheckinsEnabled: boolean;
-  trustedContactName: string;
-  trustedContactDetail: string;
 };
 
 const ROLE_TITLE: Record<RoleId, string> = {
@@ -169,9 +166,6 @@ export function userProfileDefaultsFromViewModel(
     anchorNote: vm.sleep.anchor.note,
     sleepConstraint: "cant_sleep_before_9am",
     caffeineHabit: "afternoon_ok",
-    buddyCheckinsEnabled: false,
-    trustedContactName: "",
-    trustedContactDetail: "",
   };
 }
 
@@ -203,7 +197,17 @@ export function normalizeUserProfileSettings(
 ): UserProfileSettings {
   const base = userProfileDefaultsFromViewModel(baseVm);
   if (!partial) return base;
-  return { ...base, ...partial };
+  const {
+    buddyCheckinsEnabled: _b,
+    trustedContactName: _n,
+    trustedContactDetail: _d,
+    ...rest
+  } = partial as Partial<UserProfileSettings> & {
+    buddyCheckinsEnabled?: boolean;
+    trustedContactName?: string;
+    trustedContactDetail?: string;
+  };
+  return { ...base, ...rest };
 }
 
 export function applyUserProfileToViewModel(

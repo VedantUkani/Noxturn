@@ -47,51 +47,6 @@ export function PreferencesStep({ draft, onChange }: PreferencesStepProps) {
           ))}
         </select>
       </div>
-
-      <button
-        type="button"
-        aria-pressed={draft.buddyCheckins}
-        onClick={() => onChange({ buddyCheckins: !draft.buddyCheckins })}
-        className={cn(
-          nx.card,
-          "flex w-full items-start gap-3 p-5 text-left transition-colors",
-          draft.buddyCheckins
-            ? "border-[#45e0d4]/25 bg-[#0c1f3d]/35"
-            : "border-white/[0.06]",
-          nx.focusRing,
-        )}
-      >
-        <span
-          className={cn(
-            "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2",
-            draft.buddyCheckins
-              ? "border-[#45e0d4] bg-[#45e0d4]"
-              : "border-white/[0.15] bg-transparent",
-          )}
-          aria-hidden
-        >
-          {draft.buddyCheckins ? (
-            <svg
-              className="h-3 w-3 text-[#04112d]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={3}
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          ) : null}
-        </span>
-        <span>
-          <span className="block text-sm font-medium text-[#edf2ff]">
-            Enable buddy check-ins
-          </span>
-          <span className="mt-1 block text-xs leading-relaxed text-[#7d89a6]">
-            Receive check-in reminders from your support network (no messages are
-            sent until you connect this in Settings).
-          </span>
-        </span>
-      </button>
     </div>
   );
 }

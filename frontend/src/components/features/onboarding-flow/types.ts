@@ -2,7 +2,7 @@ export const ONBOARDING_STEP_LABELS = [
   "Role",
   "Commute",
   "Preferences",
-  "Schedule",
+  "Roster",
 ] as const;
 
 export type OnboardingStepIndex = 1 | 2 | 3 | 4;
@@ -44,7 +44,6 @@ export type OnboardingDraft = {
   roleId: RoleId | null;
   commuteMinutes: number;
   sleepConstraint: SleepConstraint;
-  buddyCheckins: boolean;
   scheduleMode: ScheduleMode;
   /** Paste panel: raw CSV / shift lines. */
   scheduleNotes: string;
@@ -58,7 +57,6 @@ export const defaultOnboardingDraft = (): OnboardingDraft => ({
   roleId: null,
   commuteMinutes: 35,
   sleepConstraint: "cant_sleep_before_9am",
-  buddyCheckins: true,
   scheduleMode: "paste",
   scheduleNotes: "",
   scheduleDeferred: false,

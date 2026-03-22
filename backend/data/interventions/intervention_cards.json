@@ -72,15 +72,6 @@
     "evidence_note": "Pre-commitment and communication reduce sleep disruption."
   },
   {
-    "id": "card-009",
-    "name": "Buddy check-in",
-    "when_it_applies": "High strain days, post-night commute, or missed anchors.",
-    "when_not_to_use": "If user opts out of buddy sharing.",
-    "duration_min": 5,
-    "tone": "supportive",
-    "evidence_note": "Social support buffers stress and improves adherence."
-  },
-  {
     "id": "card-010",
     "name": "Unsafe drive-home alert",
     "when_it_applies": "After night shift with long commute or severe sleep debt.",

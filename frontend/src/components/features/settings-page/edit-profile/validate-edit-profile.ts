@@ -18,8 +18,6 @@ export type EditProfileFieldErrors = Partial<
     | "preferredSleepHours"
     | "anchorSleepStart"
     | "anchorSleepEnd"
-    | "trustedContactName"
-    | "trustedContactDetail"
     | "form",
     string
   >
@@ -65,14 +63,6 @@ export function validateUserProfileSettings(
   const em = values.email.trim();
   if (em && !EMAIL_RE.test(em)) {
     errors.email = "Enter a valid email address.";
-  }
-  if (values.buddyCheckinsEnabled) {
-    if (!values.trustedContactName.trim()) {
-      errors.trustedContactName = "Add a contact name or turn off buddy check-ins.";
-    }
-    if (!values.trustedContactDetail.trim()) {
-      errors.trustedContactDetail = "Add an email or phone number.";
-    }
   }
   return errors;
 }

@@ -192,27 +192,7 @@ class RulePlanner:
             ))
             base_idx += 1
 
-        # 6. buddy_checkin — one per plan for rapid_flip or unsafe_drive
-        if labels & {"rapid_flip", "unsafe_drive"} and ref_time:
-            buddy_time = ref_time + timedelta(hours=1)
-            tasks.append(PlanTask(
-                id=uuid4(),
-                category=TaskCategory.buddy_checkin,
-                title="Check in with a colleague",
-                description=(
-                    "Brief welfare check-in with a trusted colleague or supervisor. "
-                    "Rapid schedule flips and unsafe-drive risk require a second pair of eyes on your state."
-                ),
-                scheduled_time=buddy_time,
-                duration_minutes=10,
-                anchor_flag=False,
-                optional_flag=False,
-                source_reason=f"{'Rapid flip' if 'rapid_flip' in labels else 'Unsafe drive'} risk detected — peer oversight recommended.",
-                sort_order=base_idx,
-            ))
-            base_idx += 1
-
-        # 7. meal — one meal timing anchor per 24-hour window
+        # 6. meal — one meal timing anchor per 24-hour window
         if ref_time:
             meal_time = ref_time + timedelta(hours=4)
             tasks.append(PlanTask(
@@ -232,7 +212,7 @@ class RulePlanner:
             ))
             base_idx += 1
 
-        # 8. social — brief positive social contact on first off-day after high-strain cluster
+        # 7. social — brief positive social contact on first off-day after high-strain cluster
         #    3f: emit when strain >= 50 AND episode set contains rapid_flip or low_recovery
         if strain >= 50 and labels & {"rapid_flip", "low_recovery"} and ep_end:
             social_time = ep_end + timedelta(hours=5)

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useReducer } from "react";
+import { getStoredScheduleBlocks } from "@/lib/session";
 import {
   clearWizardState,
   loadWizardState,
@@ -84,9 +85,12 @@ export function validateStep(
   }
 }
 
-/** Legacy parity: finish only after defer, or successful import simulation. */
+/** Finish when user defers, has blocks in the shared schedule store (same as /schedule), or legacy import flag. */
 export function canFinishSchedule(draft: OnboardingDraft): boolean {
   if (draft.scheduleDeferred) return true;
+  if (typeof window !== "undefined" && getStoredScheduleBlocks().length > 0) {
+    return true;
+  }
   if (draft.importComplete !== null) return true;
   return false;
 }
