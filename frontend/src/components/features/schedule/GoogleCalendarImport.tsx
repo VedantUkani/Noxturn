@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useGoogleLogin } from "@react-oauth/google";
+import { fetchGoogleCalendarViaPopup } from "@/lib/googleCalendarOAuth";
 
 export type CalendarShift = {
   title: string;
@@ -18,66 +18,26 @@ export function GoogleCalendarImport({ onImport }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [count, setCount] = useState<number | null>(null);
 
-  const login = useGoogleLogin({
-    flow: "implicit",
-    scope: "https://www.googleapis.com/auth/calendar.readonly",
-    onSuccess: async (tokenResponse) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const token = tokenResponse.access_token;
-        const timeMin = new Date().toISOString();
-        const timeMax = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
-
-        const url = new URL("https://www.googleapis.com/calendar/v3/calendars/primary/events");
-        url.searchParams.set("timeMin", timeMin);
-        url.searchParams.set("timeMax", timeMax);
-        url.searchParams.set("singleEvents", "true");
-        url.searchParams.set("orderBy", "startTime");
-        url.searchParams.set("maxResults", "50");
-
-        const res = await fetch(url.toString(), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!res.ok) throw new Error(`Google Calendar API error: ${res.status}`);
-
-        const json = await res.json();
-        const items = json.items ?? [];
-
-        const shifts: CalendarShift[] = items
-          .filter((e: { start?: { dateTime?: string; date?: string } }) =>
-            e.start?.dateTime || e.start?.date
-          )
-          .map((e: {
-            summary?: string;
-            start: { dateTime?: string; date?: string };
-            end: { dateTime?: string; date?: string };
-          }) => ({
-            title: e.summary ?? "Shift",
-            start: e.start.dateTime ?? `${e.start.date}T08:00:00`,
-            end: e.end?.dateTime ?? `${e.end?.date}T16:00:00`,
-          }));
-
-        setCount(shifts.length);
-        onImport(shifts);
-      } catch (e) {
-        setError((e as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    },
-    onError: () => {
-      setError("Google Calendar access was denied or failed.");
+  const handleClick = async () => {
+    setError(null);
+    setCount(null);
+    setLoading(true);
+    try {
+      const events = await fetchGoogleCalendarViaPopup(14);
+      setCount(events.length);
+      onImport(events);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
       setLoading(false);
-    },
-  });
+    }
+  };
 
   return (
     <div className="space-y-2">
       <button
         type="button"
-        onClick={() => { setError(null); setCount(null); login(); }}
+        onClick={handleClick}
         disabled={loading}
         className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-gray-100 disabled:opacity-60"
       >
@@ -106,7 +66,7 @@ export function GoogleCalendarImport({ onImport }: Props) {
         <p className="text-center text-xs text-red-400">{error}</p>
       )}
       <p className="text-center text-[11px] text-slate-500">
-        Fetches next 14 days. Opens a Google popup — allow it if blocked.
+        Opens a Google popup — allow it if blocked by your browser.
       </p>
     </div>
   );
