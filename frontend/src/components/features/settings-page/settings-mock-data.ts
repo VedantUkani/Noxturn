@@ -91,7 +91,7 @@ export const SETTINGS_PAGE_MOCK: SettingsPageViewModel = {
     secureNodeLabel: "Secure Node Connected",
   },
   footer: {
-    brandLine: "ShiftWeaver 2024 © Human Factors Lab",
+    brandLine: "Noxturn 2026 @ HackASU",
     links: [
       { label: "Developer API", href: "/" },
       { label: "Terms of Care", href: "/" },
