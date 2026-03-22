@@ -2,23 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ComponentType } from "react";
 import { DASHBOARD_NAV } from "@/lib/navigation";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 import {
   IconCalendar,
+  IconClipboardList,
   IconClock,
   IconFlask,
   IconPulse,
 } from "@/components/icons/NavIcons";
+import type { DashboardNavHref } from "@/lib/navigation";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { UserMiniProfileCard } from "./UserMiniProfileCard";
 
-const navIcon = {
+const navIcon: Record<
+  DashboardNavHref,
+  ComponentType<{ className?: string }>
+> = {
   "/week": IconCalendar,
+  "/schedule": IconClipboardList,
   "/today": IconClock,
   "/recovery": IconPulse,
   "/sandbox": IconFlask,
-} as const;
+};
 
 type AppSidebarProps = {
   onNavigate?: () => void;

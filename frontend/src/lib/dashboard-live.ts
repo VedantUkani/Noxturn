@@ -25,7 +25,6 @@ type LiveBanner = {
 };
 
 export type LiveDashboardState = {
-  planMode: string;
   vitals: TodayDashboardPayload["vitals"];
   /** Snapshot from initial payload — recovery simulations reset here. */
   baselineVitals: TodayDashboardPayload["vitals"];
@@ -57,7 +56,6 @@ type LiveEvent =
   | { type: "DISMISS_BANNER" }
   | { type: "OPEN_DETAIL"; taskId: string }
   | { type: "CLOSE_DETAIL" }
-  | { type: "SET_PLAN_MODE"; mode: string }
   | { type: "CLEAR_PULSE" }
   | { type: "CLEAR_HERO_HINT" }
   | { type: "APPEND_WHAT_CHANGED"; entry: Omit<WhatChangedEntry, "id"> };
@@ -217,7 +215,6 @@ export function initialLiveState(p: TodayDashboardPayload): LiveDashboardState {
   const baselineVitals = { ...p.vitals };
   const recoveryProfile = inferBand(p.vitals.readinessScore);
   return {
-    planMode: p.planMode,
     vitals: { ...p.vitals },
     baselineVitals,
     recoveryProfile,
@@ -277,9 +274,6 @@ export function applyLiveEvent(
 
     case "CLOSE_DETAIL":
       return { ...state, detailTaskId: null };
-
-    case "SET_PLAN_MODE":
-      return { ...state, planMode: event.mode };
 
     case "APPEND_WHAT_CHANGED":
       return {
@@ -407,7 +401,6 @@ export function applyLiveEvent(
           tasks,
           nextBest,
           recommendations: touchRecommendations(state.recommendations),
-          planMode: "recover",
           banner: null,
           whatChanged: pushChange(state.whatChanged, {
             headline: `Anchor skipped: “${task.title}”.`,
@@ -450,7 +443,6 @@ export function applyLiveEvent(
           tasks,
           nextBest,
           recommendations: touchRecommendations(state.recommendations),
-          planMode: "recover",
           banner: null,
           whatChanged: pushChange(state.whatChanged, {
             headline: `Anchor window passed: “${task.title}”.`,
@@ -488,7 +480,6 @@ export function applyLiveEvent(
         vitalsSyncedAt: nowIso(),
         nextBest,
         recommendations: touchRecommendations(state.recommendations),
-        planMode: "recover",
         planRelationLine: planRelationForBand(band),
         banner: {
           message: "Plan updated",
@@ -517,7 +508,6 @@ export function applyLiveEvent(
         vitalsSyncedAt: nowIso(),
         nextBest,
         recommendations: touchRecommendations(state.recommendations),
-        planMode: "recover",
         planRelationLine: planRelationForBand(band),
         banner: {
           message: "Plan updated",

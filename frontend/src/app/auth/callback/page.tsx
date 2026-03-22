@@ -3,6 +3,10 @@
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { markAuthenticated } from "@/lib/auth-browser";
+import {
+  displayNameFromEmail,
+  persistSessionIdentity,
+} from "@/lib/session-identity";
 import { POST_ONBOARDING_DEST_KEY } from "@/lib/onboarding-flag";
 import { supabase } from "@/lib/supabase";
 
@@ -26,6 +30,20 @@ function AuthCallbackInner() {
       } catch {
         /* session may still be established via hash fragment */
         await supabase.auth.getSession();
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+      if (user) {
+        const email = user.email?.trim() ?? "";
+        const meta = user.user_metadata as Record<string, unknown> | undefined;
+        const metaName =
+          (typeof meta?.full_name === "string" ? meta.full_name : "") ||
+          (typeof meta?.name === "string" ? meta.name : "");
+        const displayName =
+          metaName.trim() ||
+          (email ? displayNameFromEmail(email) : "Account");
+        persistSessionIdentity({ displayName, email });
       }
 
       markAuthenticated();

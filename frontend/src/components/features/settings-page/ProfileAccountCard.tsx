@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ProfileAccountModel } from "./types";
-import { SETTINGS_LOGIN_HREF } from "./settings-routes";
+import { EditProfileTrigger } from "./edit-profile/EditProfileTrigger";
 import { IconCarCommute } from "./settings-icons";
 
 const card = "rounded-[22px] border border-white/[0.06] bg-[#141f42] shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)]";
@@ -9,9 +8,10 @@ const label = "text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7d89
 
 type ProfileAccountCardProps = {
   data: ProfileAccountModel;
+  onEditProfile?: () => void;
 };
 
-export function ProfileAccountCard({ data }: ProfileAccountCardProps) {
+export function ProfileAccountCard({ data, onEditProfile }: ProfileAccountCardProps) {
   return (
     <section className={cn("p-6 sm:p-8", card)} aria-labelledby="profile-account-heading">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -26,12 +26,9 @@ export function ProfileAccountCard({ data }: ProfileAccountCardProps) {
             {data.cardSubtitle}
           </p>
         </div>
-        <Link
-          href={SETTINGS_LOGIN_HREF}
-          className="shrink-0 self-start text-sm font-semibold text-[#45e0d4] underline-offset-4 hover:underline focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#45e0d4]/35 sm:mt-1"
-        >
-          {data.editLabel}
-        </Link>
+        {onEditProfile ? (
+          <EditProfileTrigger label={data.editLabel} onClick={onEditProfile} />
+        ) : null}
       </div>
 
       <div className="mt-8 grid gap-10 md:grid-cols-2 md:gap-12">

@@ -6,6 +6,7 @@ import {
   serializeAuthCookie,
   serializeClearAuthCookie,
 } from "./auth-cookie";
+import { clearSessionIdentity } from "./session-identity";
 
 export function markAuthenticated(): void {
   if (typeof document === "undefined") return;
@@ -18,4 +19,5 @@ export function markAuthenticated(): void {
 export function clearAuthenticated(): void {
   if (typeof document === "undefined") return;
   document.cookie = serializeClearAuthCookie();
+  clearSessionIdentity();
 }

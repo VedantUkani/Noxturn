@@ -68,13 +68,12 @@ export type TodayAvoidanceRow = {
 };
 
 /**
- * Today dashboard model for the live page. In production, `planMode`, `vitals`
+ * Today dashboard model for the live page. In production, `vitals`
  * (including whether to show live sync), `nextBest`, and `tasks` / anchor split
  * come from the dashboard API — outputs of the planner agent and persisted plan.
  * `dashboard-live.ts` only simulates changes locally for the demo shell.
  */
 export type TodayDashboardPayload = {
-  planMode: string;
   vitals: {
     hrv: number;
     /** Shown when the API indicates fresh wearable/sync-backed vitals (agent-driven). */
