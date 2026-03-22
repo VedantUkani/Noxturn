@@ -22,9 +22,11 @@ export function ProfileAccountCard({ data, onEditProfile }: ProfileAccountCardPr
           >
             {data.cardTitle}
           </h2>
-          <p className="mt-1.5 text-sm leading-relaxed text-[#98a4bf]">
-            {data.cardSubtitle}
-          </p>
+          {data.cardSubtitle ? (
+            <p className="mt-1.5 text-sm leading-relaxed text-[#98a4bf]">
+              {data.cardSubtitle}
+            </p>
+          ) : null}
         </div>
         {onEditProfile ? (
           <EditProfileTrigger label={data.editLabel} onClick={onEditProfile} />

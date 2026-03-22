@@ -9,12 +9,11 @@ export const SETTINGS_PAGE_MOCK: SettingsPageViewModel = {
   header: {
     eyebrow: "SETTINGS",
     title: "Workspace & Recovery",
-    subtitle:
-      "Fine-tune your circadian guardian. Your settings help us calculate the most effective recovery windows between high-stakes shifts.",
+    subtitle: "",
   },
   profile: {
     cardTitle: "Profile & Account",
-    cardSubtitle: "Your professional identity within the weaver network.",
+    cardSubtitle: "",
     editLabel: "Edit Profile",
     fullNameLabel: "FULL NAME",
     fullName: "Dr. Elena Sterling",

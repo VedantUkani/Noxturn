@@ -146,10 +146,6 @@ export function EditProfilePanel({
             >
               Edit profile
             </h2>
-            <p className="mt-2 max-w-md text-sm leading-relaxed text-[#98a4bf]">
-              Update how Noxturn understands your work context and sleep
-              preferences. This is your live profile — not a first-time setup.
-            </p>
           </div>
           <button
             type="button"
@@ -193,9 +189,6 @@ export function EditProfilePanel({
               >
                 Basic profile
               </h3>
-              <p className="mt-1 text-xs text-[#7d89a6]">
-                Identity used across your workspace and recovery summaries.
-              </p>
               <div className="mt-5 space-y-4">
                 <div>
                   <label htmlFor="profile-full-name" className={nx.labelUpper}>
@@ -296,10 +289,6 @@ export function EditProfilePanel({
               >
                 Commute & work context
               </h3>
-              <p className="mt-1 text-xs text-[#7d89a6]">
-                Travel burden shapes how much protected time you need between
-                duties.
-              </p>
               <div className={cn("mt-5 rounded-[22px] border border-white/[0.06] bg-[#141f42]/60 p-5")}>
                 <CommuteEditor
                   minutes={values.commuteMinutes}
@@ -321,9 +310,6 @@ export function EditProfilePanel({
               >
                 Sleep & recovery preferences
               </h3>
-              <p className="mt-1 text-xs text-[#7d89a6]">
-                Personal sleep profile — separate from shift scheduling tools.
-              </p>
               <div className={cn("mt-5 rounded-[22px] border border-white/[0.06] bg-[#141f42]/60 p-5 sm:p-6")}>
                 <SleepWindowEditor
                   chronotype={values.chronotype}

@@ -33,6 +33,11 @@ export type UserProfileSettings = {
   anchorNote: string;
   sleepConstraint: SleepConstraint;
   caffeineHabit: CaffeineHabit;
+  /** Wearable connection state */
+  ouraConnected: boolean;
+  /** Health report stored in Supabase Storage */
+  healthReportPath: string | null;
+  healthReportFileName: string | null;
 };
 
 const ROLE_TITLE: Record<RoleId, string> = {
@@ -166,6 +171,9 @@ export function userProfileDefaultsFromViewModel(
     anchorNote: vm.sleep.anchor.note,
     sleepConstraint: "cant_sleep_before_9am",
     caffeineHabit: "afternoon_ok",
+    ouraConnected: false,
+    healthReportPath: null,
+    healthReportFileName: null,
   };
 }
 

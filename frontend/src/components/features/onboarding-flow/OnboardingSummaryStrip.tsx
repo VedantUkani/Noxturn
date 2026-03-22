@@ -45,6 +45,12 @@ export function OnboardingSummaryStrip({
         "mb-8 flex flex-wrap gap-x-6 gap-y-2 border-white/[0.05] bg-[#141f42]/70 px-4 py-3 text-xs text-[#7d89a6]",
       )}
     >
+      {draft.fullName && (
+        <span>
+          Name:{" "}
+          <span className="font-medium text-[#edf2ff]">{draft.fullName}</span>
+        </span>
+      )}
       <span>
         Role:{" "}
         <span className="font-medium text-[#edf2ff]">{roleLabel(draft.roleId)}</span>
@@ -52,18 +58,22 @@ export function OnboardingSummaryStrip({
       {step >= 3 ? (
         <span>
           Commute:{" "}
-          <span className="font-medium text-[#edf2ff]">
-            {draft.commuteMinutes} min
-          </span>
+          <span className="font-medium text-[#edf2ff]">{draft.commuteMinutes} min</span>
         </span>
       ) : null}
       {step >= 4 ? (
         <span>
-          Constraint:{" "}
+          Sleep:{" "}
           <span className="font-medium text-[#edf2ff]">
             {constraintLabel(draft.sleepConstraint)}
           </span>
         </span>
+      ) : null}
+      {step >= 5 && draft.ouraConnected ? (
+        <span className="text-[#45e0d4]">Oura ✓</span>
+      ) : null}
+      {step >= 5 && draft.healthReportPath ? (
+        <span className="text-[#45e0d4]">Health report ✓</span>
       ) : null}
     </div>
   );
