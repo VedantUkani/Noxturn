@@ -169,27 +169,6 @@ export function OnboardingPageContent() {
           </div>
         </section>
 
-        <section className={cn(nxMarketing.sectionBand, "py-10 sm:py-12")}>
-          <div
-            className={cn(
-              nxMarketing.contentWide,
-              "grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-10",
-            )}
-          >
-            {[
-              ["4", "Risk detectors"],
-              ["12", "Intervention cards"],
-              ["10", "Clinical sources"],
-              ["3", "Shift personas"],
-            ].map(([num, label]) => (
-              <div key={label} className="text-center">
-                <div className={nxMarketing.statNumber}>{num}</div>
-                <div className="mt-1.5 text-xs text-[#7d89a6]">{label}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <section className={cn(nxMarketing.contentWide, "py-20 sm:py-24")}>
           <p className={nxMarketing.eyebrow}>Features</p>
           <h2 className={cn("mb-12 max-w-2xl", nxMarketing.heading2)}>
@@ -242,22 +221,6 @@ export function OnboardingPageContent() {
               ))}
             </div>
           </div>
-        </section>
-
-        <section className={cn(nxMarketing.contentNarrow, "py-24 text-center sm:py-28")}>
-          <h2 className="mb-4 text-3xl font-bold tracking-tight text-[#edf2ff]">
-            Ready to start?
-          </h2>
-          <p className="mb-10 text-[#98a4bf]">
-            Import your schedule in under 2 minutes and get a clinically-grounded
-            recovery plan.
-          </p>
-          <Link
-            href="/onboard"
-            className={cn(nxMarketing.primaryCtaLg, "px-8 py-3.5")}
-          >
-            Start now — it&apos;s free ›
-          </Link>
         </section>
 
         <footer className={nxMarketing.footer}>

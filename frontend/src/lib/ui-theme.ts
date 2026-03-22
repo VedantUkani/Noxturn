@@ -100,7 +100,6 @@ export const nxMarketing = {
   eyebrow:
     "mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7d89a6]",
   heading2: "text-2xl font-bold tracking-tight text-[#edf2ff] sm:text-3xl",
-  statNumber: "text-3xl font-bold tracking-tight text-[#45e0d4]",
   contentWide: "mx-auto w-full max-w-5xl px-4 sm:px-6 md:px-8",
   contentNarrow: "mx-auto w-full max-w-2xl px-4 sm:px-6 md:px-8",
   featureCard:
