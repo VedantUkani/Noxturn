@@ -17,8 +17,7 @@
     "post_night_sleep_protection",
     "strategic_nap",
     "caffeine_cutoff",
-    "bright_light_after_wake",
-    "buddy_checkin"
+    "bright_light_after_wake"
   ],
   "avoid_patterns": [
     "More than 3 consecutive night shifts",

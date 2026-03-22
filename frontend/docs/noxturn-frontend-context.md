@@ -17,7 +17,6 @@ Noxturn is a **schedule harm-reduction copilot** for rotating shift workers (nur
 | **Recovery Rhythm** | Non-punitive rhythm state (not guilt metrics or streak loss). |
 | **Shift Sandbox** | What-if simulator for picking up or swapping shifts. |
 | **Evidence Lens** | Explain why a recommendation exists (RAG / refs). |
-| **Buddy Summary** | Optional supportive share card for a trusted contact. |
 
 ---
 
@@ -62,7 +61,6 @@ frontend/
       injury-map/        # circadian injury visualization (when added)
       sandbox/           # shift simulator UI
       evidence/          # evidence lens UI
-      buddy/             # buddy summary card
     contexts/            # a11y, theme, optional i18n
     lib/
       types.ts           # domain types (mirror backend JSON)
@@ -146,7 +144,6 @@ Build toward this split; names can evolve but **responsibilities** should not bl
 | **Recovery rhythm** | Rhythm state UI (not streaks); ties to `recovery_rhythm_label` / wearable data |
 | **Sandbox** | Diff current vs hypothetical blocks, show `strain_delta` + `verdict` |
 | **Evidence lens** | Modal or panel: citations, short “why this” copy |
-| **Buddy summary** | Exportable / shareable supportive card |
 | **UI primitives** | Buttons, cards, modals, inputs — shared and a11y-reviewed |
 
 ---

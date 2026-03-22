@@ -13,9 +13,12 @@ export type PersistedWizardState = {
 
 function normalizeDraft(raw: Partial<OnboardingDraft>): OnboardingDraft {
   const base = defaultOnboardingDraft();
+  const { buddyCheckins: _legacyBuddy, ...rawRest } = raw as Partial<OnboardingDraft> & {
+    buddyCheckins?: boolean;
+  };
   return {
     ...base,
-    ...raw,
+    ...rawRest,
     manualShifts: Array.isArray(raw.manualShifts)
       ? raw.manualShifts.map((s) => ({
           id: String(s.id),
