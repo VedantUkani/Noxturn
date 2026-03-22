@@ -1,10 +1,8 @@
 "use client";
 
-import { commuteRecoveryHintHours } from "@/components/features/onboarding-flow/commute-utils";
 import type { TransportMode } from "@/lib/user-profile-settings";
 import { nx } from "@/lib/ui-theme";
 import { cn } from "@/lib/utils";
-import { useMemo } from "react";
 
 const MINUTE_CHIPS = [15, 30, 45, 60, 75, 90] as const;
 
@@ -32,8 +30,6 @@ export function CommuteEditor({
   error,
   disabled,
 }: CommuteEditorProps) {
-  const hintHours = useMemo(() => commuteRecoveryHintHours(minutes), [minutes]);
-
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-2">

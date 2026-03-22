@@ -198,7 +198,7 @@ export function TodayDashboardView() {
       {d.recommendations.length > 0 ? (
         <section>
           <div className="mb-4 flex items-baseline gap-3">
-            <p className={nx.labelUpper}>Today's Targets</p>
+            <p className={nx.labelUpper}>Today&apos;s Targets</p>
             <p className="text-xs text-[#7d89a6]">key numbers to hit today</p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -226,7 +226,7 @@ export function TodayDashboardView() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-400/80">
               Skip Today
             </p>
-            <p className="text-xs text-[#7d89a6]">things to leave out of today's training</p>
+            <p className="text-xs text-[#7d89a6]">things to leave out of today&apos;s training</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {d.avoid.map((item) => (

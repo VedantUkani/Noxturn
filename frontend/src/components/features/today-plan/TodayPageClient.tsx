@@ -67,7 +67,7 @@ export function TodayPageClient() {
   }, []);
 
   const loadDashboard = useCallback(
-    async (_userId: string): Promise<"ready" | "empty"> => {
+    async (_: string): Promise<"ready" | "empty"> => {
       const d = await fetchDashboardToday();
       const raw = payloadFromDashboardApi(d);
       const filtered = applyPayload(raw);
