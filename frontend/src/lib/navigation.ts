@@ -1,4 +1,9 @@
-export type DashboardNavHref = "/week" | "/today" | "/recovery" | "/sandbox";
+export type DashboardNavHref =
+  | "/week"
+  | "/schedule"
+  | "/today"
+  | "/recovery"
+  | "/sandbox";
 
 export type DashboardNavItem = {
   href: DashboardNavHref;
@@ -7,7 +12,7 @@ export type DashboardNavItem = {
   description: string;
 };
 
-/** Primary shell navigation — order is intentional (scan: horizon → now → recovery → simulate). */
+/** Primary shell navigation — order is intentional (horizon → now → recovery → simulate → roster). */
 export const DASHBOARD_NAV: readonly DashboardNavItem[] = [
   {
     href: "/week",
@@ -29,12 +34,18 @@ export const DASHBOARD_NAV: readonly DashboardNavItem[] = [
     label: "Sandbox",
     description: "What-if shifts before you commit to a swap.",
   },
+  {
+    href: "/schedule",
+    label: "Roster & schedule",
+    description: "Shifts, calendar import, and uploads.",
+  },
 ] as const;
 
 /** Short label for the dashboard top bar (not the same as nav label). */
 export function dashboardPageHeading(pathname: string): string {
   const map: Record<string, string> = {
     "/week": "Circadian injury map",
+    "/schedule": "Roster & schedule",
     "/today": "Today",
     "/dashboard": "Today",
     "/recovery": "Recovery",

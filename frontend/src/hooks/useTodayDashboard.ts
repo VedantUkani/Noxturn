@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { setStoredPlanMode } from "@/lib/session";
 import type { TodayDashboardPayload } from "@/lib/dashboard-types";
 import type { RecoverySimulationBand } from "@/lib/dashboard-types";
 import {
@@ -18,7 +17,6 @@ export type TodayDashboardActions = {
   openTaskDetail: (id: string) => void;
   closeTaskDetail: () => void;
   dismissPlanBanner: () => void;
-  setPlanMode: (mode: string) => void;
   startNextBest: () => void;
   remindNextBest: () => void;
   exhaustionCheckIn: () => void;
@@ -36,13 +34,6 @@ export function useTodayDashboard(
   baselineRef.current = initial;
 
   const [state, setState] = useState(() => initialLiveState(initial));
-
-  useEffect(() => {
-    setStoredPlanMode(state.planMode);
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("noxturn-plan-mode"));
-    }
-  }, [state.planMode]);
 
   useEffect(() => {
     if (!state.pulse) return;
@@ -102,10 +93,6 @@ export function useTodayDashboard(
     () => dispatch({ type: "DISMISS_BANNER" }),
     [dispatch],
   );
-  const setPlanMode = useCallback(
-    (mode: string) => dispatch({ type: "SET_PLAN_MODE", mode }),
-    [dispatch],
-  );
   const exhaustionCheckIn = useCallback(
     () => dispatch({ type: "EXHAUSTION_CHECKIN" }),
     [dispatch],
@@ -160,7 +147,6 @@ export function useTodayDashboard(
       openTaskDetail,
       closeTaskDetail,
       dismissPlanBanner,
-      setPlanMode,
       startNextBest,
       remindNextBest,
       exhaustionCheckIn,
@@ -177,7 +163,6 @@ export function useTodayDashboard(
       openTaskDetail,
       closeTaskDetail,
       dismissPlanBanner,
-      setPlanMode,
       startNextBest,
       remindNextBest,
       exhaustionCheckIn,

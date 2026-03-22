@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { DEMO_USER_NAME, DEMO_USER_ROLE } from "@/lib/constants";
+import { useEffectiveUserDisplay } from "@/hooks/useEffectiveUserDisplay";
 import { clearAuthenticated } from "@/lib/auth-browser";
 import { cn } from "@/lib/utils";
 import { nx } from "@/lib/ui-theme";
@@ -21,6 +21,7 @@ function initials(name: string) {
 
 export function UserMiniProfileCard({ className }: UserMiniProfileCardProps) {
   const router = useRouter();
+  const { displayName, roleLine } = useEffectiveUserDisplay();
 
   function signOut() {
     clearAuthenticated();
@@ -40,14 +41,14 @@ export function UserMiniProfileCard({ className }: UserMiniProfileCardProps) {
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#45e0d4]/15 text-[11px] font-semibold tracking-tight text-[#45e0d4] ring-1 ring-[#45e0d4]/25"
           aria-hidden
         >
-          {initials(DEMO_USER_NAME)}
+          {initials(displayName)}
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-medium leading-tight text-[#edf2ff]">
-            {DEMO_USER_NAME}
+            {displayName}
           </p>
           <p className="mt-0.5 truncate text-[11px] leading-tight text-[#7d89a6]">
-            {DEMO_USER_ROLE}
+            {roleLine}
           </p>
         </div>
       </div>
