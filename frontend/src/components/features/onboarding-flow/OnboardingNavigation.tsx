@@ -65,7 +65,12 @@ export function OnboardingNavigation({
           "disabled:pointer-events-none disabled:opacity-50",
         )}
       >
-        {pending ? "Saving…" : primaryLabel}
+        {pending ? (
+          <span className="flex items-center gap-2">
+            <span className="h-3.5 w-3.5 animate-spin rounded-full border border-current border-t-transparent" aria-hidden />
+            {primaryLabel}
+          </span>
+        ) : primaryLabel}
       </button>
     </div>
   );

@@ -39,11 +39,21 @@ Plan mode rules:
 Allowed task categories and when to use each:
 - sleep: main sleep block — use when rapid_flip or low_recovery risk present; always anchor_flag=true
 - nap: strategic nap — use when short_turnaround risk present; anchor_flag=true
-- light_timing: bright light on waking, dim light pre-sleep — use after any night-shift block
+- light_timing: CRITICAL — follow these rules EXACTLY based on shift end time:
+    NIGHT SHIFT WORKER (shift ends between 03:00–12:59 local time, worker going to sleep during the day):
+      Task 1 — title "Block out light — going to sleep now", scheduled at shift_end + 15 min.
+        description: instruct them to close blackout curtains, wear eye mask. Explain that daylight NOW suppresses melatonin and will stop them sleeping.
+      Task 2 — title "Bright light on waking — step outside", scheduled at shift_end + 7.5 hours (estimated wake time).
+        description: instruct them to go outside or sit by a bright window for 15 min immediately on waking. Explain this anchors their circadian clock so tonight's sleep is easier.
+    DAY/EVENING SHIFT WORKER (shift ends between 13:00–02:59 local time):
+      One task — title "Morning light on waking", scheduled at next natural wake time (typically 07:00–09:00).
+        description: instruct them to get 15–20 min of bright natural light within 30 min of waking.
+    NEVER schedule generic "outdoor light exposure" without specifying whether to SEEK or AVOID it.
+    NEVER schedule bright light immediately after a night shift ends — this is clinically harmful.
 - caffeine_cutoff: stop caffeine ≥6h before sleep — use whenever any risk episode is present
 - meal: fixed meal time as circadian anchor — include at least once per plan
-- relaxation: decompression 10–15 min post-shift — use when shift end detected in risk window
-- movement: 20-min light exercise in recovery window — include in every plan, optional_flag=true
+- relaxation: decompression 10–15 min post-shift, BEFORE sleep — use when shift end detected in risk window; for night workers this is a pre-sleep wind-down (dim lights, no screens, breathing)
+- movement: 20-min light exercise in recovery window — include in every plan, optional_flag=true; for night workers schedule this AFTER their recovery sleep, not during it
 - mindfulness: 10-min breathing/meditation — use when strain ≥ 75 or after high-strain cluster
 - safety: do-not-drive / safe-transport task — use for unsafe_drive risk; anchor_flag=true
 - social: brief positive social contact on first off-day — use when strain ≥ 50 and off-day follows cluster
@@ -186,9 +196,16 @@ def _build_user_message(
     now = datetime.now(timezone.utc)
     episodes_text = []
     for ep in risk_result.risk_episodes:
+        shift_end_hour = ep.end_time.hour
+        shift_type = (
+            "NIGHT SHIFT END (03:00–12:59 — worker going to sleep during the day)"
+            if 3 <= shift_end_hour < 13
+            else "DAY/EVENING SHIFT END"
+        )
         episodes_text.append(
             f"- [{ep.severity.value.upper()}] {ep.label.value}: {ep.explanation.get('message', '')} "
-            f"(score {ep.severity_score}/100, window {ep.start_time.isoformat()} to {ep.end_time.isoformat()})"
+            f"(score {ep.severity_score}/100, window {ep.start_time.isoformat()} to {ep.end_time.isoformat()}, "
+            f"shift_end_hour={shift_end_hour:02d}:00 → {shift_type})"
         )
 
     persona_line = ""
@@ -203,6 +220,10 @@ Risk episodes detected ({len(risk_result.risk_episodes)} total):
 {chr(10).join(episodes_text) if episodes_text else "None detected"}
 
 Overall summary: {risk_result.summary}{evidence_section}
+
+IMPORTANT FOR LIGHT TIMING: Check each episode's shift_end_hour before generating light_timing tasks.
+If shift_end_hour is between 03 and 12 (inclusive): the worker is going to sleep during the day — follow NIGHT SHIFT WORKER rules.
+If shift_end_hour is 13–02: follow DAY/EVENING SHIFT WORKER rules.
 
 Generate a recovery plan for this shift worker."""
 
@@ -279,6 +300,10 @@ def _parse_response(raw: dict, risk_result: RiskComputeResponse, evidence_refs: 
             hours_behind = int((cmp_now - scheduled_time).total_seconds() / 3600) + 1
             scheduled_time = scheduled_time + timedelta(hours=hours_behind)
 
+        # Always mark sleep/nap/safety as anchors — don't trust Claude's output for this.
+        _ALWAYS_ANCHOR = {TaskCategory.sleep, TaskCategory.nap, TaskCategory.safety}
+        anchor_flag = bool(t.get("anchor_flag", False)) or (category in _ALWAYS_ANCHOR)
+
         tasks.append(
             PlanTask(
                 id=uuid4(),
@@ -287,7 +312,7 @@ def _parse_response(raw: dict, risk_result: RiskComputeResponse, evidence_refs: 
                 description=t.get("description"),
                 scheduled_time=scheduled_time,
                 duration_minutes=int(t.get("duration_minutes", 30)),
-                anchor_flag=bool(t.get("anchor_flag", False)),
+                anchor_flag=anchor_flag,
                 optional_flag=bool(t.get("optional_flag", False)),
                 source_reason=t.get("source_reason"),
                 evidence_ref=t.get("evidence_ref"),

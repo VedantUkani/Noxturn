@@ -1,11 +1,9 @@
 "use client";
 
 import type { DashboardTask } from "@/lib/dashboard-types";
-import { IconClock } from "@/components/icons/NavIcons";
 import { cn } from "@/lib/utils";
-import { nx } from "@/lib/ui-theme";
 
-function fmtWhen(iso: string): string {
+function fmtTime(iso: string): string {
   try {
     return new Date(iso).toLocaleTimeString(undefined, {
       hour: "numeric",
@@ -16,7 +14,20 @@ function fmtWhen(iso: string): string {
   }
 }
 
-type DashboardTaskCardProps = {
+function CheckCircle({ done }: { done: boolean }) {
+  if (done)
+    return (
+      <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 text-[#45e0d4]" fill="none">
+        <circle cx="8" cy="8" r="7" fill="currentColor" fillOpacity={0.15} stroke="currentColor" strokeWidth="1.5" />
+        <path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  return (
+    <div className="h-4 w-4 shrink-0 rounded-full border border-white/20" />
+  );
+}
+
+type Props = {
   task: DashboardTask;
   onComplete: () => void;
   onSkip: () => void;
@@ -29,137 +40,110 @@ export function DashboardTaskCard({
   task,
   onComplete,
   onSkip,
-  onMissed,
   onSnooze,
   onDetails,
-}: DashboardTaskCardProps) {
+}: Props) {
   const done =
     task.status === "completed" ||
     task.status === "skipped" ||
     task.status === "expired" ||
     task.status === "replaced";
-  const snoozed = task.status === "snoozed";
+
+  const timeLabel = task.scheduled_time
+    ? `${fmtTime(task.scheduled_time)} · ${task.duration_minutes}m`
+    : `${task.duration_minutes}m`;
+
+  const statusNote =
+    task.status === "completed" ? "Completed" :
+    task.status === "skipped" ? "Skipped" :
+    task.status === "expired" ? "Window passed" :
+    task.status === "replaced" ? "Superseded" :
+    task.status === "snoozed" && task.snoozedUntil
+      ? `Snoozed until ${fmtTime(task.snoozedUntil)}`
+      : null;
 
   return (
-    <article
+    <div
       className={cn(
-        "rounded-[22px] border border-white/[0.08] bg-[#141f42]/90 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] transition-opacity md:p-5",
-        task.anchor
-          ? "border-[#45e0d4]/28 shadow-[0_0_36px_-20px_rgba(69,224,212,0.2),inset_0_1px_0_0_rgba(255,255,255,0.06)]"
-          : "",
-        done && "opacity-60",
+        "flex items-start gap-3 px-4 py-3.5 transition-opacity",
+        done && "opacity-45",
       )}
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={cn(
-                "rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                task.anchor
-                  ? "bg-[#45e0d4]/15 text-[#a8fff7]"
-                  : "bg-[#101c3c] text-[#7d89a6]",
-              )}
-            >
-              {task.anchor ? "Anchor" : "Support"}
-            </span>
-            <span className="text-[11px] text-[#7d89a6]">
-              {fmtWhen(task.scheduled_time)} · {task.duration_minutes} min
-            </span>
-          </div>
-          <h4 className="mt-2 text-sm font-semibold text-[#edf2ff] md:text-[15px]">
-            {task.title}
-          </h4>
-          {snoozed && task.snoozedUntil ? (
-            <p className="mt-1 text-xs text-[#f7c22c]/90">
-              Snoozed until {fmtWhen(task.snoozedUntil)}
-            </p>
-          ) : null}
-          {task.status === "skipped" ? (
-            <p className="mt-1 text-xs text-[#7d89a6]">Skipped</p>
-          ) : null}
-          {task.status === "replaced" ? (
-            <p className="mt-1 text-xs text-[#7d89a6]">Superseded by a newer step</p>
-          ) : null}
-          {task.status === "completed" ? (
-            <p className="mt-1 text-xs text-[#45e0d4]/85">Completed</p>
-          ) : null}
-          {task.status === "expired" ? (
-            <p className="mt-1 text-xs text-[#7d89a6]">
-              Window passed — noted without judgment.
-            </p>
-          ) : null}
-        </div>
-      </div>
+      {/* Circle */}
+      <button
+        type="button"
+        aria-label={done ? "Completed" : "Mark as done"}
+        onClick={!done ? onComplete : undefined}
+        className={cn(
+          "mt-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#45e0d4]/50 rounded-full",
+          !done && "cursor-pointer",
+        )}
+      >
+        <CheckCircle done={done} />
+      </button>
 
-      {!done ? (
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={onComplete}
+      <div className="min-w-0 flex-1">
+        {/* Title + time */}
+        <div className="flex items-baseline justify-between gap-3">
+          <p
             className={cn(
-              "rounded-xl bg-[#45e0d4] px-3 py-1.5 text-xs font-bold text-[#04112d] transition hover:brightness-105",
-              nx.focusRing,
+              "text-sm font-medium leading-snug",
+              done ? "text-[#7d89a6] line-through" : "text-[#edf2ff]",
             )}
           >
-            Done
-          </button>
-          <button
-            type="button"
-            onClick={onSkip}
-            className={cn(
-              "rounded-xl border border-white/[0.12] bg-[#101c3c] px-3 py-1.5 text-xs font-medium text-[#edf2ff] transition hover:border-white/[0.18]",
-              nx.focusRing,
-            )}
-          >
-            Skip
-          </button>
-          {task.status === "planned" ? (
+            {task.title}
+          </p>
+          <span className="shrink-0 text-[11px] tabular-nums text-[#7d89a6]">
+            {timeLabel}
+          </span>
+        </div>
+
+        {/* Status note */}
+        {statusNote ? (
+          <p className={cn(
+            "mt-0.5 text-[11px]",
+            task.status === "completed" ? "text-[#45e0d4]/70" :
+            task.status === "snoozed" ? "text-amber-400/80" :
+            "text-[#7d89a6]",
+          )}>
+            {statusNote}
+          </p>
+        ) : null}
+
+        {/* Actions — only for active tasks */}
+        {!done && (
+          <div className="mt-2 flex items-center gap-1">
             <button
               type="button"
-              onClick={onMissed}
-              className={cn(
-                "rounded-lg px-2 py-1.5 text-[11px] font-medium text-[#7d89a6] underline-offset-2 hover:text-[#98a4bf] hover:underline",
-                nx.focusRing,
-              )}
+              onClick={onComplete}
+              className="rounded-md bg-[#45e0d4]/10 px-2.5 py-1 text-[11px] font-semibold text-[#45e0d4] transition hover:bg-[#45e0d4]/20"
             >
-              Missed window
+              Done
             </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={onSnooze}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-xl border border-white/[0.12] bg-[#101c3c] px-3 py-1.5 text-xs font-medium text-[#edf2ff] transition hover:border-white/[0.18]",
-              nx.focusRing,
-            )}
-          >
-            <IconClock className="h-3.5 w-3.5" aria-hidden />
-            Snooze
-          </button>
-          <button
-            type="button"
-            onClick={onDetails}
-            className={cn(
-              "ml-auto rounded-lg px-3 py-1.5 text-xs font-medium text-[#86c9ff] underline-offset-2 hover:underline",
-              nx.focusRing,
-            )}
-          >
-            Details
-          </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={onDetails}
-          className={cn(
-            "mt-3 text-xs font-medium text-[#86c9ff] hover:underline",
-            nx.focusRing,
-          )}
-        >
-          View details
-        </button>
-      )}
-    </article>
+            <button
+              type="button"
+              onClick={onSkip}
+              className="rounded-md border border-white/[0.08] px-2.5 py-1 text-[11px] font-medium text-[#7d89a6] transition hover:border-white/[0.15] hover:text-[#98a4bf]"
+            >
+              Skip
+            </button>
+            <button
+              type="button"
+              onClick={onSnooze}
+              className="rounded-md border border-white/[0.08] px-2.5 py-1 text-[11px] font-medium text-[#7d89a6] transition hover:border-white/[0.15] hover:text-[#98a4bf]"
+            >
+              Snooze
+            </button>
+            <button
+              type="button"
+              onClick={onDetails}
+              className="ml-auto text-[11px] font-medium text-[#86c9ff]/60 transition hover:text-[#86c9ff]"
+            >
+              Details →
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

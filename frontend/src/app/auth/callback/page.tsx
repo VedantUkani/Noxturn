@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { markAuthenticated } from "@/lib/auth-browser";
+import { syncBackendAuth } from "@/lib/backend-auth";
 import {
   displayNameFromEmail,
   persistSessionIdentity,
@@ -44,6 +45,12 @@ function AuthCallbackInner() {
           metaName.trim() ||
           (email ? displayNameFromEmail(email) : "Account");
         persistSessionIdentity({ displayName, email });
+        // Sync with backend auth to obtain backend JWT for protected API calls
+        try {
+          await syncBackendAuth(email, displayName);
+        } catch {
+          /* non-fatal */
+        }
       }
 
       markAuthenticated();

@@ -36,10 +36,19 @@ async function parseJson<T>(res: Response): Promise<T> {
   }
 }
 
+function authHeader(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const jwt = localStorage.getItem("noxturn_backend_jwt");
+  return jwt ? { Authorization: `Bearer ${jwt}` } : {};
+}
+
 export async function getJson<T>(path: string): Promise<T> {
   const base = getApiBase();
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, {
+    headers: authHeader(),
+    cache: "no-store",
+  });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     throw new ApiError(
@@ -56,7 +65,7 @@ export async function postJson<T>(path: string, body: unknown): Promise<T> {
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeader() },
     body: JSON.stringify(body),
     cache: "no-store",
   });

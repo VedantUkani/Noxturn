@@ -1,17 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AppSidebar } from "@/components/layout/sidebar";
 import { DashboardTopBar } from "./DashboardTopBar";
 import { IconClose, IconMenu } from "@/components/icons/NavIcons";
 import { APP_NAME } from "@/lib/constants";
+import { getBackendJwt, syncBackendAuth } from "@/lib/backend-auth";
 import { nx } from "@/lib/ui-theme";
 import { cn } from "@/lib/utils";
 
 export function DashboardChrome({ children }: { children: React.ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // If user is already Supabase-authenticated but has no backend JWT (e.g. logged
+  // in before this fix was deployed), sync now so API calls don't 401.
+  useEffect(() => {
+    if (getBackendJwt()) return; // already have it
+    void (async () => {
+      try {
+        const { supabase } = await import("@/lib/supabase");
+        if (!supabase) return;
+        const { data } = await supabase.auth.getSession();
+        const email = data.session?.user?.email;
+        if (!email) return;
+        const meta = data.session?.user?.user_metadata as Record<string, unknown> | undefined;
+        const name =
+          (typeof meta?.full_name === "string" ? meta.full_name : "") ||
+          (typeof meta?.name === "string" ? meta.name : "");
+        await syncBackendAuth(email, name || undefined);
+      } catch {
+        /* non-fatal */
+      }
+    })();
+  }, []);
   const pathname = usePathname();
   const hideChromeTopBar = pathname === "/settings";
 

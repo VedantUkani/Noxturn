@@ -84,3 +84,6 @@ BACKEND_FIXES_V2.md
 Backend_Report_V2.md
 BACKEND_FIXES.md
 
+package-lock.json
+package.json
+sample_data.json

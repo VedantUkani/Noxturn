@@ -22,6 +22,7 @@ from app.routes.health import router as health_router
 from app.routes.personas import router as personas_router
 from app.routes.plans import router as plans_router
 from app.routes.rag import router as rag_router
+from app.routes.recovery import router as recovery_router
 from app.routes.risks import router as risks_router
 from app.routes.schedule import router as schedule_router
 from app.routes.upload import router as upload_router
@@ -93,6 +94,7 @@ app.include_router(schedule_router)
 app.include_router(risks_router)
 app.include_router(rag_router)
 app.include_router(plans_router)
+app.include_router(recovery_router)
 app.include_router(stats_router)
 app.include_router(tasks_router)
 app.include_router(wearables_router)

@@ -75,11 +75,10 @@ export function nextBestFromApi(nba: DashboardTodayResponse["next_best_action"])
 export function payloadFromDashboardApi(d: DashboardTodayResponse): TodayDashboardPayload {
   const view = mapDashboardToTodayView(d);
   const anchors = d.anchor_tasks.map(planTaskToDashboard);
-  const tasks = [...anchors, ...mockSupportTasks()];
   return {
     vitals: view.vitals,
     nextBest: nextBestFromApi(d.next_best_action),
-    tasks,
+    tasks: anchors,
     recommendations: [...view.recommendations],
     avoid: [...view.avoid],
   };

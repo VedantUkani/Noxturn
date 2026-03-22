@@ -5,7 +5,7 @@
  * mapped in `nextBestFromApi` in `mocks/today-dashboard-payload.ts`.
  */
 
-export type TodayRecommendationId = "sleep" | "light" | "caffeine";
+export type TodayRecommendationId = "sleep" | "light" | "caffeine" | "social";
 
 export type TodayRecommendation = {
   id: TodayRecommendationId;
@@ -83,6 +83,12 @@ export const todayDemo: TodayViewModel = {
       title: "Caffeine Cutoff",
       value: "By 13:00 Today",
       note: "An earlier cutoff leaves more room for sleep pressure when you finally wind down.",
+    },
+    {
+      id: "social",
+      title: "Social Interaction",
+      value: "20 min connection",
+      note: "A brief positive interaction on your first recovery day helps anchor emotional rhythm and reduces allostatic load.",
     },
   ],
   avoid: [

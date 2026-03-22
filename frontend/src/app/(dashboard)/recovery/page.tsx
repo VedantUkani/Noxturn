@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { RecoveryAnalyticsPage } from "@/components/features/recovery-analytics";
-import { mockRecoveryAnalyticsViewModel } from "@/components/features/recovery-analytics/mock-data";
+import { RecoveryPageClient } from "@/components/features/recovery-analytics/RecoveryPageClient";
 
 export const metadata: Metadata = {
   title: "Recovery",
@@ -8,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function RecoveryPage() {
-  return <RecoveryAnalyticsPage data={mockRecoveryAnalyticsViewModel} />;
+  return <RecoveryPageClient />;
 }

@@ -6,10 +6,18 @@ export type RecoverySnapshotModel = {
   microLabel: string;
 };
 
+export type DailyBlockStat = {
+  day: string;       // "MON"
+  date: string;      // "2026-03-15"
+  protected: number;
+  total: number;
+};
+
 export type RecoveryProtectedBlocksModel = {
   title: string;
   subtitle: string;
   weekdayLabels: readonly string[];
+  daily: readonly DailyBlockStat[];
 };
 
 export type RecoveryMetricModel = {

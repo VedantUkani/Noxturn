@@ -7,6 +7,7 @@ import {
   serializeClearAuthCookie,
 } from "./auth-cookie";
 import { clearSessionIdentity } from "./session-identity";
+import { clearBackendJwt } from "./backend-auth";
 
 export function markAuthenticated(): void {
   if (typeof document === "undefined") return;
@@ -20,4 +21,5 @@ export function clearAuthenticated(): void {
   if (typeof document === "undefined") return;
   document.cookie = serializeClearAuthCookie();
   clearSessionIdentity();
+  clearBackendJwt();
 }
