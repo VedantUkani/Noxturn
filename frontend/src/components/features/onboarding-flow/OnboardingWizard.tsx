@@ -91,8 +91,16 @@ export function OnboardingWizard() {
     }
     setFinishing(true);
 
-    // TODO(noxturn-api): POST /api/onboarding/profile with draft payload
-    void draft;
+    // Save onboarding profile to localStorage so dashboard can read it
+    try {
+      localStorage.setItem("noxturn_profile", JSON.stringify({
+        roleId: draft.roleId,
+        commuteMinutes: draft.commuteMinutes,
+        sleepConstraint: draft.sleepConstraint,
+        buddyOptIn: draft.buddyOptIn,
+        savedAt: new Date().toISOString(),
+      }));
+    } catch { /* ignore */ }
 
     markOnboardingComplete();
     clearWizardState();
