@@ -1,6 +1,6 @@
 # Noxturn — Circadian Recovery Planner for Shift Workers
 
-> **HackASU 2026 · Mental Health Track**
+> **HackASU 2026**
 
 Noxturn is an AI-powered recovery planner built for nurses, paramedics, factory workers, and anyone working rotating shifts. It analyzes your schedule, detects circadian risk (rapid flips, short turnarounds, unsafe drive windows), and uses Claude AI to generate a personalized 24–72 hour recovery plan — calibrated to your chronotype, sleep conditions, and medical history.
 
