@@ -1,0 +1,28 @@
+{
+  "id": "nurse_icu",
+  "name": "ICU / ER Nurse",
+  "role": "nurse",
+  "shift_pattern": "rotating_12h",
+  "typical_shift_hours": 12,
+  "typical_commute_minutes": 30,
+  "risk_profile": {
+    "rapid_flip_sensitivity": "critical",
+    "sleep_minimum_hours": 7,
+    "nap_tolerance": "good",
+    "consecutive_nights_max": 3
+  },
+  "plan_tone": "clinical_supportive",
+  "clinical_context": "Works in a high-acuity ICU or ER environment where cognitive errors directly risk patient lives. Must maintain alertness for medication dosing, complex assessments, and emergency procedures. Emotional load from patient outcomes adds to fatigue burden beyond shift hours.",
+  "priority_interventions": [
+    "post_night_sleep_protection",
+    "strategic_nap",
+    "caffeine_cutoff",
+    "bright_light_after_wake"
+  ],
+  "avoid_patterns": [
+    "More than 3 consecutive night shifts",
+    "Less than 11h rest between 12h shifts",
+    "Driving more than 45 min after a night shift without a nap"
+  ],
+  "recovery_notes": "Post-shift cortisol spike from ICU stress delays sleep onset — a 15-min decompression routine before attempting sleep is especially important. Meal timing helps re-anchor disrupted circadian rhythm after rotating shifts."
+}

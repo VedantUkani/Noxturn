@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Onboarding — Noxturn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              slate: {
+                50: "#f8fafc",
+                100: "#f1f5f9",
+                200: "#e2e8f0",
+                300: "#cbd5e1",
+                400: "#94a3b8",
+                500: "#64748b",
+                600: "#475569",
+                700: "#334155",
+                800: "#1e293b",
+                900: "#0f172a",
+                950: "#020617",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      html,
+      body {
+        background-color: #04112d;
+        color: #f1f5f9;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.25s ease both;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-spin {
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 4px;
+        background: #1e293b;
+        border-radius: 2px;
+        outline: none;
+        width: 100%;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        background: #45e0d4;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        background: #45e0d4;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+      }
+      select option {
+        background: #1e293b;
+        color: #f1f5f9;
+      }
+      .toast-enter {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      .toast-show {
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .toast-hide {
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      /* Embedded in Next app (iframe): parent shell already provides nav + top bar */
+      html.embed-onboard #sidebar,
+      html.embed-onboard #sidebar-overlay {
+        display: none !important;
+      }
+      html.embed-onboard #onboard-main-shell {
+        padding-left: 0 !important;
+      }
+      html.embed-onboard #inner-chrome-header {
+        display: none !important;
+      }
+      html.embed-onboard #page-root {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-top: 0.5rem;
+        padding-bottom: 2rem;
+      }
+      @media (min-width: 640px) {
+        html.embed-onboard #page-root {
+          padding-left: 1.5rem;
+          padding-right: 1.5rem;
+          padding-top: 0.75rem;
+        }
+      }
+      html.embed-onboard #onboard-content-column {
+        max-width: 48rem;
+      }
+      html.embed-onboard #stepper {
+        margin-bottom: 2rem;
+      }
+    </style>
+    <script>
+      try {
+        if (window.self !== window.top) {
+          document.documentElement.classList.add("embed-onboard");
+        }
+      } catch (e) {
+        /* cross-origin */
+      }
+    </script>
+  </head>
+  <body class="min-h-full bg-[#04112d] antialiased text-[#edf2ff]">
+    <!-- Mobile overlay -->
+    <div
+      id="sidebar-overlay"
+      class="fixed inset-0 z-30 hidden bg-black/60 backdrop-blur-sm lg:hidden"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Sidebar -->
+    <aside
+      id="sidebar"
+      class="fixed left-0 top-0 z-40 flex h-full w-60 -translate-x-full flex-col border-r border-white/[0.06] bg-[#08142f] shadow-[8px_0_48px_-20px_rgba(0,0,0,0.85)] transition-transform duration-200 lg:translate-x-0"
+    >
+      <div class="border-b border-white/[0.06] px-5 py-5">
+        <a href="/onboarding" class="flex items-center gap-2" target="_top">
+          <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-[#0c1f3d] text-sm font-bold text-[#45e0d4] shadow-[inset_0_0_0_1px_rgba(69,224,212,0.12)]">N</span>
+          <div class="leading-none">
+            <div class="text-sm font-semibold text-[#edf2ff]">Noxturn</div>
+            <div class="mt-0.5 text-xs text-[#7d89a6]">Circadian Planner</div>
+          </div>
+        </a>
+      </div>
+      <nav class="flex flex-1 flex-col space-y-1 px-3 py-4" aria-label="App">
+        <a
+          href="/onboarding"
+          class="sidebar-link group flex items-center rounded-2xl border border-transparent px-3 py-2.5 text-sm font-medium text-[#98a4bf] transition-colors hover:bg-white/[0.04] hover:text-[#edf2ff]"
+          target="_top"
+        >
+          <svg class="mr-2 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+          Home
+        </a>
+        <a
+          href="/onboard"
+          class="sidebar-link flex items-center rounded-2xl border border-[#45e0d4]/20 bg-[#0c1f3d]/60 px-3 py-2.5 text-sm font-medium text-[#45e0d4] shadow-[inset_0_0_0_1px_rgba(69,224,212,0.12)]"
+          target="_top"
+        >
+          <svg class="mr-2 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          Onboard
+          <span class="ml-auto h-1.5 w-1.5 rounded-full bg-[#45e0d4]"></span>
+        </a>
+        <a
+          href="/today"
+          class="sidebar-link group flex items-center rounded-2xl border border-transparent px-3 py-2.5 text-sm font-medium text-[#98a4bf] transition-colors hover:bg-white/[0.04] hover:text-[#edf2ff]"
+          target="_top"
+        >
+          <svg class="mr-2 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+          Dashboard
+        </a>
+        <a
+          href="/settings"
+          class="sidebar-link group flex items-center rounded-2xl border border-transparent px-3 py-2.5 text-sm font-medium text-[#98a4bf] transition-colors hover:bg-white/[0.04] hover:text-[#edf2ff]"
+          target="_top"
+        >
+          <svg class="mr-2 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+            />
+          </svg>
+          Settings
+        </a>
+      </nav>
+      <div class="border-t border-white/[0.06] px-3 pb-5 pt-3">
+        <div class="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-[#141f42] px-3 py-2.5">
+          <div class="flex h-7 w-7 items-center justify-center rounded-full bg-[#16264a] text-xs font-semibold text-[#98a4bf]">U</div>
+          <div>
+            <div class="text-xs font-medium text-[#edf2ff]">Shift Worker</div>
+            <div class="text-xs text-[#7d89a6]">Local session</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div id="onboard-main-shell" class="flex min-h-screen flex-col lg:pl-60">
+      <header
+        id="inner-chrome-header"
+        class="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-white/[0.06] bg-[#04112d]/92 px-4 backdrop-blur-md sm:px-6"
+      >
+        <button
+          type="button"
+          id="btn-menu"
+          class="rounded-lg p-1.5 text-[#98a4bf] hover:bg-white/[0.06] lg:hidden"
+          aria-label="Open menu"
+        >
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <div class="flex flex-1 justify-center lg:justify-start lg:pl-0">
+          <span class="text-sm font-semibold text-[#edf2ff]">Onboarding</span>
+        </div>
+        <div class="relative" id="a11y-root">
+          <button
+            type="button"
+            id="a11y-btn"
+            class="flex items-center gap-2 rounded-xl border border-white/[0.1] bg-[#101c3c]/80 px-3 py-1.5 text-sm text-[#98a4bf]"
+            aria-expanded="false"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="4" r="1.5" />
+              <path d="M6 8h12" />
+              <path d="M12 8v13" />
+              <path d="M8 21l4-5 4 5" />
+            </svg>
+            <span class="hidden sm:inline">Accessibility</span>
+          </button>
+          <div
+            id="a11y-panel"
+            class="absolute right-0 top-full z-50 mt-2 hidden w-72 rounded-[22px] border border-white/[0.06] bg-[#141f42] shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)]"
+            role="dialog"
+          >
+            <div class="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+              <span class="text-sm font-semibold text-[#edf2ff]">Accessibility</span>
+              <button type="button" id="a11y-close" class="rounded-lg p-1 text-[#98a4bf] hover:bg-white/[0.06] hover:text-[#edf2ff]" aria-label="Close">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="p-4 text-xs text-[#7d89a6]">Adjust display preferences for this page.</div>
+          </div>
+        </div>
+      </header>
+
+      <div id="page-root" class="flex flex-1 flex-col px-4 py-6 sm:px-6">
+        <div id="onboard-content-column" class="mx-auto w-full max-w-2xl flex-1">
+          <!-- Stepper -->
+          <div id="stepper" class="mb-8 flex flex-wrap items-center gap-2 sm:gap-3"></div>
+
+          <!-- Step 1 -->
+          <section id="step-1" class="step-panel animate-fade-in">
+            <h2 class="mb-1 text-xl font-bold text-[#edf2ff]">What's your role?</h2>
+            <p class="mb-6 text-sm text-[#98a4bf]">This helps us tailor your recovery plan and communication tone.</p>
+            <div class="grid gap-3 sm:grid-cols-2" id="role-grid"></div>
+            <div class="mt-8 flex justify-end">
+              <button
+                type="button"
+                id="btn-s1-next"
+                class="inline-flex items-center gap-1 rounded-2xl bg-[#45e0d4] px-4 py-2 text-sm font-bold text-[#04112d] shadow-[0_8px_28px_-12px_rgba(69,224,212,0.55)] hover:brightness-105"
+              >
+                Continue
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+          </section>
+
+          <!-- Step 2 -->
+          <section id="step-2" class="step-panel hidden">
+            <h2 class="mb-1 text-xl font-bold text-[#edf2ff]">How long is your commute?</h2>
+            <p class="mb-6 text-sm text-[#98a4bf]">Used to calculate available rest time between shifts.</p>
+            <div class="rounded-[22px] border border-white/[0.06] bg-[#141f42] p-6">
+              <div class="mb-3 flex items-center justify-between">
+                <span class="text-xs font-medium uppercase tracking-wider text-[#98a4bf]">One-way commute</span>
+                <span id="commute-val" class="text-sm font-semibold text-[#edf2ff]">35 min</span>
+              </div>
+              <input id="commute-range" type="range" min="0" max="120" step="5" value="35" class="w-full" />
+              <div class="mt-1 flex justify-between text-xs text-[#7d89a6]">
+                <span>0 min</span>
+                <span>120 min</span>
+              </div>
+              <div id="commute-info" class="mt-4 rounded-xl border border-white/[0.08] bg-[#101c3c]/60 px-3 py-2.5 text-xs text-[#7d89a6]"></div>
+            </div>
+            <div class="mt-8 flex justify-between">
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-sm text-[#98a4bf] hover:bg-white/[0.06] hover:text-[#edf2ff]"
+                data-back
+              >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Back
+              </button>
+              <button
+                type="button"
+                id="btn-s2-next"
+                class="inline-flex items-center gap-1 rounded-2xl bg-[#45e0d4] px-4 py-2 text-sm font-bold text-[#04112d] shadow-[0_8px_28px_-12px_rgba(69,224,212,0.55)] hover:brightness-105"
+              >
+                Continue
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+          </section>
+
+          <!-- Step 3 -->
+          <section id="step-3" class="step-panel hidden">
+            <h2 class="mb-1 text-xl font-bold text-[#edf2ff]">Sleep preferences</h2>
+            <p class="mb-6 text-sm text-[#98a4bf]">Helps personalise your plan's sleep timing recommendations.</p>
+            <div class="space-y-5 rounded-[22px] border border-white/[0.06] bg-[#141f42] p-6">
+              <div>
+                <label class="mb-2 block text-xs font-medium uppercase tracking-wider text-[#98a4bf]">Sleep constraint</label>
+                <select
+                  id="constraint-select"
+                  class="w-full rounded-xl border border-white/[0.08] bg-[#101c3c]/80 px-3 py-2 text-sm text-[#edf2ff] focus:border-[#45e0d4]/50 focus:outline-none focus:ring-1 focus:ring-[#45e0d4]/40"
+                >
+                  <option value="cant_sleep_before_9am">Can't sleep before 9 AM after nights</option>
+                  <option value="light_sensitive">Light sensitive before sleep</option>
+                  <option value="short_sleep_risk">Frequently short sleep after shifts</option>
+                  <option value="none">No specific constraint</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-8 flex justify-between">
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-sm text-[#98a4bf] hover:bg-white/[0.06] hover:text-[#edf2ff]"
+                data-back
+              >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Back
+              </button>
+              <button
+                type="button"
+                id="btn-s3-next"
+                class="inline-flex items-center gap-1 rounded-2xl bg-[#45e0d4] px-4 py-2 text-sm font-bold text-[#04112d] shadow-[0_8px_28px_-12px_rgba(69,224,212,0.55)] hover:brightness-105"
+              >
+                Continue
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+          </section>
+
+          <!-- Step 4 -->
+          <section id="step-4" class="step-panel hidden">
+            <h2 class="mb-1 text-xl font-bold text-[#edf2ff]">Import your schedule</h2>
+            <p class="mb-6 text-sm text-[#98a4bf]">Paste shift text or add shifts manually.</p>
+
+            <div id="schedule-active">
+              <div class="mb-4 flex gap-1 rounded-[22px] border border-white/[0.06] bg-[#141f42] p-1">
+                <button type="button" id="mode-paste" class="mode-btn flex-1 rounded-xl bg-[#45e0d4] py-2 text-sm font-bold text-[#04112d] shadow-[0_8px_28px_-12px_rgba(69,224,212,0.45)]">Paste text</button>
+                <button type="button" id="mode-manual" class="mode-btn flex-1 rounded-lg py-2 text-sm font-medium text-[#98a4bf] hover:text-[#edf2ff]">Add manually</button>
+              </div>
+
+              <div id="panel-paste" class="rounded-[22px] border border-white/[0.06] bg-[#141f42] p-4">
+                <div class="mb-2 text-xs font-medium uppercase tracking-wider text-[#98a4bf]">Schedule text</div>
+                <p class="mb-2 text-xs text-[#7d89a6]">
+                  CSV format: block_type,start_ISO,end_ISO e.g. "night_shift,2025-01-01T22:00:00,2025-01-02T06:00:00"
+                </p>
+                <textarea
+                  id="paste-ta"
+                  rows="6"
+                  class="w-full resize-none rounded-lg border border-white/[0.08] bg-[#101c3c]/80 px-3 py-2 text-sm text-[#edf2ff] placeholder:text-[#7d89a6]"
+                  placeholder='night_shift,2025-01-10T22:00:00,2025-01-11T06:00:00&#10;day_shift,2025-01-12T07:00:00,2025-01-12T19:00:00'
+                ></textarea>
+                <button
+                  type="button"
+                  id="btn-parse"
+                  class="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-2xl bg-[#45e0d4] px-4 text-sm font-bold text-[#04112d] shadow-[0_8px_28px_-12px_rgba(69,224,212,0.55)] hover:brightness-105"
+                >
+                  <span id="parse-label">Parse & import</span>
+                  <span id="parse-spin" class="hidden">
+                    <svg class="h-4 w-4 animate-spin text-[#04112d]" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  </span>
+                </button>
+              </div>
+
+              <div id="panel-manual" class="hidden rounded-[22px] border border-white/[0.06] bg-[#141f42] p-4">
+                <div class="mb-4 space-y-3">
+                  <div class="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label class="mb-1 block text-xs text-[#7d89a6]">Shift type</label>
+                      <select id="ms-type" class="w-full rounded-lg border border-white/[0.08] bg-[#101c3c]/80 px-3 py-2 text-sm text-[#edf2ff]">
+                        <option value="day_shift">Day shift</option>
+                        <option value="night_shift">Night shift</option>
+                        <option value="evening_shift">Evening shift</option>
+                        <option value="day_off">Day off</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-xs text-[#7d89a6]">Title (optional)</label>
+                      <input id="ms-title" type="text" class="w-full rounded-lg border border-white/[0.08] bg-[#101c3c]/80 px-3 py-2 text-sm text-[#edf2ff]" placeholder="e.g. ICU Ward A" />
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-3 gap-3">
+                    <div>
+                      <label class="mb-1 block text-xs text-[#7d89a6]">Date</label>
+                      <input id="ms-date" type="date" class="w-full rounded-lg border border-white/[0.08] bg-[#101c3c]/80 px-3 py-2 text-sm text-[#edf2ff]" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-xs text-[#7d89a6]">Start</label>
+                      <input id="ms-start" type="time" class="w-full rounded-lg border border-white/[0.08] bg-[#101c3c]/80 px-3 py-2 text-sm text-[#edf2ff]" />
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-xs text-[#7d89a6]">End</label>
+                      <input id="ms-end" type="time" class="w-full rounded-lg border border-white/[0.08] bg-[#101c3c]/80 px-3 py-2 text-sm text-[#edf2ff]" />
+                    </div>
+                  </div>
+                  <button type="button" id="btn-add-shift" class="rounded-lg border border-white/[0.1] bg-[#16264a] px-3 py-2 text-sm text-[#edf2ff] hover:bg-[#141f42]">Add shift</button>
+                </div>
+                <div id="manual-list-wrap" class="mb-4 hidden">
+                  <div class="mb-2 text-xs font-medium uppercase tracking-wider text-[#7d89a6]">Added shifts</div>
+                  <div id="manual-list" class="space-y-2"></div>
+                </div>
+                <button
+                  type="button"
+                  id="btn-import-manual"
+                  class="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#45e0d4] py-2.5 text-sm font-bold text-[#04112d] opacity-50 shadow-[0_8px_28px_-12px_rgba(69,224,212,0.55)] hover:brightness-105"
+                  disabled
+                >
+                  <span id="manual-import-label">Import 0 shift(s)</span>
+                  <span id="manual-spin" class="hidden">
+                    <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                  </span>
+                </button>
+              </div>
+
+              <div
+                id="schedule-error"
+                class="mt-4 hidden flex items-start gap-2 rounded-lg border border-red-800/40 bg-red-950/40 px-3 py-2.5 text-sm text-red-300"
+              >
+                <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                <span id="schedule-error-msg"></span>
+              </div>
+            </div>
+
+            <div id="schedule-success" class="hidden rounded-[22px] border border-white/[0.06] bg-[#141f42]/70 p-4">
+              <div class="mb-3 flex flex-wrap items-center gap-2">
+                <div class="flex h-6 w-6 items-center justify-center rounded-full border border-emerald-700 bg-emerald-900/60">
+                  <svg class="h-3.5 w-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <span id="success-count" class="text-sm font-semibold text-[#edf2ff]">0 shifts imported</span>
+                <span id="success-badge" class="rounded bg-emerald-950/70 px-1.5 py-0.5 text-xs text-emerald-300">94% confidence</span>
+              </div>
+              <ul id="success-warnings" class="mb-3 hidden space-y-1"></ul>
+              <a
+                id="btn-dashboard"
+                href="/today"
+                class="flex w-full items-center justify-center gap-1 rounded-2xl bg-[#45e0d4] py-2.5 text-sm font-bold text-[#04112d] shadow-[0_8px_28px_-12px_rgba(69,224,212,0.55)] hover:brightness-105"
+                target="_top"
+              >
+                Go to Dashboard
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </a>
+            </div>
+
+            <div class="mt-8 flex justify-start">
+              <button
+                type="button"
+                id="btn-s4-back"
+                class="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-sm text-[#98a4bf] hover:bg-white/[0.06] hover:text-[#edf2ff]"
+              >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Back
+              </button>
+            </div>
+          </section>
+
+          <!-- Summary -->
+          <div id="summary-strip" class="mt-8 hidden flex-wrap gap-4 rounded-[22px] border border-white/[0.06] bg-[#141f42]/60 px-4 py-3 text-xs text-[#7d89a6]"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div
+      id="toast"
+      class="toast-enter fixed bottom-6 right-6 z-50 hidden max-w-sm rounded-xl border border-emerald-700 bg-emerald-900/90 px-4 py-3 text-emerald-200 shadow-2xl"
+    >
+      <div class="flex items-start gap-3">
+        <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-800/80 text-emerald-200">✓</div>
+        <p class="flex-1 text-sm">Schedule imported successfully</p>
+        <button type="button" id="toast-close" class="text-emerald-200/70 hover:text-emerald-100" aria-label="Dismiss">×</button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var step = 1;
+        var role = "nurse";
+        var commute = 35;
+        var constraint = "cant_sleep_before_9am";
+        var scheduleMode = "paste";
+        var manualShifts = [];
+        var importSuccess = null;
+        var loadingPaste = false;
+        var loadingManual = false;
+        var toastTimer = null;
+
+        var ROLE_ROWS = [
+          { id: "nurse", emoji: "🏥", label: "Nurse / RN", desc: "ICU, ER, or ward rotations" },
+          { id: "paramedic", emoji: "🚑", label: "Paramedic / EMT", desc: "24-on / 48-off schedules" },
+          { id: "factory_worker", emoji: "🏭", label: "Factory / Shift Worker", desc: "Rotating 8h or 12h shifts" },
+          { id: "resident", emoji: "⚕️", label: "Medical Resident", desc: "Long call rotations" },
+          { id: "other", emoji: "👤", label: "Other", desc: "Any rotating schedule" },
+        ];
+
+        var ROLE_SUMMARY = { nurse: "nurse", paramedic: "paramedic", factory_worker: "factory worker", resident: "medical resident", other: "other" };
+
+        function el(id) {
+          return document.getElementById(id);
+        }
+
+        function commuteY() {
+          return 11 + Math.round(commute / 30) * 0.5;
+        }
+
+        function updateCommuteInfo() {
+          var n = el("commute-info");
+          if (!n) return;
+          n.innerHTML =
+            'With a <span class="font-medium text-[#edf2ff]">' +
+            commute +
+            '</span> minute commute, you need at least <span class="font-medium text-[#edf2ff]">' +
+            commuteY() +
+            "h</span> between shifts to avoid a short-turnaround risk episode.";
+        }
+
+        function renderStepper() {
+          var labels = ["Role", "Commute", "Preferences", "Schedule"];
+          var h = "";
+          for (var i = 0; i < 4; i++) {
+            var num = i + 1;
+            var dotClass = "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-all ";
+            var inner = "";
+            if (step === num) {
+              dotClass += "border-[#45e0d4] bg-[#45e0d4] text-[#04112d]";
+              inner = String(num);
+            } else if (step > num) {
+              dotClass += "border-emerald-700 bg-emerald-900/60 text-emerald-400";
+              inner = '<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+            } else {
+              dotClass += "border-white/[0.1] bg-[#101c3c] text-[#7d89a6]";
+              inner = String(num);
+            }
+            var lblClass = "hidden text-xs sm:inline " + (step === num ? "font-medium text-[#edf2ff]" : "text-[#7d89a6]");
+            h += '<div class="flex items-center gap-2">';
+            h += '<div class="' + dotClass + '">' + inner + "</div>";
+            h += '<span class="' + lblClass + '">' + labels[i] + "</span>";
+            h += "</div>";
+            if (i < 3) {
+              var segDone = step > num;
+              h +=
+                '<div class="h-px w-8 shrink-0 sm:w-12 ' + (segDone ? "bg-[#45e0d4]/45" : "bg-white/[0.08]") + '"></div>';
+            }
+          }
+          el("stepper").innerHTML = h;
+        }
+
+        function renderRoles() {
+          var g = el("role-grid");
+          g.innerHTML = ROLE_ROWS.map(function (r) {
+            var sel = r.id === role;
+            return (
+              '<button type="button" data-role="' +
+              r.id +
+              '" class="flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-all ' +
+              (sel
+                ? "border-[#45e0d4]/35 bg-[#0c1f3d]/50 shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)]"
+                : "border-white/[0.06] bg-[#141f42] hover:border-white/[0.12]") +
+              '">' +
+              '<span class="text-2xl">' +
+              r.emoji +
+              "</span>" +
+              '<div class="min-w-0 flex-1"><div class="text-sm font-semibold text-[#edf2ff]">' +
+              r.label +
+              '</div><div class="mt-0.5 text-xs text-[#7d89a6]">' +
+              r.desc +
+              "</div></div>" +
+              (sel
+                ? '<span class="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#45e0d4]"><svg class="h-3 w-3 text-[#04112d]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>'
+                : "") +
+              "</button>"
+            );
+          }).join("");
+          g.querySelectorAll("[data-role]").forEach(function (b) {
+            b.addEventListener("click", function () {
+              role = b.getAttribute("data-role");
+              renderRoles();
+            });
+          });
+        }
+
+        function renderSummary() {
+          var s = el("summary-strip");
+          if (step <= 1) {
+            s.classList.add("hidden");
+            return;
+          }
+          s.classList.remove("hidden");
+          var parts = ['<span>Role: <span class="text-[#edf2ff]">' + ROLE_SUMMARY[role] + "</span></span>"];
+          if (step >= 3) {
+            parts.push('<span>Commute: <span class="text-[#edf2ff]">' + commute + " min</span></span>");
+          }
+          if (step >= 4) {
+            var c = el("constraint-select");
+            var cv = c ? c.value : constraint;
+            parts.push(
+              '<span>Constraint: <span class="text-[#edf2ff]">' +
+                cv.replace(/_/g, " ") +
+                "</span></span>"
+            );
+          }
+          s.innerHTML = parts.join("");
+        }
+
+        function showStepPanels() {
+          for (var i = 1; i <= 4; i++) {
+            var p = el("step-" + i);
+            if (!p) continue;
+            if (i === step) {
+              p.classList.remove("hidden");
+              p.classList.add("animate-fade-in");
+            } else {
+              p.classList.add("hidden");
+              p.classList.remove("animate-fade-in");
+            }
+          }
+        }
+
+        function updateUI() {
+          renderStepper();
+          renderSummary();
+          showStepPanels();
+        }
+
+        function showToast() {
+          var t = el("toast");
+          t.classList.remove("hidden", "toast-hide");
+          t.classList.add("toast-show");
+          void t.offsetWidth;
+          if (toastTimer) clearTimeout(toastTimer);
+          toastTimer = setTimeout(hideToast, 3500);
+        }
+
+        function hideToast() {
+          var t = el("toast");
+          t.classList.add("toast-hide");
+          t.classList.remove("toast-show");
+          setTimeout(function () {
+            t.classList.add("hidden");
+            t.classList.remove("toast-hide");
+          }, 200);
+        }
+
+        function setScheduleSuccess(count, warnings) {
+          importSuccess = { count: count };
+          el("schedule-active").classList.add("hidden");
+          el("schedule-success").classList.remove("hidden");
+          el("success-count").textContent = count + " shifts imported";
+          var w = el("success-warnings");
+          w.innerHTML = "";
+          if (warnings && warnings.length) {
+            w.classList.remove("hidden");
+            w.innerHTML = warnings
+              .map(function (msg) {
+                return (
+                  '<li class="flex items-start gap-2 text-xs text-amber-400"><span>⚠</span><span>' +
+                  msg +
+                  "</span></li>"
+                );
+              })
+              .join("");
+          } else {
+            w.classList.add("hidden");
+          }
+          showToast();
+        }
+
+        function resetScheduleUI() {
+          importSuccess = null;
+          el("schedule-error").classList.add("hidden");
+          el("schedule-success").classList.add("hidden");
+          el("schedule-active").classList.remove("hidden");
+          loadingPaste = false;
+          loadingManual = false;
+          el("parse-spin").classList.add("hidden");
+          el("parse-label").textContent = "Parse & import";
+          el("manual-spin").classList.add("hidden");
+          el("btn-parse").disabled = false;
+          el("btn-import-manual").disabled = manualShifts.length === 0;
+        }
+
+        function renderManualList() {
+          var wrap = el("manual-list-wrap");
+          var list = el("manual-list");
+          var btn = el("btn-import-manual");
+          var lbl = el("manual-import-label");
+          if (!manualShifts.length) {
+            wrap.classList.add("hidden");
+            btn.disabled = true;
+            btn.classList.add("opacity-50");
+            lbl.textContent = "Import 0 shift(s)";
+            return;
+          }
+          wrap.classList.remove("hidden");
+          btn.disabled = false;
+          btn.classList.remove("opacity-50");
+          lbl.textContent = "Import " + manualShifts.length + " shift(s)";
+          list.innerHTML = manualShifts
+            .map(function (sh) {
+              var badge = sh.type.replace(/_/g, " ");
+              return (
+                '<div class="flex items-center justify-between rounded-xl border border-white/[0.08] bg-[#101c3c]/60 px-3 py-2">' +
+                '<div class="flex flex-wrap items-center gap-2"><span class="rounded border border-white/[0.08] bg-[#0c1f3d]/80 px-1.5 py-0.5 text-xs text-[#86c9ff]">' +
+                badge +
+                '</span><span class="text-xs text-[#98a4bf]">' +
+                sh.date +
+                " · " +
+                sh.start +
+                "–" +
+                sh.end +
+                "</span></div>" +
+                '<button type="button" data-rid="' +
+                sh.id +
+                '" class="remove-shift text-xs text-[#7d89a6] hover:text-red-400">×</button>' +
+                "</div>"
+              );
+            })
+            .join("");
+          list.querySelectorAll(".remove-shift").forEach(function (b) {
+            b.addEventListener("click", function () {
+              var id = b.getAttribute("data-rid");
+              manualShifts = manualShifts.filter(function (x) {
+                return String(x.id) !== id;
+              });
+              renderManualList();
+            });
+          });
+        }
+
+        /* Init */
+        renderRoles();
+        el("commute-range").addEventListener("input", function () {
+          commute = parseInt(el("commute-range").value, 10);
+          el("commute-val").textContent = commute + " min";
+          updateCommuteInfo();
+          renderSummary();
+        });
+        updateCommuteInfo();
+
+        el("constraint-select").addEventListener("change", function () {
+          constraint = el("constraint-select").value;
+          renderSummary();
+        });
+
+        el("btn-s1-next").addEventListener("click", function () {
+          step = 2;
+          updateUI();
+        });
+        el("btn-s2-next").addEventListener("click", function () {
+          step = 3;
+          updateUI();
+        });
+        el("btn-s3-next").addEventListener("click", function () {
+          step = 4;
+          resetScheduleUI();
+          updateUI();
+        });
+
+        document.querySelectorAll("[data-back]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            if (step === 4) resetScheduleUI();
+            step = Math.max(1, step - 1);
+            updateUI();
+          });
+        });
+
+        el("btn-s4-back").addEventListener("click", function () {
+          resetScheduleUI();
+          step = 3;
+          updateUI();
+        });
+
+        el("mode-paste").addEventListener("click", function () {
+          scheduleMode = "paste";
+          el("mode-paste").className =
+            "mode-btn flex-1 rounded-xl bg-[#45e0d4] py-2 text-sm font-bold text-[#04112d] shadow-[0_8px_28px_-12px_rgba(69,224,212,0.45)]";
+          el("mode-manual").className =
+            "mode-btn flex-1 rounded-xl py-2 text-sm font-medium text-[#98a4bf] hover:text-[#edf2ff]";
+          el("panel-paste").classList.remove("hidden");
+          el("panel-manual").classList.add("hidden");
+          el("schedule-error").classList.add("hidden");
+        });
+        el("mode-manual").addEventListener("click", function () {
+          scheduleMode = "manual";
+          el("mode-manual").className =
+            "mode-btn flex-1 rounded-xl bg-[#45e0d4] py-2 text-sm font-bold text-[#04112d] shadow-[0_8px_28px_-12px_rgba(69,224,212,0.45)]";
+          el("mode-paste").className =
+            "mode-btn flex-1 rounded-xl py-2 text-sm font-medium text-[#98a4bf] hover:text-[#edf2ff]";
+          el("panel-manual").classList.remove("hidden");
+          el("panel-paste").classList.add("hidden");
+          el("schedule-error").classList.add("hidden");
+        });
+
+        el("btn-parse").addEventListener("click", function () {
+          var txt = (el("paste-ta").value || "").trim();
+          el("schedule-error").classList.add("hidden");
+          if (!txt) {
+            el("schedule-error").classList.remove("hidden");
+            el("schedule-error").classList.add("flex");
+            el("schedule-error-msg").textContent = "Paste your schedule text before importing.";
+            return;
+          }
+          loadingPaste = true;
+          el("btn-parse").disabled = true;
+          el("parse-spin").classList.remove("hidden");
+          el("parse-label").textContent = "Importing…";
+          setTimeout(function () {
+            loadingPaste = false;
+            el("parse-spin").classList.add("hidden");
+            el("parse-label").textContent = "Parse & import";
+            el("btn-parse").disabled = false;
+            var lines = txt.split(/\r?\n/).filter(function (l) {
+              return l.trim();
+            });
+            setScheduleSuccess(lines.length || 1, ["Parsed rows may need review in the full editor."]);
+          }, 1000);
+        });
+
+        el("btn-add-shift").addEventListener("click", function () {
+          el("schedule-error").classList.add("hidden");
+          var d = el("ms-date").value;
+          var st = el("ms-start").value;
+          var en = el("ms-end").value;
+          if (!d || !st || !en) {
+            el("schedule-error").classList.remove("hidden");
+            el("schedule-error").classList.add("flex");
+            el("schedule-error-msg").textContent = "Please fill date, start, and end time.";
+            return;
+          }
+          manualShifts.push({
+            id: Date.now(),
+            type: el("ms-type").value,
+            title: el("ms-title").value,
+            date: d,
+            start: st,
+            end: en,
+          });
+          el("ms-title").value = "";
+          el("ms-date").value = "";
+          el("ms-start").value = "";
+          el("ms-end").value = "";
+          renderManualList();
+        });
+
+        el("btn-import-manual").addEventListener("click", function () {
+          if (!manualShifts.length) return;
+          el("schedule-error").classList.add("hidden");
+          loadingManual = true;
+          el("btn-import-manual").disabled = true;
+          el("manual-spin").classList.remove("hidden");
+          setTimeout(function () {
+            loadingManual = false;
+            el("manual-spin").classList.add("hidden");
+            el("btn-import-manual").disabled = false;
+            setScheduleSuccess(manualShifts.length, []);
+          }, 1000);
+        });
+
+        el("toast-close").addEventListener("click", hideToast);
+
+        var embedded =
+          document.documentElement.classList.contains("embed-onboard");
+
+        /* Sidebar mobile — skip when embedded (parent app provides chrome) */
+        if (!embedded) {
+          function openSidebar(open) {
+            el("sidebar").classList.toggle("-translate-x-full", !open);
+            el("sidebar-overlay").classList.toggle("hidden", !open);
+          }
+          el("btn-menu").addEventListener("click", function () {
+            openSidebar(true);
+          });
+          el("sidebar-overlay").addEventListener("click", function () {
+            openSidebar(false);
+          });
+          document.querySelectorAll(".sidebar-link").forEach(function (a) {
+            a.addEventListener("click", function () {
+              openSidebar(false);
+            });
+          });
+        }
+
+        /* A11y panel in static header — skip when embedded (use app top bar) */
+        if (!embedded) {
+          el("a11y-btn").addEventListener("click", function (e) {
+            e.stopPropagation();
+            el("a11y-panel").classList.toggle("hidden");
+          });
+          el("a11y-close").addEventListener("click", function () {
+            el("a11y-panel").classList.add("hidden");
+          });
+          document.addEventListener("click", function (e) {
+            var root = el("a11y-root");
+            if (root && !root.contains(e.target))
+              el("a11y-panel").classList.add("hidden");
+          });
+        }
+
+        updateUI();
+      })();
+    </script>
+  </body>
+</html>

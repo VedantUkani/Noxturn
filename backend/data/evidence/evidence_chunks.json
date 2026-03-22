@@ -1,0 +1,62 @@
+[
+  {
+    "id": "ev-001",
+    "title": "Circadian disruption in rotating shifts",
+    "content": "Rotating shift schedules disrupt circadian alignment and increase fatigue-related errors, especially during rapid day-night transitions.",
+    "source": "NIOSH shift work guidance"
+  },
+  {
+    "id": "ev-002",
+    "title": "Protected sleep after nights",
+    "content": "After night duty, protecting a primary daytime sleep block is strongly associated with better alertness and reduced cumulative fatigue.",
+    "source": "NIOSH training for nurses"
+  },
+  {
+    "id": "ev-003",
+    "title": "Strategic naps",
+    "content": "Naps of 20 to 30 minutes can improve alertness and reduce performance deficits in shift workers without major sleep inertia.",
+    "source": "Sleep medicine studies"
+  },
+  {
+    "id": "ev-004",
+    "title": "Caffeine half-life timing",
+    "content": "Caffeine can impair sleep when consumed too close to intended sleep onset; a practical cutoff window is around six hours.",
+    "source": "Clinical sleep literature"
+  },
+  {
+    "id": "ev-005",
+    "title": "Light as circadian signal",
+    "content": "Bright light after wake and reduced light before sleep are high-impact tools for circadian phase support.",
+    "source": "Chronobiology review"
+  },
+  {
+    "id": "ev-006",
+    "title": "Short turnaround risks",
+    "content": "Less than 11 hours between shifts is associated with poorer recovery, higher fatigue, and increased safety risk.",
+    "source": "Working time recommendations"
+  },
+  {
+    "id": "ev-007",
+    "title": "Drowsy driving after night shifts",
+    "content": "Commutes after overnight work carry meaningful drowsy-driving risk; mitigation includes naps, caffeine timing, and coordinated peer support.",
+    "source": "NIOSH and transport safety reports"
+  },
+  {
+    "id": "ev-008",
+    "title": "Consecutive nights and sleep debt",
+    "content": "Multiple consecutive night shifts commonly produce cumulative sleep debt that worsens mood, cognitive performance, and recovery.",
+    "source": "Fatigue research summaries"
+  },
+  {
+    "id": "ev-009",
+    "title": "Decompression and stress downshift",
+    "content": "A short decompression routine after shift can lower hyperarousal and support faster sleep initiation.",
+    "source": "Occupational stress literature"
+  },
+  {
+    "id": "ev-010",
+    "title": "Social support effects",
+    "content": "Peer support and brief check-ins can reduce perceived stress and improve adherence to recovery actions during high-strain periods.",
+    "source": "Mental health and shift work studies"
+  }
+]
