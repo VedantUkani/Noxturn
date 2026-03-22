@@ -106,7 +106,6 @@
     <button onclick="showSection('wearables')">POST /wearables/import</button>
 
     <div class="section-label">Explore</div>
-    <button onclick="showSection('sandbox')">POST /simulate/shift-sandbox</button>
     <button onclick="showSection('rag')">GET /rag/retrieve</button>
     <button onclick="showSection('personas')">GET /personas/list</button>
 
@@ -141,7 +140,6 @@
             <li id="check-dashboard">GET /dashboard/today — active plan loaded</li>
             <li id="check-wearables">POST /wearables/import — recovery score computed</li>
             <li id="check-tasks">POST /tasks/event — task marked complete</li>
-            <li id="check-sandbox">POST /simulate/shift-sandbox — strain delta computed</li>
             <li id="check-rag">GET /rag/retrieve — evidence cards returned</li>
           </ul>
           <div class="btn-row" style="margin-top:20px;">
@@ -159,7 +157,7 @@
           </div>
           <div class="ref-card">
             <h4>No Supabase Needed</h4>
-            <p>/health<br>/simulate/shift-sandbox<br>/rag/retrieve<br><br>All other endpoints require user_id and a working Supabase connection.</p>
+            <p>/health<br>/rag/retrieve<br><br>All other endpoints require user_id and a working Supabase connection.</p>
           </div>
           <div class="ref-card">
             <h4>Block Types</h4>
@@ -673,40 +671,6 @@ night_shift,2026-03-24T19:00:00,2026-03-25T07:00:00,ICU Night 2</pre>
           <input id="wear-hr" type="number" value="62" style="width:100px;" />
           <div class="btn-row">
             <button class="btn btn-primary" onclick="callWearables()">Send Request</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SANDBOX -->
-    <div id="section-sandbox" class="section-view">
-      <div class="panel">
-        <div class="panel-header">
-          <span class="method post">POST</span>
-          <h2>/simulate/shift-sandbox</h2>
-        </div>
-        <div class="panel-body">
-          <p class="hint">Tests impact of adding a hypothetical shift. No Supabase required — purely computational.</p>
-          <label>commute_minutes</label>
-          <input id="sandbox-commute" type="number" value="30" style="width:100px;" />
-          <label>current_blocks (JSON array)</label>
-          <textarea id="sandbox-current">[
-  {
-    "block_type": "night_shift",
-    "start_time": "2026-03-22T19:00:00",
-    "end_time": "2026-03-23T07:00:00"
-  }
-]</textarea>
-          <label>hypothetical_shifts (JSON array)</label>
-          <textarea id="sandbox-hypo">[
-  {
-    "block_type": "day_shift",
-    "start_time": "2026-03-23T08:00:00",
-    "end_time": "2026-03-23T16:00:00"
-  }
-]</textarea>
-          <div class="btn-row">
-            <button class="btn btn-primary" onclick="callSandbox()">Send Request</button>
           </div>
         </div>
       </div>
@@ -1261,20 +1225,6 @@ night_shift,2026-03-24T19:00:00,2026-03-25T07:00:00,ICU Night 2</pre>
     showResponse(claudeResult.data, claudeResult.status);
   }
 
-  async function callSandbox() {
-    let current, hypo;
-    try {
-      current = JSON.parse(document.getElementById('sandbox-current').value);
-      hypo = JSON.parse(document.getElementById('sandbox-hypo').value);
-    } catch { showResponse({ error: 'Invalid JSON in blocks fields' }, 400); return; }
-    const r = await apiPost('/simulate/shift-sandbox', {
-      current_blocks: current,
-      hypothetical_shifts: hypo,
-      commute_minutes: parseInt(document.getElementById('sandbox-commute').value) || 30,
-    });
-    markCheck('sandbox', r.ok);
-  }
-
   async function callUsage() {
     const r = await apiGet(`/plans/claude-usage?user_id=${USER_ID}`);
     if (!r.ok || !r.data) return;
@@ -1363,14 +1313,6 @@ night_shift,2026-03-24T19:00:00,2026-03-25T07:00:00,ICU Night 2</pre>
     // Health
     let r = await apiGet('/health');
     markCheck('health', r.ok);
-
-    // Sandbox (no DB)
-    r = await apiPost('/simulate/shift-sandbox', {
-      current_blocks: [{ block_type: 'night_shift', start_time: '2026-03-22T19:00:00', end_time: '2026-03-23T07:00:00' }],
-      hypothetical_shifts: [{ block_type: 'day_shift', start_time: '2026-03-23T09:00:00', end_time: '2026-03-23T17:00:00' }],
-      commute_minutes: 30,
-    });
-    markCheck('sandbox', r.ok);
 
     // RAG (no DB)
     r = await apiGet('/rag/retrieve?query=night+shift+sleep&top_k=3');

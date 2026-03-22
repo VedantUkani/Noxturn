@@ -1,6 +1,8 @@
 export { WeeklyRiskSummary } from "./WeeklyRiskSummary";
 export { WeeklyTopDangers } from "./WeeklyTopDangers";
 export { WeekDangerCard } from "./WeekDangerCard";
+export { WeekLegend } from "./WeekLegend";
+export { WeekOverviewGrid } from "./WeekOverviewGrid";
 export { WeeklyTimeline } from "./WeeklyTimeline";
 export { ShiftBlock } from "./ShiftBlock";
 export { ObligationBlock } from "./ObligationBlock";

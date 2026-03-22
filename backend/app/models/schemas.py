@@ -243,23 +243,6 @@ class RecoveryConsistencyResponse(BaseModel):
     label: str                   # "strong" | "moderate" | "low" | "none"
 
 
-class ShiftSandboxRequest(BaseModel):
-    user_id: Optional[UUID] = None
-    current_blocks: List[ScheduleBlock]
-    hypothetical_shifts: List[ScheduleBlock]
-    remove_shift_ids: Optional[List[UUID]] = None
-    commute_minutes: int = 30
-
-
-class ShiftSandboxResponse(BaseModel):
-    original_strain_score: float = Field(ge=0, le=100)
-    projected_strain_score: float = Field(ge=0, le=100)
-    strain_delta: float
-    recovery_bottleneck: Dict
-    verdict: str
-    explanation: str
-
-
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
 class AuthRegisterRequest(BaseModel):

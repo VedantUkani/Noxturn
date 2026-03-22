@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { WeekDayColumn } from "@/lib/week-risk-view-model";
 import type { WeekRiskEpisodeVM } from "@/lib/week-risk-view-model";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,10 @@ type DayContextPanelProps = {
   onPickEpisode: (id: string) => void;
   selectedEpisodeId: string | null;
   className?: string;
+  /** Shorter section labels for the Week spotlight layout. */
+  compact?: boolean;
+  /** e.g. CTA row — rendered after main content. */
+  footer?: ReactNode;
 };
 
 export function DayContextPanel({
@@ -33,6 +38,8 @@ export function DayContextPanel({
   onPickEpisode,
   selectedEpisodeId,
   className,
+  compact = false,
+  footer,
 }: DayContextPanelProps) {
   const selectedEpisode = selectedEpisodeId
     ? episodesForDay.find((e) => e.id === selectedEpisodeId)
@@ -65,7 +72,7 @@ export function DayContextPanel({
             <span className="font-normal text-[#98a4bf]">{day.dateLabel}</span>
           </p>
         </div>
-        {day.dayStrainHint != null ? (
+        {!compact && day.dayStrainHint != null ? (
           <div className="shrink-0 text-right">
             <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#7d89a6]">
               Load
@@ -77,8 +84,10 @@ export function DayContextPanel({
         ) : null}
       </div>
 
-      <div className="mt-6 space-y-3">
-        <p className="text-xs font-medium text-[#98a4bf]">On the calendar</p>
+      <div className="mt-5 space-y-3">
+        <p className="text-xs font-medium text-[#98a4bf]">
+          {compact ? "Schedule" : "On the calendar"}
+        </p>
         {day.shifts.length === 0 ? (
           <p className="text-sm text-[#7d89a6]">Nothing starting this day.</p>
         ) : (
@@ -101,10 +110,14 @@ export function DayContextPanel({
         )}
       </div>
 
-      <div className="mt-8 space-y-3">
-        <p className="text-xs font-medium text-[#98a4bf]">Risks this day</p>
+      <div className={cn("space-y-3", compact ? "mt-6" : "mt-8")}>
+        <p className="text-xs font-medium text-[#98a4bf]">
+          {compact ? "This day" : "Risks this day"}
+        </p>
         {episodesForDay.length === 0 ? (
-          <p className="text-sm text-[#7d89a6]">No risk windows touch this day.</p>
+          <p className="text-sm text-[#7d89a6]">
+            {compact ? "Nothing else flagged for this day." : "No risk windows touch this day."}
+          </p>
         ) : (
           <ul className="space-y-2">
             {episodesForDay.map((e) => (
@@ -140,15 +153,17 @@ export function DayContextPanel({
       </div>
 
       {selectedEpisode ? (
-        <div className="mt-6 rounded-lg bg-[#0c2a3d]/40 px-4 py-4 ring-1 ring-[#45e0d4]/18">
+        <div className="mt-5 rounded-xl bg-[#0c2a3d]/40 px-4 py-3.5 ring-1 ring-[#45e0d4]/18">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#45e0d4]/90">
-            Why it matters
+            {compact ? "In plain terms" : "Why it matters"}
           </p>
           <p className="mt-2 text-sm leading-relaxed text-[#98a4bf]">
             {selectedEpisode.explanation}
           </p>
         </div>
       ) : null}
+
+      {footer ? <div className="mt-6">{footer}</div> : null}
     </div>
   );
 }

@@ -15,7 +15,6 @@ Noxturn is a **schedule harm-reduction copilot** for rotating shift workers (nur
 | **Circadian Injury Map** | Risky flips, short turnarounds, low recovery windows, unsafe fatigue windows. |
 | **Reweave Engine** | Refresh today/tomorrow when tasks are completed, skipped, or missed. |
 | **Recovery Rhythm** | Non-punitive rhythm state (not guilt metrics or streak loss). |
-| **Shift Sandbox** | What-if simulator for picking up or swapping shifts. |
 | **Evidence Lens** | Explain why a recommendation exists (RAG / refs). |
 
 ---
@@ -23,7 +22,7 @@ Noxturn is a **schedule harm-reduction copilot** for rotating shift workers (nur
 ## Design principles
 
 - **Calm, trustworthy, humane** — clinically clear without coldness; supportive without generic wellness fluff.
-- **Low cognitive load** — one primary **next best action**; details (evidence, sandbox) one tap away.
+- **Low cognitive load** — one primary **next best action**; details (evidence) one tap away.
 - **Dark, fatigue-friendly** — e.g. deep slate background, muted borders, restrained accent (cool, not neon “gamified” greens).
 - **Accessible & responsive** — semantic HTML, focus states, scalable type, sensible touch targets.
 - **Demo-ready** — happy path works with real API **or** typed mocks behind the same client layer.
@@ -59,7 +58,6 @@ frontend/
       ui/                # shared primitives (Button, Card, Modal, …)
       dashboard/         # dashboard feature slices
       injury-map/        # circadian injury visualization (when added)
-      sandbox/           # shift simulator UI
       evidence/          # evidence lens UI
     contexts/            # a11y, theme, optional i18n
     lib/
@@ -95,7 +93,6 @@ Authoritative backend models: `backend/app/models/schemas.py`. Frontend types sh
 | **Reweave** | `TaskEventCreate` / `TaskEventResponse`, `ReplanRequest` / `ReplanResponse`. |
 | **Dashboard** | `DashboardTodayResponse`: `plan_mode`, `next_best_action`, `anchor_tasks`, `recovery_rhythm_label`, `recovery_score`. |
 | **Wearables** | `WearableImportRequest` / `WearableImportResponse` (`recovery_score`, etc.). |
-| **Sandbox** | `ShiftSandboxRequest` / `ShiftSandboxResponse` (`strain_delta`, `verdict`, `explanation`, `recovery_bottleneck`). |
 | **Evidence (RAG)** | `GET /rag/...` — mirror whatever the route returns in a dedicated type once wired. |
 
 **Recovery rhythm labels** should stay **non-punitive** in copy (e.g. steady / rebuilding / interrupted / unknown) even if the backend sends a string enum — map to humane UI strings in one place.
@@ -112,7 +109,6 @@ Authoritative backend models: `backend/app/models/schemas.py`. Frontend types sh
 | `/risks` | Risk compute |
 | `/schedule` | Import / calendar hooks |
 | `/wearables` | Recovery input |
-| `/simulate` | Shift sandbox (UI may live at `/sandbox`) |
 | `/rag` | Evidence |
 | `/personas` | Persona presets |
 
@@ -125,7 +121,6 @@ Authoritative backend models: `backend/app/models/schemas.py`. Frontend types sh
 | `/` | Landing / product story |
 | `/onboard` | Role, commute, constraints, schedule capture |
 | `/dashboard` | Copilot home: next action, anchors, injury map slice, wearable hook, evidence entry |
-| `/sandbox` | Shift what-if (calls `/simulate` on the API) |
 | `/settings` | Preferences |
 
 Nav items should stay in sync with this map (single source of truth in layout config).
@@ -142,7 +137,6 @@ Build toward this split; names can evolve but **responsibilities** should not bl
 | **Injury map** | Week or horizon view of risk episodes / severity (Recharts only if it clarifies) |
 | **Plan / Reweave** | Task list, next action hero, replan feedback after events |
 | **Recovery rhythm** | Rhythm state UI (not streaks); ties to `recovery_rhythm_label` / wearable data |
-| **Sandbox** | Diff current vs hypothetical blocks, show `strain_delta` + `verdict` |
 | **Evidence lens** | Modal or panel: citations, short “why this” copy |
 | **UI primitives** | Buttons, cards, modals, inputs — shared and a11y-reviewed |
 
@@ -161,7 +155,7 @@ Build toward this split; names can evolve but **responsibilities** should not bl
 
 **Persona:** *Aisha* — ICU nurse, rotating days/nights, ~45 min commute, sometimes short sleep after nights.
 
-**Happy path (~5–8 min):** Home → Onboard (role, commute, small rota with a short turnaround + a recovery gap) → Dashboard (generate plan, show mode + next action + anchors; complete or skip a task; open evidence on one row) → optional wearable numbers → point at injury visualization → Sandbox (add/move shift, show strain delta and verdict).
+**Happy path (~5–8 min):** Home → Onboard (role, commute, small rota with a short turnaround + a recovery gap) → Dashboard (generate plan, show mode + next action + anchors; complete or skip a task; open evidence on one row) → optional wearable numbers → point at injury visualization.
 
 If the API is unavailable, swap in **mock JSON** that still type-checks against `PlanGenerateResponse`, `RiskComputeResponse`, `DashboardTodayResponse`, etc.
 
