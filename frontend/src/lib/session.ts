@@ -2,7 +2,6 @@ import type { ScheduleBlockInput } from "./types";
 
 const USER_ID_KEY = "noxturn_user_id";
 const SCHEDULE_KEY = "noxturn_schedule_blocks";
-const PLAN_MODE_KEY = "noxturn_plan_mode";
 const AVOID_LIST_KEY = "noxturn_avoid_list";
 
 export function getOrCreateUserId(): string {
@@ -31,17 +30,6 @@ export function getStoredScheduleBlocks(): ScheduleBlockInput[] {
   }
 }
 
-export function setStoredPlanMode(mode: string): void {
-  if (typeof window === "undefined") return;
-  window.sessionStorage.setItem(PLAN_MODE_KEY, mode);
-  window.dispatchEvent(new Event("noxturn-plan-mode"));
-}
-
-export function getStoredPlanMode(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.sessionStorage.getItem(PLAN_MODE_KEY);
-}
-
 /** Persisted when a plan is generated (see `persistPlanSnapshot`). */
 export function setStoredAvoidList(items: string[]): void {
   if (typeof window === "undefined") return;
@@ -60,10 +48,6 @@ export function getStoredAvoidList(): string[] {
   }
 }
 
-export function persistPlanSnapshot(plan: {
-  plan_mode: string;
-  avoid_list: string[];
-}): void {
-  setStoredPlanMode(plan.plan_mode);
+export function persistPlanSnapshot(plan: { avoid_list: string[] }): void {
   setStoredAvoidList(plan.avoid_list ?? []);
 }

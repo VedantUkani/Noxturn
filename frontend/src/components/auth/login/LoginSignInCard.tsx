@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { markAuthenticated } from "@/lib/auth-browser";
+import {
+  displayNameFromEmail,
+  persistSessionIdentity,
+} from "@/lib/session-identity";
 import { POST_ONBOARDING_DEST_KEY } from "@/lib/onboarding-flag";
 import { nx } from "@/lib/ui-theme";
 import { cn } from "@/lib/utils";
@@ -108,16 +112,20 @@ export function LoginSignInCard({ postLoginDestination }: LoginSignInCardProps) 
     [pathname, router, searchParams],
   );
 
-  const continueToApp = useCallback(() => {
-    setPending(true);
-    markAuthenticated();
-    try {
-      sessionStorage.setItem(POST_ONBOARDING_DEST_KEY, postLoginDestination);
-    } catch {
-      /* ignore quota / private mode */
-    }
-    window.location.assign("/onboarding");
-  }, [postLoginDestination]);
+  const continueToApp = useCallback(
+    (identity: { displayName: string; email: string }) => {
+      persistSessionIdentity(identity);
+      setPending(true);
+      markAuthenticated();
+      try {
+        sessionStorage.setItem(POST_ONBOARDING_DEST_KEY, postLoginDestination);
+      } catch {
+        /* ignore quota / private mode */
+      }
+      window.location.assign("/onboarding");
+    },
+    [postLoginDestination],
+  );
 
   const onSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -136,13 +144,13 @@ export function LoginSignInCard({ postLoginDestination }: LoginSignInCardProps) 
         setConfirmErr(null);
         setTermsErr(null);
         if (eErr || pErr) return;
-
+        const em = email.trim();
         setPending(true);
         try {
           const { supabase } = await import("@/lib/supabase");
           if (supabase) {
             const { error } = await supabase.auth.signInWithPassword({
-              email: email.trim(),
+              email: em,
               password,
             });
             if (error) {
@@ -156,7 +164,10 @@ export function LoginSignInCard({ postLoginDestination }: LoginSignInCardProps) 
           setFormError("Sign in failed. Please try again.");
           return;
         }
-        continueToApp();
+        continueToApp({
+          displayName: displayNameFromEmail(em),
+          email: em,
+        });
         return;
       }
 
@@ -185,7 +196,10 @@ export function LoginSignInCard({ postLoginDestination }: LoginSignInCardProps) 
         setFormError(result.message);
         return;
       }
-      continueToApp();
+      continueToApp({
+        displayName: fullName.trim(),
+        email: email.trim(),
+      });
     },
     [
       agreeToTerms,
