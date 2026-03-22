@@ -1,4 +1,9 @@
-/** Static demo payload for the Today dashboard — replace with API + mocks later. */
+/**
+ * Static demo payload for the Today dashboard (local / story-style).
+ * Hero lines like “Prioritize Napping” / “Before 14:00” are not final — production
+ * uses `next_best_action` from the dashboard API (Claude planner JSON),
+ * mapped in `nextBestFromApi` in `mocks/today-dashboard-payload.ts`.
+ */
 
 export type TodayRecommendationId = "sleep" | "light" | "caffeine";
 

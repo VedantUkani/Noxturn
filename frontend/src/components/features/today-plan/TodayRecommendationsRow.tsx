@@ -29,7 +29,7 @@ export function TodayRecommendationsRow({
             onEvidence ? () => onEvidence(item.id) : undefined
           }
           className={cn(
-            pulse && "animate-reweave-emphasis ring-1 ring-teal-400/25",
+            pulse && "animate-reweave-emphasis ring-1 ring-[#45e0d4]/25",
           )}
         />
       ))}

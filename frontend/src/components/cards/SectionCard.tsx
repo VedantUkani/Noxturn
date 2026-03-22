@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { nx } from "@/lib/ui-theme";
 
 type SectionCardProps = {
   title: string;
@@ -6,17 +7,18 @@ type SectionCardProps = {
   className?: string;
 };
 
-/** Simple surface for route placeholders; swap for richer cards later. */
+/** Shared section surface — Recovery-aligned card treatment. */
 export function SectionCard({ title, children, className }: SectionCardProps) {
   return (
     <section
       className={cn(
-        "rounded-lg border border-slate-800 bg-slate-900/50 p-4 sm:p-5",
+        nx.card,
+        "p-5 sm:p-6",
         className,
       )}
     >
-      <h2 className="text-sm font-semibold text-slate-200">{title}</h2>
-      <div className="mt-3 text-sm leading-relaxed text-slate-400">{children}</div>
+      <h2 className="text-sm font-semibold text-[#edf2ff]">{title}</h2>
+      <div className="mt-3 text-sm leading-relaxed text-[#98a4bf]">{children}</div>
     </section>
   );
 }
