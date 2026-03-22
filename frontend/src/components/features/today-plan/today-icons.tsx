@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import {
   IconBed,
+  IconBell,
   IconCoffee,
   IconSnack,
   IconStride,
@@ -20,6 +21,7 @@ export const todayRecommendationIcons = {
   sleep: <IconBed className={chip} />,
   light: <IconSun className={chip} />,
   caffeine: <IconCoffee className={chip} />,
+  social: <IconBell className={chip} />,
 } as const satisfies Record<TodayRecommendationId, ReactNode>;
 
 /** Icons for avoidance rows — keys must match `todayDemo.avoid[].icon`. */
