@@ -49,13 +49,14 @@ export type OnboardingDraft = {
   caffeineHabit: CaffeineHabit;
 
   // Step 4 — Wearables
-  ouraConnected: boolean;
+  fitbitConnected: boolean;
   wearablesSkipped: boolean;
 
-  // Step 5 — Health report
-  healthReportPath: string | null;
-  healthReportFileName: string | null;
-  healthReportSkipped: boolean;
+  // Step 5 — Health context
+  onMedications: boolean | null;
+  medicationDetails: string;
+  sleepConditions: string[];
+  medicalHistory: string[];
 };
 
 export const defaultOnboardingDraft = (): OnboardingDraft => ({
@@ -72,9 +73,10 @@ export const defaultOnboardingDraft = (): OnboardingDraft => ({
   anchorNote: "",
   sleepConstraint: "cant_sleep_before_9am",
   caffeineHabit: "before_noon",
-  ouraConnected: false,
+  fitbitConnected: false,
   wearablesSkipped: false,
-  healthReportPath: null,
-  healthReportFileName: null,
-  healthReportSkipped: false,
+  onMedications: null,
+  medicationDetails: "",
+  sleepConditions: [],
+  medicalHistory: [],
 });

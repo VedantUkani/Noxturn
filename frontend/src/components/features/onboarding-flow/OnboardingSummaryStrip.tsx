@@ -69,11 +69,11 @@ export function OnboardingSummaryStrip({
           </span>
         </span>
       ) : null}
-      {step >= 5 && draft.ouraConnected ? (
-        <span className="text-[#45e0d4]">Oura ✓</span>
+      {step >= 5 && draft.fitbitConnected ? (
+        <span className="text-[#45e0d4]">Fitbit ✓</span>
       ) : null}
-      {step >= 5 && draft.healthReportPath ? (
-        <span className="text-[#45e0d4]">Health report ✓</span>
+      {step >= 5 && (draft.sleepConditions.length > 0 || draft.medicalHistory.length > 0) ? (
+        <span className="text-[#45e0d4]">Health ✓</span>
       ) : null}
     </div>
   );
