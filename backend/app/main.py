@@ -79,7 +79,17 @@ async def _log_requests(request: Request, call_next):
     return response
 
 
-_allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+_allowed_origins = [o.strip() for o in _origins_env.split(",") if o.strip()]
+
+# Always include localhost for local dev
+_always_allowed = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://noxturn.vercel.app",
+]
+_allowed_origins = list(set(_always_allowed + _allowed_origins))
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
