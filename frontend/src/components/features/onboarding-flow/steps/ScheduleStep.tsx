@@ -8,6 +8,7 @@ import type {
 } from "../types";
 import { nx } from "@/lib/ui-theme";
 import { cn } from "@/lib/utils";
+import { GoogleCalendarImport, type CalendarShift } from "@/components/features/schedule/GoogleCalendarImport";
 
 type ScheduleStepProps = {
   draft: OnboardingDraft;
@@ -103,10 +104,37 @@ export function ScheduleStep({
     setEnd("");
   }, [date, start, end, msType, title, onAddShift]);
 
-  const setMode = (mode: "paste" | "manual") => {
+  const setMode = (mode: "paste" | "manual" | "google") => {
     onChange({ scheduleMode: mode, importComplete: null });
     setError(null);
   };
+
+  const handleGoogleImport = useCallback((shifts: CalendarShift[]) => {
+    shifts.forEach((s) => {
+      const startDate = s.start.split("T")[0];
+      const startTime = s.start.split("T")[1]?.slice(0, 5) ?? "08:00";
+      const endTime = s.end.split("T")[1]?.slice(0, 5) ?? "16:00";
+      const hr = parseInt(startTime.split(":")[0], 10);
+      const type: ManualShiftDraft["type"] =
+        hr >= 22 || hr < 6
+          ? "night_shift"
+          : hr >= 6 && hr < 14
+          ? "day_shift"
+          : "evening_shift";
+      onAddShift({
+        id: `gcal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        type,
+        title: s.title,
+        date: startDate,
+        start: startTime,
+        end: endTime,
+      });
+    });
+    if (shifts.length > 0) {
+      const result: ScheduleImportResult = { count: shifts.length, warnings: [] };
+      onChange({ importComplete: result, scheduleDeferred: false, scheduleMode: "google" });
+    }
+  }, [onAddShift, onChange]);
 
   const resetImport = useCallback(() => {
     onChange({ importComplete: null });
@@ -196,9 +224,22 @@ export function ScheduleStep({
       <div className="flex gap-1 rounded-[22px] border border-white/[0.06] bg-[#141f42] p-1">
         <button
           type="button"
+          onClick={() => setMode("google")}
+          className={cn(
+            "flex-1 rounded-xl py-2 text-xs font-semibold transition-colors sm:text-sm",
+            draft.scheduleMode === "google"
+              ? "bg-[#45e0d4] font-bold text-[#04112d] shadow-[0_8px_28px_-12px_rgba(69,224,212,0.45)]"
+              : "text-[#98a4bf] hover:text-[#edf2ff]",
+            nx.focusRing,
+          )}
+        >
+          Google Cal
+        </button>
+        <button
+          type="button"
           onClick={() => setMode("paste")}
           className={cn(
-            "flex-1 rounded-xl py-2.5 text-sm font-semibold transition-colors",
+            "flex-1 rounded-xl py-2 text-xs font-semibold transition-colors sm:text-sm",
             draft.scheduleMode === "paste"
               ? "bg-[#45e0d4] font-bold text-[#04112d] shadow-[0_8px_28px_-12px_rgba(69,224,212,0.45)]"
               : "text-[#98a4bf] hover:text-[#edf2ff]",
@@ -211,18 +252,28 @@ export function ScheduleStep({
           type="button"
           onClick={() => setMode("manual")}
           className={cn(
-            "flex-1 rounded-xl py-2.5 text-sm font-semibold transition-colors",
+            "flex-1 rounded-xl py-2 text-xs font-semibold transition-colors sm:text-sm",
             draft.scheduleMode === "manual"
               ? "bg-[#45e0d4] font-bold text-[#04112d] shadow-[0_8px_28px_-12px_rgba(69,224,212,0.45)]"
               : "text-[#98a4bf] hover:text-[#edf2ff]",
             nx.focusRing,
           )}
         >
-          Add manually
+          Manual
         </button>
       </div>
 
-      {draft.scheduleMode === "paste" ? (
+      {draft.scheduleMode === "google" ? (
+        <div className={cn(nx.card, "p-5 sm:p-6 space-y-2")}>
+          <p className="text-xs font-medium uppercase tracking-wider text-[#7d89a6] mb-3">
+            Import from Google Calendar
+          </p>
+          <p className="text-xs text-[#7d89a6] mb-4">
+            Clicks a secure Google popup — fetches your next 14 days of events and maps them to shifts automatically.
+          </p>
+          <GoogleCalendarImport onImport={handleGoogleImport} />
+        </div>
+      ) : draft.scheduleMode === "paste" ? (
         <div className={cn(nx.card, "p-5 sm:p-6")}>
           <p className={nx.labelUpper}>Schedule text</p>
           <p className="mt-2 text-xs leading-relaxed text-[#7d89a6]">

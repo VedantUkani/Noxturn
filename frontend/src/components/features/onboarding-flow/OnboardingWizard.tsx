@@ -97,7 +97,7 @@ export function OnboardingWizard() {
         roleId: draft.roleId,
         commuteMinutes: draft.commuteMinutes,
         sleepConstraint: draft.sleepConstraint,
-        buddyOptIn: draft.buddyOptIn,
+        buddyOptIn: draft.buddyCheckins,
         savedAt: new Date().toISOString(),
       }));
     } catch { /* ignore */ }

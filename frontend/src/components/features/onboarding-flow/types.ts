@@ -21,7 +21,7 @@ export type SleepConstraint =
   | "short_sleep_risk"
   | "none";
 
-export type ScheduleMode = "paste" | "manual";
+export type ScheduleMode = "paste" | "manual" | "google";
 
 /** Legacy manual row: typed shift + optional title + times. */
 export type ManualShiftDraft = {
