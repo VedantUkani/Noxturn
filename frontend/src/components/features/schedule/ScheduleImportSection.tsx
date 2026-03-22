@@ -7,10 +7,11 @@ import {
   useState,
   type ChangeEvent,
 } from "react";
+import { useGoogleLogin } from "@react-oauth/google";
 import {
   eventsToBlocks,
-  fetchGoogleCalendarEvents,
   fetchOutlookCalendarEvents,
+  type CalendarEvent,
 } from "@/lib/calendarImport";
 import { getOrCreateUserId } from "@/lib/session";
 import {
@@ -21,7 +22,6 @@ import {
 import type { ScheduleBlockInput } from "@/lib/types";
 import {
   isSupabaseConfigured,
-  signInWithGoogle,
   signInWithMicrosoft,
   supabase,
 } from "@/lib/supabase";
@@ -110,23 +110,47 @@ export function ScheduleImportSection({
     }
   };
 
-  const pullGoogle = async () => {
-    setBusy(true);
-    setErr(null);
-    setNotice(null);
-    try {
-      const events = await fetchGoogleCalendarEvents(14);
-      const blocks = eventsToBlocks(events, 30).map((b) => ({
-        ...b,
-        id: crypto.randomUUID(),
-      }));
-      mergeCalendarBlocks(blocks);
-    } catch (x) {
-      setErr(x instanceof Error ? x.message : "Google import failed.");
-    } finally {
+  const googleLogin = useGoogleLogin({
+    scope: "https://www.googleapis.com/auth/calendar.readonly",
+    onSuccess: async (tokenResponse) => {
+      setBusy(true);
+      setErr(null);
+      setNotice(null);
+      try {
+        const token = tokenResponse.access_token;
+        const timeMin = new Date().toISOString();
+        const timeMax = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+        const url = new URL("https://www.googleapis.com/calendar/v3/calendars/primary/events");
+        url.searchParams.set("timeMin", timeMin);
+        url.searchParams.set("timeMax", timeMax);
+        url.searchParams.set("singleEvents", "true");
+        url.searchParams.set("orderBy", "startTime");
+        url.searchParams.set("maxResults", "50");
+        const res = await fetch(url.toString(), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`Google Calendar error: ${res.status}`);
+        const json = await res.json() as { items?: Array<{ summary?: string; start: { dateTime?: string; date?: string }; end: { dateTime?: string; date?: string } }> };
+        const events: CalendarEvent[] = (json.items ?? [])
+          .filter((e) => e.start.dateTime || e.start.date)
+          .map((e) => ({
+            title: e.summary ?? "Shift",
+            start: e.start.dateTime ?? `${e.start.date}T00:00:00`,
+            end: e.end.dateTime ?? `${e.end.date}T23:59:59`,
+          }));
+        const blocks = eventsToBlocks(events, 30).map((b) => ({ ...b, id: crypto.randomUUID() }));
+        mergeCalendarBlocks(blocks);
+      } catch (x) {
+        setErr(x instanceof Error ? x.message : "Google import failed.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    onError: () => {
+      setErr("Google Calendar access was denied.");
       setBusy(false);
-    }
-  };
+    },
+  });
 
   const pullOutlook = async () => {
     setBusy(true);
@@ -143,15 +167,6 @@ export function ScheduleImportSection({
       setErr(x instanceof Error ? x.message : "Outlook import failed.");
     } finally {
       setBusy(false);
-    }
-  };
-
-  const connectGoogle = async () => {
-    setErr(null);
-    try {
-      await signInWithGoogle();
-    } catch (x) {
-      setErr(x instanceof Error ? x.message : "Could not start Google sign-in.");
     }
   };
 
@@ -192,10 +207,10 @@ export function ScheduleImportSection({
         <button
           type="button"
           className={btnClass}
-          disabled={busy || !supabaseOk}
-          onClick={calendarReady ? pullGoogle : connectGoogle}
+          disabled={busy}
+          onClick={() => { setErr(null); googleLogin(); }}
         >
-          {calendarReady ? "Import Google" : "Google Calendar"}
+          Google Calendar
         </button>
         <button
           type="button"
@@ -203,7 +218,7 @@ export function ScheduleImportSection({
           disabled={busy || !supabaseOk}
           onClick={calendarReady ? pullOutlook : connectOutlook}
         >
-          {calendarReady ? "Import Outlook" : "Outlook"}
+          {calendarReady ? "Import Outlook" : "Connect Outlook"}
         </button>
         <button
           type="button"
@@ -243,8 +258,7 @@ export function ScheduleImportSection({
         )
       ) : !calendarReady ? (
         <p className="text-[11px] text-slate-500">
-          Tap Google or Outlook to connect, then tap again to import the next
-          two weeks.
+          Google Calendar opens a popup — allow it if blocked. Connect Outlook to import from Microsoft.
         </p>
       ) : null}
 

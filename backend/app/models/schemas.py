@@ -39,7 +39,6 @@ class TaskCategory(str, Enum):
     movement = "movement"
     mindfulness = "mindfulness"
     safety = "safety"
-    buddy_checkin = "buddy_checkin"
 
 
 class TaskStatus(str, Enum):

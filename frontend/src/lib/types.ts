@@ -27,8 +27,7 @@ export type TaskCategory =
   | "relaxation"
   | "movement"
   | "mindfulness"
-  | "safety"
-  | "buddy_checkin";
+  | "safety";
 
 export type Severity = "low" | "moderate" | "high" | "critical";
 
