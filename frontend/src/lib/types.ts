@@ -141,15 +141,6 @@ export type WearableImportResponse = {
   source: string;
 };
 
-export type ShiftSandboxResponse = {
-  original_strain_score: number;
-  projected_strain_score: number;
-  strain_delta: number;
-  recovery_bottleneck: Record<string, unknown>;
-  verdict: string;
-  explanation: string;
-};
-
 export const SEVERITY_RANK: Record<Severity, number> = {
   low: 1,
   moderate: 2,

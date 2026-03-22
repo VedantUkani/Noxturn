@@ -1740,7 +1740,11 @@ export default function DashboardLayout({
 Week route appears in `DASHBOARD_NAV` and `dashboardPageHeading("/week")` → **Circadian injury map**.
 
 ```ts
-export type DashboardNavHref = "/week" | "/today" | "/recovery" | "/sandbox";
+export type DashboardNavHref =
+  | "/week"
+  | "/schedule"
+  | "/today"
+  | "/recovery";
 
 export type DashboardNavItem = {
   href: DashboardNavHref;
@@ -1749,7 +1753,7 @@ export type DashboardNavItem = {
   description: string;
 };
 
-/** Primary shell navigation — order is intentional (scan: horizon → now → recovery → simulate). */
+/** Primary shell navigation — order is intentional (horizon → now → recovery → roster). */
 export const DASHBOARD_NAV: readonly DashboardNavItem[] = [
   {
     href: "/week",
@@ -1767,9 +1771,9 @@ export const DASHBOARD_NAV: readonly DashboardNavItem[] = [
     description: "Rhythm and rest signals without streak pressure.",
   },
   {
-    href: "/sandbox",
-    label: "Sandbox",
-    description: "What-if shifts before you commit to a swap.",
+    href: "/schedule",
+    label: "Roster & schedule",
+    description: "Shifts, calendar import, and uploads.",
   },
 ] as const;
 
@@ -1777,11 +1781,13 @@ export const DASHBOARD_NAV: readonly DashboardNavItem[] = [
 export function dashboardPageHeading(pathname: string): string {
   const map: Record<string, string> = {
     "/week": "Circadian injury map",
+    "/schedule": "Roster & schedule",
     "/today": "Today",
     "/dashboard": "Today",
     "/recovery": "Recovery",
-    "/sandbox": "Sandbox",
-    "/evidence": "Evidence lens",
+    "/settings": "Settings",
+    "/onboarding": "Welcome",
+    "/onboard": "Onboarding",
   };
   return map[pathname] ?? "Noxturn";
 }

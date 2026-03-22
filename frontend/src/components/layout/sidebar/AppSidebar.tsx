@@ -9,7 +9,6 @@ import {
   IconCalendar,
   IconClipboardList,
   IconClock,
-  IconFlask,
   IconPulse,
 } from "@/components/icons/NavIcons";
 import type { DashboardNavHref } from "@/lib/navigation";
@@ -24,7 +23,6 @@ const navIcon: Record<
   "/schedule": IconClipboardList,
   "/today": IconClock,
   "/recovery": IconPulse,
-  "/sandbox": IconFlask,
 };
 
 type AppSidebarProps = {

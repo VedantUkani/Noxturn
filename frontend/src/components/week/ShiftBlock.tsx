@@ -29,7 +29,7 @@ export function ShiftBlock({ segment, layout, className }: ShiftBlockProps) {
   return (
     <div
       className={cn(
-        "absolute top-1 bottom-1 flex min-w-0 flex-col justify-center overflow-hidden rounded-md px-1.5 py-0.5 text-[10px] leading-tight shadow-sm",
+        "absolute top-1 bottom-1 flex min-w-0 flex-col justify-center overflow-hidden rounded-lg px-2 py-1 text-[10px] leading-tight shadow-sm sm:text-[11px]",
         blockTypeClasses(segment.blockType, segment.kind),
         className,
       )}

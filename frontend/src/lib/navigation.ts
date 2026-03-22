@@ -2,8 +2,7 @@ export type DashboardNavHref =
   | "/week"
   | "/schedule"
   | "/today"
-  | "/recovery"
-  | "/sandbox";
+  | "/recovery";
 
 export type DashboardNavItem = {
   href: DashboardNavHref;
@@ -12,7 +11,7 @@ export type DashboardNavItem = {
   description: string;
 };
 
-/** Primary shell navigation — order is intentional (horizon → now → recovery → simulate → roster). */
+/** Primary shell navigation — order is intentional (horizon → now → recovery → roster). */
 export const DASHBOARD_NAV: readonly DashboardNavItem[] = [
   {
     href: "/week",
@@ -30,11 +29,6 @@ export const DASHBOARD_NAV: readonly DashboardNavItem[] = [
     description: "Rhythm and rest signals without streak pressure.",
   },
   {
-    href: "/sandbox",
-    label: "Sandbox",
-    description: "What-if shifts before you commit to a swap.",
-  },
-  {
     href: "/schedule",
     label: "Roster & schedule",
     description: "Shifts, calendar import, and uploads.",
@@ -49,7 +43,6 @@ export function dashboardPageHeading(pathname: string): string {
     "/today": "Today",
     "/dashboard": "Today",
     "/recovery": "Recovery",
-    "/sandbox": "Sandbox",
     "/settings": "Settings",
     "/onboarding": "Welcome",
     "/onboard": "Onboarding",

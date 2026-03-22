@@ -18,22 +18,28 @@ export function RiskOverlay({
   selected,
   onSelect,
 }: RiskOverlayProps) {
+  const label = WEEK_RISK_TITLES[episode.label];
   return (
     <button
       type="button"
-      onClick={() => onSelect(episode.id)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect(episode.id);
+      }}
+      aria-label={`${label}. ${episode.headline}`}
+      aria-pressed={selected}
       className={cn(
-        "absolute top-0.5 bottom-0.5 cursor-pointer rounded border px-1 text-left text-[9px] font-medium leading-tight transition-[box-shadow,transform] hover:z-10 hover:ring-1 hover:ring-[#45e0d4]/40",
+        "absolute top-1 bottom-1 cursor-pointer rounded-md border transition-[box-shadow,transform] hover:z-10 hover:ring-1 hover:ring-[#45e0d4]/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#45e0d4]/60",
         severityAccent(episode.severity),
-        selected && "z-20 ring-2 ring-teal-300/50",
+        selected && "z-20 ring-2 ring-[#45e0d4]/45",
       )}
       style={{
         left: `${layout.leftPct}%`,
-        width: `${layout.widthPct}%`,
+        width: `${Math.max(layout.widthPct, 0.35)}%`,
       }}
-      title={WEEK_RISK_TITLES[episode.label]}
+      title={`${label} — ${episode.headline}`}
     >
-      <span className="line-clamp-2">{WEEK_RISK_TITLES[episode.label]}</span>
+      <span className="sr-only">{label}</span>
     </button>
   );
 }

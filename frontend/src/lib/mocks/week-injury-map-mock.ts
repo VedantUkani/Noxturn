@@ -241,7 +241,11 @@ export function buildDemoWeekInjuryMap(now = new Date()): CircadianInjuryMapData
 
   const circadianStrainScore = 67;
   const summaryLine =
-    "This week stacks nights against quick day returns — the injury is in the schedule transitions, not in how hard you’re trying.";
+    "Your body is asked to switch gears often — especially around night shifts and early starts.";
+  const weekDifficultyLine =
+    "The hardest part is how quickly you return to daytime demand after nights, with only thin rest between.";
+  const recoveryWindowLine =
+    "Saturday is your clearest day to protect sleep and let your rhythm settle before the week turns again.";
 
   const topSorted = [...episodes].sort(
     (a, b) => b.severityScore - a.severityScore,
@@ -265,6 +269,8 @@ export function buildDemoWeekInjuryMap(now = new Date()): CircadianInjuryMapData
     weekStartDayKey: dayKeyLocal(weekStart),
     circadianStrainScore,
     summaryLine,
+    weekDifficultyLine,
+    recoveryWindowLine,
     topRisks,
     days: buildDayColumns(weekStart, shifts),
     episodes,

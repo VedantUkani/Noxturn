@@ -23,7 +23,6 @@ from app.routes.personas import router as personas_router
 from app.routes.plans import router as plans_router
 from app.routes.rag import router as rag_router
 from app.routes.risks import router as risks_router
-from app.routes.sandbox import router as sandbox_router
 from app.routes.schedule import router as schedule_router
 from app.routes.upload import router as upload_router
 from app.routes.ical import router as ical_router
@@ -98,7 +97,6 @@ app.include_router(stats_router)
 app.include_router(tasks_router)
 app.include_router(wearables_router)
 app.include_router(dashboard_router)
-app.include_router(sandbox_router)
 app.include_router(personas_router)
 app.include_router(upload_router)
 app.include_router(ical_router)

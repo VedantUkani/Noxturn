@@ -65,7 +65,17 @@ export type CircadianInjuryMapData = {
   weekLabel: string;
   weekStartDayKey: string;
   circadianStrainScore: number;
+  /** One humane read of the week — non-blaming, clinically grounded. */
   summaryLine: string;
+  /**
+   * Plain-language “what’s structurally hard” (schedule shape, not the person).
+   * Optional so API-backed weeks can omit until the backend sends it.
+   */
+  weekDifficultyLine?: string;
+  /**
+   * Optional single line highlighting a protective recovery pocket (e.g. a quieter day).
+   */
+  recoveryWindowLine?: string;
   topRisks: {
     label: WeekRiskLabel;
     severity: Severity;

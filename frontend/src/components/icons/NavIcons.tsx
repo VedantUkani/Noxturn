@@ -79,25 +79,6 @@ export function IconPulse({ className }: IconProps) {
   );
 }
 
-export function IconFlask({ className }: IconProps) {
-  return (
-    <svg
-      className={cn("h-5 w-5", className)}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      aria-hidden
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M9 3h6M10 3v6.5L6 18v3h12v-3l-4-8.5V3M8 21h8"
-      />
-    </svg>
-  );
-}
-
 export function IconBed({ className }: IconProps) {
   return (
     <svg

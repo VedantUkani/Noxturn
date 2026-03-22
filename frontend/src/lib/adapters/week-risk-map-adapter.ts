@@ -133,6 +133,10 @@ export function mapRiskComputeToWeekView(
     headline: e.headline,
     detail: e.explanation,
   }));
+  const top = sorted[0];
+  const weekDifficultyLine = top
+    ? `The strongest schedule signal is “${top.headline.toLowerCase()}” — worth pacing around that window.`
+    : undefined;
 
   const fmtRange = new Intl.DateTimeFormat(undefined, {
     month: "short",
@@ -146,6 +150,8 @@ export function mapRiskComputeToWeekView(
     weekStartDayKey: dayKeyLocal(weekStart),
     circadianStrainScore: Math.round(res.circadian_strain_score),
     summaryLine: res.summary,
+    weekDifficultyLine,
+    recoveryWindowLine: undefined,
     topRisks,
     days: buildDayColumnsFromShifts(weekStart, shifts),
     episodes,

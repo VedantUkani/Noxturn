@@ -66,3 +66,33 @@ export function episodeTouchesDay(
   dayEnd.setHours(23, 59, 59, 999);
   return start < dayEnd && end > dayStart;
 }
+
+/** Local midnight for `dayKey` and the following midnight (half-open [start, end)). */
+export function dayBoundsLocalMidnight(dayKey: string): {
+  start: Date;
+  end: Date;
+} {
+  const [y, mo, d] = dayKey.split("-").map(Number);
+  const start = new Date(y, mo - 1, d, 0, 0, 0, 0);
+  const end = new Date(y, mo - 1, d + 1, 0, 0, 0, 0);
+  return { start, end };
+}
+
+/**
+ * Map a segment onto one calendar day (0–100% = midnight → midnight local).
+ */
+export function layoutSegmentInCalendarDay(
+  dayKey: string,
+  segStart: Date,
+  segEnd: Date,
+): SegmentLayout | null {
+  const { start: dayStart, end: dayEnd } = dayBoundsLocalMidnight(dayKey);
+  const ms = dayEnd.getTime() - dayStart.getTime();
+  const s = Math.max(segStart.getTime(), dayStart.getTime());
+  const e = Math.min(segEnd.getTime(), dayEnd.getTime());
+  if (e <= s) return null;
+  return {
+    leftPct: ((s - dayStart.getTime()) / ms) * 100,
+    widthPct: Math.max(((e - s) / ms) * 100, 0.65),
+  };
+}

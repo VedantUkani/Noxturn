@@ -1,6 +1,6 @@
 /**
  * Canonical Noxturn UI theme — aligned with the Recovery analytics screen.
- * Use these tokens/classes for surfaces, type, accents, and focus so Week / Today / Sandbox
+ * Use these tokens/classes for surfaces, type, accents, and focus so Week / Today
  * match the same premium dark system (deep navy base, blue surfaces, teal accent).
  */
 
