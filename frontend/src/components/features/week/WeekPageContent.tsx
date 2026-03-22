@@ -8,7 +8,6 @@ import { WeekPageHeader } from "./WeekPageHeader";
 import { WeeklySummaryCard } from "./WeeklySummaryCard";
 import { WeeklyScheduleRiskPanel } from "./WeeklyScheduleRiskPanel";
 import { DayDetailCard } from "./DayDetailCard";
-import { WeeklyPressureCards } from "./WeeklyPressureCards";
 import { RecoveryWindowCard } from "./RecoveryWindowCard";
 
 export function WeekPageContent() {
@@ -16,7 +15,6 @@ export function WeekPageContent() {
   const { phase, data, errorMsg } = useWeekInjuryMapData();
 
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
-  const [selectedEpisodeId, setSelectedEpisodeId] = useState<string | null>(null);
 
   // Auto-select first day once data arrives
   useEffect(() => {
@@ -35,17 +33,6 @@ export function WeekPageContent() {
       episodeTouchesDay(e.startTime, e.endTime, selectedDayKey),
     );
   }, [data, selectedDayKey]);
-
-  useEffect(() => {
-    if (!selectedDayKey || !data) return;
-    const inDay = data.episodes.filter((e) =>
-      episodeTouchesDay(e.startTime, e.endTime, selectedDayKey),
-    );
-    setSelectedEpisodeId((prev) => {
-      if (prev && inDay.some((e) => e.id === prev)) return prev;
-      return inDay[0]?.id ?? null;
-    });
-  }, [selectedDayKey, data]);
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (phase === "loading") {
@@ -130,17 +117,10 @@ export function WeekPageContent() {
         </div>
         <div className="lg:col-span-4">
           <div className="lg:sticky lg:top-6">
-            <DayDetailCard
-              day={selectedDayColumn}
-              episodesForDay={episodesForDay}
-              onPickEpisode={setSelectedEpisodeId}
-              selectedEpisodeId={selectedEpisodeId}
-            />
+            <DayDetailCard day={selectedDayColumn} episodesForDay={episodesForDay} />
           </div>
         </div>
       </div>
-
-      <WeeklyPressureCards data={data} />
 
       {data.recoveryWindowLine ? (
         <RecoveryWindowCard line={data.recoveryWindowLine} />
