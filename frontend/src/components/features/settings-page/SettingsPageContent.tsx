@@ -48,7 +48,7 @@ export function SettingsPageContent({
           profile={effectiveProfile}
           onSave={handleSave}
         />
-        <WearableSyncCard data={data.wearables} />
+        <WearableSyncCard />
       </div>
 
       <SettingsFooterRow data={data.footer} />
