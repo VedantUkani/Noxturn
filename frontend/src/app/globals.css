@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply min-h-dvh antialiased;
+}
+
+@keyframes nox-onboarding-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.nox-onboarding-enter {
+  animation: nox-onboarding-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Marketing hero headline — teal / ice blue (aligned with `nx` / Week / Today) */
+.gradient-text {
+  background: linear-gradient(135deg, #86c9ff 0%, #45e0d4 52%, #2eb8aa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-dot {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.glass {
+  background: rgba(20, 31, 66, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
