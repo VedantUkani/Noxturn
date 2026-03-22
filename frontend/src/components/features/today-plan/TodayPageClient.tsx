@@ -10,6 +10,7 @@ import {
   postTasksEvent,
 } from "@/lib/noxturn-api";
 import { getOrCreateUserId, getStoredScheduleBlocks } from "@/lib/session";
+import { getUserProfileForApi } from "@/lib/user-profile-settings";
 import { payloadFromDashboardApi } from "@/lib/mocks/today-dashboard-payload";
 import type { TodayDashboardPayload } from "@/lib/dashboard-types";
 import { TodayDashboardProvider } from "@/contexts/TodayDashboardContext";
@@ -107,6 +108,7 @@ export function TodayPageClient() {
               blocks,
               commute_minutes: getCommuteMinutes(),
               plan_hours: 24,
+              user_profile: getUserProfileForApi(),
             });
           } catch { /* fall through — still try to load existing plan */ }
           if (cancelledRef.current) return;
@@ -135,6 +137,7 @@ export function TodayPageClient() {
               blocks,
               commute_minutes: getCommuteMinutes(),
               plan_hours: 24,
+              user_profile: getUserProfileForApi(),
             });
             if (cancelledRef.current) return;
             const outcome = await loadDashboard(userId);
