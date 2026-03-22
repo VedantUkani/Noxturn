@@ -241,16 +241,12 @@ export function normalizeUserProfileSettings(
 ): UserProfileSettings {
   const base = userProfileDefaultsFromViewModel(baseVm);
   if (!partial) return base;
-  const {
-    buddyCheckinsEnabled: _b,
-    trustedContactName: _n,
-    trustedContactDetail: _d,
-    ...rest
-  } = partial as Partial<UserProfileSettings> & {
-    buddyCheckinsEnabled?: boolean;
-    trustedContactName?: string;
-    trustedContactDetail?: string;
-  };
+  // Strip legacy fields that no longer exist in UserProfileSettings
+  const stripped = { ...partial } as Record<string, unknown>;
+  delete stripped.buddyCheckinsEnabled;
+  delete stripped.trustedContactName;
+  delete stripped.trustedContactDetail;
+  const rest = stripped as Partial<UserProfileSettings>;
   return { ...base, ...rest };
 }
 
