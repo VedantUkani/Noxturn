@@ -9,14 +9,12 @@ type TaskDetailSheetProps = {
   task: DashboardTask | null;
   open: boolean;
   onClose: () => void;
-  onOpenEvidence?: () => void;
 };
 
 export function TaskDetailSheet({
   task,
   open,
   onClose,
-  onOpenEvidence,
 }: TaskDetailSheetProps) {
   useEffect(() => {
     if (!open) return;
@@ -69,17 +67,6 @@ export function TaskDetailSheet({
             <IconClose className="h-5 w-5" />
           </button>
         </div>
-        {onOpenEvidence ? (
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={onOpenEvidence}
-              className="text-xs font-semibold text-teal-300/90 underline-offset-4 hover:underline focus-visible:outline focus-visible:ring-2 focus-visible:ring-teal-400/40"
-            >
-              Open evidence lens
-            </button>
-          </div>
-        ) : null}
 
         <dl className="mt-4 space-y-3 text-sm">
           <div>

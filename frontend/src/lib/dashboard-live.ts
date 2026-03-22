@@ -12,7 +12,10 @@ import type {
   TodayRecommendationRow,
   WhatChangedEntry,
 } from "@/lib/dashboard-types";
-import { evidenceLensId } from "@/lib/evidence-lens";
+
+function changeEntryId(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
 
 type LiveBanner = {
   message: string;
@@ -70,7 +73,7 @@ function pushChange(
   entries: WhatChangedEntry[],
   entry: Omit<WhatChangedEntry, "id">,
 ): WhatChangedEntry[] {
-  const next: WhatChangedEntry = { ...entry, id: evidenceLensId() };
+  const next: WhatChangedEntry = { ...entry, id: changeEntryId() };
   return [...entries.slice(-11), next];
 }
 

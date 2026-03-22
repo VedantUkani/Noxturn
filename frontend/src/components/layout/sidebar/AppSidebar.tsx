@@ -12,7 +12,6 @@ import {
 } from "@/components/icons/NavIcons";
 import { SidebarNavItem } from "./SidebarNavItem";
 import { UserMiniProfileCard } from "./UserMiniProfileCard";
-import { EvidenceLensButton } from "./EvidenceLensButton";
 
 const navIcon = {
   "/week": IconCalendar,
@@ -33,7 +32,7 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
       <div className="shrink-0 overflow-hidden">
         <div className="px-0.5">
           <Link
-            href="/today"
+            href="/onboarding"
             onClick={onNavigate}
             className="group block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#45e0d4]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08142f]"
           >
@@ -71,7 +70,6 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
       <div className="shrink-0 border-t border-white/[0.06] bg-transparent pt-4">
         <div className="flex flex-col gap-2.5">
           <UserMiniProfileCard />
-          <EvidenceLensButton onNavigate={onNavigate} />
         </div>
       </div>
     </div>

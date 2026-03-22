@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { NOXTURN_AUTH_COOKIE, NOXTURN_AUTH_VALUE } from "@/lib/auth-cookie";
 
-/** Only the root login screen is public. */
-const PUBLIC_PATHS = new Set<string>(["/"]);
+/** Public routes (no session cookie yet). */
+const PUBLIC_PATHS = new Set<string>(["/", "/auth/callback"]);
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

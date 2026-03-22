@@ -6,6 +6,12 @@ import type { NextConfig } from "next";
  *
  * If you use `npm run dev:webpack` and see stale chunk errors, run `npm run dev:clean`.
  */
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      { source: "/evidence", destination: "/today", permanent: false },
+    ];
+  },
+};
 
 export default nextConfig;

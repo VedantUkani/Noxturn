@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { AppSidebar } from "@/components/layout/sidebar";
 import { DashboardTopBar } from "./DashboardTopBar";
 import { IconClose, IconMenu } from "@/components/icons/NavIcons";
@@ -10,6 +12,8 @@ import { cn } from "@/lib/utils";
 
 export function DashboardChrome({ children }: { children: React.ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const pathname = usePathname();
+  const hideChromeTopBar = pathname === "/settings";
 
   const closeMobile = () => setMobileNavOpen(false);
 
@@ -73,14 +77,19 @@ export function DashboardChrome({ children }: { children: React.ReactNode }) {
           >
             <IconMenu />
           </button>
-          <span className="font-semibold tracking-tight text-[#edf2ff]">
+          <Link
+            href="/onboarding"
+            className="font-semibold tracking-tight text-[#edf2ff] hover:text-white"
+          >
             {APP_NAME}
-          </span>
+          </Link>
         </div>
 
-        <div className="shrink-0">
-          <DashboardTopBar />
-        </div>
+        {hideChromeTopBar ? null : (
+          <div className="shrink-0">
+            <DashboardTopBar />
+          </div>
+        )}
 
         <main
           className={cn(

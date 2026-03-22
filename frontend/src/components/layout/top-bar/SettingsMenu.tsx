@@ -164,7 +164,7 @@ export function SettingsMenu() {
               Settings
             </p>
             <p className="mt-1.5 text-xs leading-relaxed text-[#98a4bf]">
-              Roster, evidence, and session — keep everything aligned with your
+              Roster, workspace, and session — keep everything aligned with your
               shifts.
             </p>
           </div>
@@ -173,6 +173,19 @@ export function SettingsMenu() {
             style={{ backgroundColor: "#141f42" }}
             aria-label="Settings links"
           >
+            <Link
+              href="/settings"
+              className={linkRowClass}
+              style={{ backgroundColor: "#141f42" }}
+              onClick={closeWithAnimation}
+            >
+              <span className="text-sm font-semibold text-[#edf2ff]">
+                Workspace &amp; recovery
+              </span>
+              <span className="mt-1 block text-[12px] leading-snug text-[#98a4bf]">
+                Profile, sleep, wearables, and privacy.
+              </span>
+            </Link>
             <Link
               href="/schedule"
               className={linkRowClass}
@@ -184,19 +197,6 @@ export function SettingsMenu() {
               </span>
               <span className="mt-1 block text-[12px] leading-snug text-[#98a4bf]">
                 Shifts, calendar import, and uploads.
-              </span>
-            </Link>
-            <Link
-              href="/evidence"
-              className={cn(linkRowClass, "border-b-0")}
-              style={{ backgroundColor: "#141f42" }}
-              onClick={closeWithAnimation}
-            >
-              <span className="text-sm font-semibold text-[#edf2ff]">
-                Evidence library
-              </span>
-              <span className="mt-1 block text-[12px] leading-snug text-[#98a4bf]">
-                Browse references behind recommendations.
               </span>
             </Link>
             <div className="mx-4 my-3 h-px bg-white/[0.08]" aria-hidden />
