@@ -3,5 +3,4 @@ export type {
   OnboardingDraft,
   OnboardingStepIndex,
   RoleId,
-  ManualShiftDraft,
 } from "./types";

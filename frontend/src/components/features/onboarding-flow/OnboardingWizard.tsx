@@ -5,47 +5,50 @@ import { useCallback, useState } from "react";
 import { OnboardingNavigation } from "./OnboardingNavigation";
 import { OnboardingStepHeader } from "./OnboardingStepHeader";
 import { OnboardingStepper } from "./OnboardingStepper";
-import { OnboardingSummaryStrip } from "./OnboardingSummaryStrip";
-import { CommuteStep } from "./steps/CommuteStep";
-import { PreferencesStep } from "./steps/PreferencesStep";
-import { RoleSelectionStep } from "./steps/RoleSelectionStep";
-import { ScheduleStep } from "./steps/ScheduleStep";
-import {
-  canFinishSchedule,
-  useOnboardingWizard,
-  validateStep,
-} from "./use-onboarding-wizard";
+import { IdentityStep } from "./steps/IdentityStep";
+import { WorkContextStep } from "./steps/WorkContextStep";
+import { SleepPreferencesStep } from "./steps/SleepPreferencesStep";
+import { WearablesStep } from "./steps/WearablesStep";
+import { HealthReportStep } from "./steps/HealthReportStep";
+import { canFinish, useOnboardingWizard, validateStep } from "./use-onboarding-wizard";
 import {
   POST_ONBOARDING_DEST_KEY,
   markOnboardingComplete,
 } from "@/lib/onboarding-flag";
 import { clearWizardState } from "./onboarding-persist";
+import {
+  saveUserProfileSettings,
+  type UserProfileSettings,
+} from "@/lib/user-profile-settings";
 import type { OnboardingStepIndex } from "./types";
 
-const STEP_META: Record<
-  OnboardingStepIndex,
-  { title: string; description: string }
-> = {
+const STEP_META: Record<OnboardingStepIndex, { title: string; description: string }> = {
   1: {
-    title: "What’s your role?",
-    description:
-      "We use this to tune language, priorities, and recovery framing in your plan.",
+    title: "Who are you?",
+    description: "Your identity and role shape how Noxturn frames your recovery plan.",
   },
   2: {
-    title: "How long is your commute?",
-    description:
-      "Used to calculate available rest time between shifts — same idea as the original onboarding flow.",
+    title: "Commute & work context",
+    description: "Travel time is factored into rest buffers between your shifts.",
   },
   3: {
     title: "Sleep preferences",
-    description:
-      "Sleep constraints that shape recovery timing in your plan.",
+    description: "Tell us how you sleep so we can tune your circadian recovery windows.",
   },
   4: {
-    title: "Bring in your rota",
-    description:
-      "Use the same calendar, file, and manual tools as Roster & schedule — or skip and finish.",
+    title: "Connect a wearable",
+    description: "Oura Ring data lets Noxturn adapt your plan to how you actually slept.",
   },
+  5: {
+    title: "Health report",
+    description: "Upload any medical clearance or sleep study. Completely optional.",
+  },
+};
+
+type StepErrors = {
+  fullName?: string;
+  roleId?: string;
+  commuteMinutes?: string;
 };
 
 export function OnboardingWizard() {
@@ -53,48 +56,59 @@ export function OnboardingWizard() {
   const { step, draft, patchDraft, goNext, goBack } = useOnboardingWizard();
 
   const [error, setError] = useState<string | null>(null);
+  const [stepErrors, setStepErrors] = useState<StepErrors>({});
   const [finishing, setFinishing] = useState(false);
 
   const meta = STEP_META[step];
 
   const onContinue = useCallback(() => {
     setError(null);
+    setStepErrors({});
+
     if (!validateStep(step, draft)) {
       if (step === 1) {
-        setError("Choose the role that best describes your work.");
+        const errs: StepErrors = {};
+        if (!draft.fullName.trim()) errs.fullName = "Full name is required.";
+        if (!draft.roleId) errs.roleId = "Please select your role.";
+        setStepErrors(errs);
+        setError("Fill in the required fields above.");
       } else if (step === 2) {
-        setError("Commute must be between 0 and 120 minutes.");
+        setStepErrors({ commuteMinutes: "Must be between 0 and 120 minutes." });
+        setError("Check the highlighted field.");
       }
       return;
     }
-    if (step === 3) {
-      patchDraft({ importComplete: null });
-    }
     goNext();
-  }, [step, draft, goNext, patchDraft]);
+  }, [step, draft, goNext]);
 
   const onFinish = useCallback(() => {
     setError(null);
-    if (!canFinishSchedule(draft)) {
-      setError(
-        "Add at least one shift (import or +), or check “I’ll set up my schedule in the app next.”",
-      );
-      return;
-    }
+    if (!canFinish(draft)) return;
     setFinishing(true);
 
-    // Save onboarding profile to localStorage so dashboard can read it
     try {
-      localStorage.setItem(
-        "noxturn_profile",
-        JSON.stringify({
-          roleId: draft.roleId,
-          commuteMinutes: draft.commuteMinutes,
-          sleepConstraint: draft.sleepConstraint,
-          savedAt: new Date().toISOString(),
-        }),
-      );
-    } catch { /* ignore */ }
+      const profile: UserProfileSettings = {
+        fullName: draft.fullName,
+        email: draft.email,
+        roleId: draft.roleId ?? "other",
+        roleSpecialty: draft.roleSpecialty,
+        commuteMinutes: draft.commuteMinutes,
+        transportMode: draft.transportMode,
+        chronotype: draft.chronotype,
+        preferredSleepHours: draft.preferredSleepHours,
+        anchorSleepStart: draft.anchorSleepStart,
+        anchorSleepEnd: draft.anchorSleepEnd,
+        anchorNote: draft.anchorNote,
+        sleepConstraint: draft.sleepConstraint,
+        caffeineHabit: draft.caffeineHabit,
+        ouraConnected: draft.ouraConnected,
+        healthReportPath: draft.healthReportPath,
+        healthReportFileName: draft.healthReportFileName,
+      };
+      saveUserProfileSettings(profile);
+    } catch {
+      /* ignore storage errors */
+    }
 
     markOnboardingComplete();
     clearWizardState();
@@ -106,22 +120,20 @@ export function OnboardingWizard() {
     } catch {
       /* ignore */
     }
+
     router.push(dest);
     router.refresh();
   }, [draft, router]);
 
   const handleBack = useCallback(() => {
     setError(null);
-    if (step === 4) {
-      patchDraft({ importComplete: null });
-    }
+    setStepErrors({});
     goBack();
-  }, [step, goBack, patchDraft]);
+  }, [goBack]);
 
   return (
     <div className="mx-auto w-full max-w-3xl pb-16">
       <OnboardingStepper currentStep={step} />
-      <OnboardingSummaryStrip step={step} draft={draft} />
       <OnboardingStepHeader title={meta.title} description={meta.description} />
 
       {error ? (
@@ -133,27 +145,27 @@ export function OnboardingWizard() {
         </p>
       ) : null}
 
-      {step === 1 ? (
-        <RoleSelectionStep
-          draft={draft}
-          onChange={(roleId) => patchDraft({ roleId })}
-        />
-      ) : null}
-      {step === 2 ? (
-        <CommuteStep draft={draft} onChange={patchDraft} />
-      ) : null}
-      {step === 3 ? (
-        <PreferencesStep draft={draft} onChange={patchDraft} />
-      ) : null}
-      {step === 4 ? (
-        <ScheduleStep draft={draft} onChange={patchDraft} />
-      ) : null}
+      {step === 1 && (
+        <IdentityStep draft={draft} onChange={patchDraft} errors={stepErrors} />
+      )}
+      {step === 2 && (
+        <WorkContextStep draft={draft} onChange={patchDraft} errors={stepErrors} />
+      )}
+      {step === 3 && (
+        <SleepPreferencesStep draft={draft} onChange={patchDraft} />
+      )}
+      {step === 4 && (
+        <WearablesStep draft={draft} onChange={patchDraft} />
+      )}
+      {step === 5 && (
+        <HealthReportStep draft={draft} onChange={patchDraft} />
+      )}
 
       <OnboardingNavigation
         showBack={step > 1}
         onBack={handleBack}
-        primaryLabel={step === 4 ? "Finish setup" : "Continue"}
-        onPrimary={step === 4 ? onFinish : onContinue}
+        primaryLabel={step === 5 ? "Finish setup" : "Continue"}
+        onPrimary={step === 5 ? onFinish : onContinue}
         pending={finishing}
       />
     </div>

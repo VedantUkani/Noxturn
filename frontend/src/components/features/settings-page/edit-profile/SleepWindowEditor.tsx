@@ -283,9 +283,6 @@ export function SleepWindowEditor({
           <label htmlFor="sleep-constraint" className={nx.labelUpper}>
             Sleep constraint
           </label>
-          <p className="mt-1 text-xs text-[#7d89a6]">
-            Shapes how aggressively we protect transitions.
-          </p>
           <select
             id="sleep-constraint"
             disabled={disabled}
@@ -310,9 +307,6 @@ export function SleepWindowEditor({
           <label htmlFor="caffeine-habit" className={nx.labelUpper}>
             Caffeine pattern
           </label>
-          <p className="mt-1 text-xs text-[#7d89a6]">
-            Used to tune recovery timing suggestions.
-          </p>
           <select
             id="caffeine-habit"
             disabled={disabled}

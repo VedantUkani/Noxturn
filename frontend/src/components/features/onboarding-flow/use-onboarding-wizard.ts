@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useReducer } from "react";
-import { getStoredScheduleBlocks } from "@/lib/session";
 import {
   clearWizardState,
   loadWizardState,
@@ -10,7 +9,6 @@ import {
 } from "./onboarding-persist";
 import {
   defaultOnboardingDraft,
-  type ManualShiftDraft,
   type OnboardingDraft,
   type OnboardingStepIndex,
 } from "./types";
@@ -21,8 +19,6 @@ type Action =
   | { type: "hydrate"; payload: WizardState }
   | { type: "setStep"; step: OnboardingStepIndex }
   | { type: "patchDraft"; patch: Partial<OnboardingDraft> }
-  | { type: "addShift"; shift: ManualShiftDraft }
-  | { type: "removeShift"; id: string }
   | { type: "reset" };
 
 function reducer(state: WizardState, action: Action): WizardState {
@@ -33,24 +29,6 @@ function reducer(state: WizardState, action: Action): WizardState {
       return { ...state, step: action.step };
     case "patchDraft":
       return { ...state, draft: { ...state.draft, ...action.patch } };
-    case "addShift":
-      return {
-        ...state,
-        draft: {
-          ...state.draft,
-          manualShifts: [...state.draft.manualShifts, action.shift],
-        },
-      };
-    case "removeShift":
-      return {
-        ...state,
-        draft: {
-          ...state.draft,
-          manualShifts: state.draft.manualShifts.filter(
-            (s) => s.id !== action.id,
-          ),
-        },
-      };
     case "reset":
       return { step: 1, draft: defaultOnboardingDraft() };
     default:
@@ -58,10 +36,7 @@ function reducer(state: WizardState, action: Action): WizardState {
   }
 }
 
-const initial: WizardState = {
-  step: 1,
-  draft: defaultOnboardingDraft(),
-};
+const initial: WizardState = { step: 1, draft: defaultOnboardingDraft() };
 
 export function validateStep(
   step: OnboardingStepIndex,
@@ -69,7 +44,10 @@ export function validateStep(
 ): boolean {
   switch (step) {
     case 1:
-      return draft.roleId !== null;
+      return (
+        draft.roleId !== null &&
+        draft.fullName.trim().length > 0
+      );
     case 2:
       return (
         Number.isFinite(draft.commuteMinutes) &&
@@ -77,22 +55,17 @@ export function validateStep(
         draft.commuteMinutes <= 120
       );
     case 3:
-      return true;
     case 4:
+    case 5:
       return true;
     default:
       return false;
   }
 }
 
-/** Finish when user defers, has blocks in the shared schedule store (same as /schedule), or legacy import flag. */
-export function canFinishSchedule(draft: OnboardingDraft): boolean {
-  if (draft.scheduleDeferred) return true;
-  if (typeof window !== "undefined" && getStoredScheduleBlocks().length > 0) {
-    return true;
-  }
-  if (draft.importComplete !== null) return true;
-  return false;
+/** Last step — always finishable (wearables + health report are optional). */
+export function canFinish(_draft: OnboardingDraft): boolean { // eslint-disable-line @typescript-eslint/no-unused-vars
+  return true;
 }
 
 export function useOnboardingWizard() {
@@ -114,7 +87,7 @@ export function useOnboardingWizard() {
   const goNext = useCallback(() => {
     dispatch({
       type: "setStep",
-      step: Math.min(4, state.step + 1) as OnboardingStepIndex,
+      step: Math.min(5, state.step + 1) as OnboardingStepIndex,
     });
   }, [state.step]);
 
@@ -125,27 +98,10 @@ export function useOnboardingWizard() {
     });
   }, [state.step]);
 
-  const addShift = useCallback((shift: ManualShiftDraft) => {
-    dispatch({ type: "addShift", shift });
-  }, []);
-
-  const removeShift = useCallback((id: string) => {
-    dispatch({ type: "removeShift", id });
-  }, []);
-
   const resetWizard = useCallback(() => {
     clearWizardState();
     dispatch({ type: "reset" });
   }, []);
 
-  return {
-    step: state.step,
-    draft: state.draft,
-    patchDraft,
-    goNext,
-    goBack,
-    addShift,
-    removeShift,
-    resetWizard,
-  };
+  return { step: state.step, draft: state.draft, patchDraft, goNext, goBack, resetWizard };
 }

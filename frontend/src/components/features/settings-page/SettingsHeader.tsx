@@ -13,9 +13,11 @@ export function SettingsHeader({ data }: SettingsHeaderProps) {
       <h1 className="text-3xl font-bold tracking-tight text-[#edf2ff] md:text-[2rem] md:leading-tight">
         {data.title}
       </h1>
-      <p className="max-w-3xl text-base leading-relaxed text-[#98a4bf]">
-        {data.subtitle}
-      </p>
+      {data.subtitle ? (
+        <p className="max-w-3xl text-base leading-relaxed text-[#98a4bf]">
+          {data.subtitle}
+        </p>
+      ) : null}
     </header>
   );
 }

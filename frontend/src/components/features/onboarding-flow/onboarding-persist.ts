@@ -4,7 +4,7 @@ import {
   type OnboardingStepIndex,
 } from "./types";
 
-const STORAGE_KEY = "noxturn_onboarding_wizard_v1";
+const STORAGE_KEY = "noxturn_onboarding_wizard_v2";
 
 export type PersistedWizardState = {
   step: OnboardingStepIndex;
@@ -13,34 +13,18 @@ export type PersistedWizardState = {
 
 function normalizeDraft(raw: Partial<OnboardingDraft>): OnboardingDraft {
   const base = defaultOnboardingDraft();
-  const { buddyCheckins: _legacyBuddy, ...rawRest } = raw as Partial<OnboardingDraft> & {
-    buddyCheckins?: boolean;
-  };
-  return {
-    ...base,
-    ...rawRest,
-    manualShifts: Array.isArray(raw.manualShifts)
-      ? raw.manualShifts.map((s) => ({
-          id: String(s.id),
-          type: s.type ?? "day_shift",
-          title: typeof s.title === "string" ? s.title : "",
-          date: typeof s.date === "string" ? s.date : "",
-          start: typeof s.start === "string" ? s.start : "",
-          end: typeof s.end === "string" ? s.end : "",
-        }))
-      : base.manualShifts,
-    importComplete:
-      raw.importComplete &&
-      typeof raw.importComplete === "object" &&
-      typeof raw.importComplete.count === "number"
-        ? {
-            count: raw.importComplete.count,
-            warnings: Array.isArray(raw.importComplete.warnings)
-              ? raw.importComplete.warnings
-              : [],
-          }
-        : null,
-  };
+  // Strip any legacy fields
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { buddyCheckins, scheduleMode, scheduleNotes, scheduleDeferred, manualShifts, importComplete, ...rest } =
+    raw as Partial<OnboardingDraft> & {
+      buddyCheckins?: boolean;
+      scheduleMode?: string;
+      scheduleNotes?: string;
+      scheduleDeferred?: boolean;
+      manualShifts?: unknown[];
+      importComplete?: unknown;
+    };
+  return { ...base, ...rest };
 }
 
 export function loadWizardState(): PersistedWizardState | null {
@@ -52,13 +36,11 @@ export function loadWizardState(): PersistedWizardState | null {
     if (!parsed || typeof parsed !== "object") return null;
     const o = parsed as Record<string, unknown>;
     const step = Number(o.step);
-    if (step !== 1 && step !== 2 && step !== 3 && step !== 4) return null;
+    if (step !== 1 && step !== 2 && step !== 3 && step !== 4 && step !== 5)
+      return null;
     const draft = o.draft as Partial<OnboardingDraft> | undefined;
     if (!draft || typeof draft !== "object") return null;
-    return {
-      step: step as OnboardingStepIndex,
-      draft: normalizeDraft(draft),
-    };
+    return { step: step as OnboardingStepIndex, draft: normalizeDraft(draft) };
   } catch {
     return null;
   }

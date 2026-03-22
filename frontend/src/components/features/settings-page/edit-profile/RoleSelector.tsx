@@ -69,15 +69,15 @@ export function RoleSelector({
               disabled={disabled}
               onClick={() => onChange(opt.id)}
               className={cn(
-                "rounded-2xl border px-4 py-3.5 text-left transition-colors",
-                "border-white/[0.08] bg-[#0f1b3a]/80 hover:border-white/[0.12]",
-                selected &&
-                  "border-[#45e0d4]/40 bg-[#0c1f3d]/55 shadow-[inset_0_0_0_1px_rgba(69,224,212,0.15)]",
+                "rounded-2xl border px-4 py-3.5 text-left transition-all duration-150",
+                selected
+                  ? "border-[#45e0d4] bg-[#0c2a3d] shadow-[0_0_0_1px_rgba(69,224,212,0.5),inset_0_0_20px_rgba(69,224,212,0.06)]"
+                  : "border-white/[0.08] bg-[#0f1b3a]/80 hover:border-[#45e0d4]/40 hover:bg-[#0d1f35]",
                 disabled && "pointer-events-none opacity-50",
                 nx.focusRing,
               )}
             >
-              <span className="block text-sm font-semibold text-[#edf2ff]">
+              <span className={cn("block text-sm font-semibold transition-colors", selected ? "text-[#45e0d4]" : "text-[#edf2ff]")}>
                 {opt.title}
               </span>
               <span className="mt-1 block text-xs leading-relaxed text-[#7d89a6]">
