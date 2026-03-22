@@ -14,6 +14,7 @@ from app.models.schemas import (
     RiskComputeResponse,
     TaskCategory,
     TaskStatus,
+    UserProfile,
 )
 
 SYSTEM_PROMPT = """You are Noxturn, a clinical circadian rhythm recovery advisor for shift workers (nurses, paramedics, factory workers).
@@ -184,6 +185,117 @@ def _build_persona_section(persona: Optional[dict]) -> str:
     tone = persona.get("plan_tone", "")
     if tone:
         lines.append(f"Communication tone: {tone} (adapt task descriptions to this tone)")
+    return "\n".join(lines)
+
+
+def _build_user_profile_section(profile: Optional[UserProfile]) -> str:
+    """
+    Converts the onboarding UserProfile into a focused system-prompt section.
+    This tells Claude exactly who this worker is so every task is personalised.
+    """
+    if not profile:
+        return ""
+
+    ROLE_LABELS = {
+        "nurse": "Nurse / RN",
+        "paramedic": "Paramedic / EMT",
+        "factory_worker": "Factory / Shift Worker",
+        "resident": "Medical Resident",
+        "other": "Shift worker",
+    }
+    CHRONOTYPE_LABELS = {
+        "early_bird": "early bird (natural wake ~06:00, prefers earlier sleep)",
+        "neutral":    "balanced chronotype (flexible peak performance window)",
+        "night_owl":  "night owl (natural wake ~09:00+, harder to fall asleep early)",
+    }
+    CONSTRAINT_LABELS = {
+        "cant_sleep_before_9am": "cannot fall asleep before 09:00 after night shifts",
+        "light_sensitive":       "highly light-sensitive before sleep — needs blackout conditions",
+        "short_sleep_risk":      "frequently gets less than 6h sleep after shifts",
+        "none":                  "no specific sleep constraint reported",
+    }
+    CAFFEINE_LABELS = {
+        "before_noon":    "stops caffeine before noon",
+        "afternoon_ok":   "tolerates afternoon caffeine",
+        "late_sensitive": "sensitive to caffeine after midday — cutoff must be early",
+        "minimal":        "minimal caffeine intake",
+    }
+
+    lines = ["\n\n--- WORKER PROFILE (from onboarding) ---"]
+
+    role = ROLE_LABELS.get(profile.role_id or "", profile.role_id or "Shift worker")
+    specialty = f" — {profile.role_specialty}" if profile.role_specialty and profile.role_specialty not in ("—", "") else ""
+    lines.append(f"Role: {role}{specialty}")
+
+    if profile.chronotype:
+        lines.append(f"Chronotype: {CHRONOTYPE_LABELS.get(profile.chronotype, profile.chronotype)}")
+
+    if profile.preferred_sleep_hours:
+        lines.append(f"Target sleep duration: {profile.preferred_sleep_hours}h per night")
+
+    if profile.anchor_sleep_start and profile.anchor_sleep_end:
+        lines.append(f"Preferred anchor sleep window: {profile.anchor_sleep_start} – {profile.anchor_sleep_end}")
+
+    if profile.sleep_constraint:
+        constraint = CONSTRAINT_LABELS.get(profile.sleep_constraint, profile.sleep_constraint)
+        lines.append(f"Sleep constraint: {constraint}")
+
+    if profile.caffeine_habit:
+        caffeine = CAFFEINE_LABELS.get(profile.caffeine_habit, profile.caffeine_habit)
+        lines.append(f"Caffeine pattern: {caffeine}")
+
+    if profile.transport_mode:
+        transport_map = {"car": "drives to work", "transit": "uses public transit", "walk_cycle": "walks or cycles", "other": "other transport"}
+        lines.append(f"Commute: {transport_map.get(profile.transport_mode, profile.transport_mode)}")
+
+    if profile.on_medications and profile.medication_details:
+        lines.append(f"Current medications: {profile.medication_details}")
+    elif profile.on_medications:
+        lines.append("On medications (details not specified)")
+
+    SLEEP_CONDITION_LABELS = {
+        "sleep_apnea": "sleep apnea (OSA)",
+        "insomnia": "chronic insomnia",
+        "rls": "restless legs syndrome (RLS)",
+        "hypersomnia": "hypersomnia (excessive daytime sleepiness)",
+    }
+    MEDICAL_HISTORY_LABELS = {
+        "cardiovascular": "cardiovascular disease",
+        "diabetes": "diabetes / blood sugar dysregulation",
+        "anxiety_depression": "anxiety / depression",
+        "chronic_fatigue": "chronic fatigue syndrome",
+        "hypertension": "hypertension",
+    }
+
+    conditions = [c for c in (profile.sleep_conditions or []) if c not in ("none",)]
+    parsed_conditions = []
+    for c in conditions:
+        if c.startswith("other:"):
+            parsed_conditions.append(c[6:])
+        elif c != "other":
+            parsed_conditions.append(SLEEP_CONDITION_LABELS.get(c, c.replace("_", " ")))
+    if parsed_conditions:
+        lines.append(f"Sleep conditions: {', '.join(parsed_conditions)} — adjust light timing and sleep protection accordingly")
+
+    history = [h for h in (profile.medical_history or []) if h not in ("none",)]
+    parsed_history = []
+    for h in history:
+        if h.startswith("other:"):
+            parsed_history.append(h[6:])
+        elif h != "other":
+            parsed_history.append(MEDICAL_HISTORY_LABELS.get(h, h.replace("_", " ")))
+    if parsed_history:
+        lines.append(f"Medical history: {', '.join(parsed_history)} — factor into recovery intensity recommendations")
+
+    if profile.fitbit_connected:
+        lines.append("Wearable: Fitbit connected — HRV and sleep stage data available for adaptive recovery")
+
+    lines.append(
+        "\nIMPORTANT: Use ALL of the above profile data to personalise every task. "
+        "Reference the worker's specific chronotype when scheduling light timing. "
+        "Respect their anchor sleep window. Apply their caffeine cutoff constraint strictly. "
+        "If sleep conditions or medical history are listed, weight protective tasks higher."
+    )
     return "\n".join(lines)
 
 
@@ -373,6 +485,7 @@ class ClaudePlanner:
         plan_hours: int = 48,
         user_id: str = "anonymous",
         persona: Optional[dict] = None,
+        user_profile: Optional[UserProfile] = None,
     ) -> PlanGenerateResponse:
         from app.services.token_tracker import record as track_tokens
         from app.rag.retriever import retrieve
@@ -387,7 +500,11 @@ class ClaudePlanner:
         except Exception as e:
             print(f"[RAG] Evidence retrieval failed (non-fatal): {e}")
 
-        system_prompt = SYSTEM_PROMPT + _build_persona_section(persona)
+        system_prompt = (
+            SYSTEM_PROMPT
+            + _build_persona_section(persona)
+            + _build_user_profile_section(user_profile)
+        )
         user_msg = _build_user_message(risk_result, plan_hours, persona, evidence_section)
 
         message = self.client.messages.create(

@@ -107,6 +107,7 @@ def generate_plan_claude(request: PlanGenerateRequest, token_user_id: str = Depe
             plan_hours=request.plan_hours,
             user_id=str(request.user_id),
             persona=persona,
+            user_profile=request.user_profile,
         )
     except HTTPException:
         raise
@@ -181,6 +182,7 @@ def replan(request: ReplanRequest, token_user_id: str = Depends(require_user)) -
                 plan_hours=24,
                 user_id=str(request.user_id),
                 persona=persona,
+                user_profile=request.user_profile,
             )
             used_claude = True
             what_changed.append("Claude AI generated the updated near-term actions.")
