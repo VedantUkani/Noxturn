@@ -9,16 +9,12 @@ import { cn } from "@/lib/utils";
 type DayDetailCardProps = {
   day: WeekDayColumn | null;
   episodesForDay: WeekRiskEpisodeVM[];
-  onPickEpisode: (id: string) => void;
-  selectedEpisodeId: string | null;
   className?: string;
 };
 
 export function DayDetailCard({
   day,
   episodesForDay,
-  onPickEpisode,
-  selectedEpisodeId,
   className,
 }: DayDetailCardProps) {
   return (
@@ -32,8 +28,6 @@ export function DayDetailCard({
       <DayContextPanel
         day={day}
         episodesForDay={episodesForDay}
-        onPickEpisode={onPickEpisode}
-        selectedEpisodeId={selectedEpisodeId}
         compact
         footer={
           <Link

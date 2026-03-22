@@ -1,10 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
+import type { Severity } from "@/lib/types";
 import type { WeekDayColumn } from "@/lib/week-risk-view-model";
 import type { WeekRiskEpisodeVM } from "@/lib/week-risk-view-model";
 import { cn } from "@/lib/utils";
-import { WEEK_RISK_TITLES, severityDotClass } from "./week-risk-meta";
+import { WEEK_RISK_TITLES } from "./week-risk-meta";
 
 function fmtRange(isoStart: string, isoEnd: string) {
   try {
@@ -20,31 +21,46 @@ function fmtRange(isoStart: string, isoEnd: string) {
   }
 }
 
+/** One narrative line per risk — avoids repeating the same text twice (headline vs explanation). */
+function riskNarrative(e: WeekRiskEpisodeVM): string {
+  const h = e.headline.trim();
+  const x = e.explanation.trim();
+  if (!x) return h;
+  if (x === h) return h;
+  return x;
+}
+
+function severityLeftBar(sev: Severity): string {
+  switch (sev) {
+    case "critical":
+      return "border-l-[3px] border-l-rose-400/90";
+    case "high":
+      return "border-l-[3px] border-l-orange-400/85";
+    case "moderate":
+      return "border-l-[3px] border-l-amber-400/75";
+    default:
+      return "border-l-[3px] border-l-slate-500/65";
+  }
+}
+
 type DayContextPanelProps = {
   day: WeekDayColumn | null;
   episodesForDay: WeekRiskEpisodeVM[];
-  onPickEpisode: (id: string) => void;
-  selectedEpisodeId: string | null;
+  /** Kept for API compatibility; selection UI removed — day detail shows every risk at once. */
+  onPickEpisode?: (id: string) => void;
+  selectedEpisodeId?: string | null;
   className?: string;
-  /** Shorter section labels for the Week spotlight layout. */
   compact?: boolean;
-  /** e.g. CTA row — rendered after main content. */
   footer?: ReactNode;
 };
 
 export function DayContextPanel({
   day,
   episodesForDay,
-  onPickEpisode,
-  selectedEpisodeId,
   className,
   compact = false,
   footer,
 }: DayContextPanelProps) {
-  const selectedEpisode = selectedEpisodeId
-    ? episodesForDay.find((e) => e.id === selectedEpisodeId)
-    : undefined;
-
   if (!day) {
     return (
       <div
@@ -58,112 +74,119 @@ export function DayContextPanel({
     );
   }
 
+  const n = episodesForDay.length;
+  const scheduleLabel = compact ? "Schedule" : "On the calendar";
+  const headsUpLabel = compact ? "Heads-up" : "Risks this day";
+
   return (
     <div
       className={cn(
-        "rounded-[22px] border border-white/[0.06] bg-[#141f42]/90 p-5 shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)] sm:p-6",
+        "relative overflow-hidden rounded-[22px] border border-white/[0.08] bg-gradient-to-b from-[#141f42]/95 to-[#101a36]/95 p-5 shadow-[0_20px_50px_-28px_rgba(0,0,0,0.88)] sm:p-6",
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div
+        className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.12] to-transparent"
+        aria-hidden
+      />
+
+      <div className="relative flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[13px] font-semibold text-[#edf2ff]">
+          <p className="text-[15px] font-semibold tracking-tight text-[#edf2ff]">
             {day.weekdayLabel}{" "}
-            <span className="font-normal text-[#98a4bf]">{day.dateLabel}</span>
+            <span className="font-normal text-[#7d89a6]">{day.dateLabel}</span>
           </p>
         </div>
-        {!compact && day.dayStrainHint != null ? (
-          <div className="shrink-0 text-right">
-            <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#7d89a6]">
-              Load
-            </p>
-            <p className="text-lg font-semibold tabular-nums text-[#f7c22c]/90">
-              {day.dayStrainHint}
-            </p>
-          </div>
-        ) : null}
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {!compact && day.dayStrainHint != null ? (
+            <div className="rounded-lg bg-white/[0.05] px-2.5 py-1 text-right ring-1 ring-white/[0.06]">
+              <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[#7d89a6]">
+                Load
+              </p>
+              <p className="text-sm font-semibold tabular-nums text-[#f7c22c]/90">
+                {day.dayStrainHint}
+              </p>
+            </div>
+          ) : null}
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] ring-1",
+              n === 0
+                ? "bg-[#45e0d4]/10 text-[#45e0d4]/90 ring-[#45e0d4]/20"
+                : "bg-white/[0.06] text-[#98a4bf] ring-white/[0.08]",
+            )}
+          >
+            {n === 0 ? "All clear" : `${n} heads-up${n > 1 ? "s" : ""}`}
+          </span>
+        </div>
       </div>
 
-      <div className="mt-5 space-y-3">
-        <p className="text-xs font-medium text-[#98a4bf]">
-          {compact ? "Schedule" : "On the calendar"}
-        </p>
-        {day.shifts.length === 0 ? (
-          <p className="text-sm text-[#7d89a6]">Nothing starting this day.</p>
-        ) : (
-          <ul className="space-y-2">
-            {day.shifts.map((s) => (
-              <li
-                key={s.id}
-                className="rounded-lg bg-[#101c3c]/80 px-3 py-2.5 text-sm text-[#98a4bf] ring-1 ring-white/[0.04]"
-              >
-                <span className="font-medium text-[#edf2ff]">{s.title}</span>
-                <span className="mt-1 block text-xs text-[#7d89a6]">
-                  {fmtRange(s.startTime, s.endTime)} ·{" "}
-                  {s.kind === "obligation"
-                    ? "Obligation"
-                    : s.blockType.replace(/_/g, " ")}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className={cn("space-y-3", compact ? "mt-6" : "mt-8")}>
-        <p className="text-xs font-medium text-[#98a4bf]">
-          {compact ? "This day" : "Risks this day"}
-        </p>
-        {episodesForDay.length === 0 ? (
-          <p className="text-sm text-[#7d89a6]">
-            {compact ? "Nothing else flagged for this day." : "No risk windows touch this day."}
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {episodesForDay.map((e) => (
-              <li key={e.id}>
-                <button
-                  type="button"
-                  onClick={() => onPickEpisode(e.id)}
-                  className={cn(
-                    "w-full rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
-                    selectedEpisodeId === e.id
-                      ? "bg-[#0c2a3d]/90 text-[#edf2ff] ring-1 ring-[#45e0d4]/35"
-                      : "bg-[#101c3c]/50 text-[#98a4bf] ring-1 ring-white/[0.04] hover:bg-[#141f42] hover:text-[#edf2ff]",
-                  )}
+      {/* Schedule — same structure every day */}
+      <section className="mt-5">
+        <h3 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7d89a6]">
+          {scheduleLabel}
+        </h3>
+        <div className="mt-2">
+          {day.shifts.length === 0 ? (
+            <p className="rounded-lg border border-white/[0.06] bg-[#101c3c]/25 px-3 py-3 text-sm text-[#7d89a6]">
+              Nothing starting this day.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {day.shifts.map((s) => (
+                <li
+                  key={s.id}
+                  className="rounded-lg border border-white/[0.06] bg-[#101c3c]/40 px-3 py-2.5"
                 >
-                  <span
-                    className={cn(
-                      "mr-2 inline-block h-1.5 w-1.5 rounded-full align-middle",
-                      severityDotClass(e.severity),
-                    )}
-                    aria-hidden
-                  />
-                  <span className="font-medium text-[#edf2ff]">
-                    {WEEK_RISK_TITLES[e.label]}
+                  <span className="text-sm font-medium text-[#edf2ff]">{s.title}</span>
+                  <span className="mt-0.5 block text-xs text-[#7d89a6]">
+                    {fmtRange(s.startTime, s.endTime)} ·{" "}
+                    {s.kind === "obligation"
+                      ? "Obligation"
+                      : s.blockType.replace(/_/g, " ")}
                   </span>
-                  <span className="mt-1 block pl-4 text-xs leading-snug text-[#7d89a6]">
-                    {e.headline}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {selectedEpisode ? (
-        <div className="mt-5 rounded-xl bg-[#0c2a3d]/40 px-4 py-3.5 ring-1 ring-[#45e0d4]/18">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#45e0d4]/90">
-            {compact ? "In plain terms" : "Why it matters"}
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-[#98a4bf]">
-            {selectedEpisode.explanation}
-          </p>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      ) : null}
+      </section>
 
-      {footer ? <div className="mt-6">{footer}</div> : null}
+      {/* Heads-up — same chrome whether empty or full */}
+      <section className="mt-5">
+        <h3 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7d89a6]">
+          {headsUpLabel}
+        </h3>
+        <div className="mt-2 space-y-2">
+          {n === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/[0.1] bg-[#101c3c]/20 px-4 py-4 text-center">
+              <p className="text-sm leading-relaxed text-[#7d89a6]">
+                No extra circadian flags on this day — still worth guarding sleep
+                if you work nights nearby.
+              </p>
+            </div>
+          ) : (
+            episodesForDay.map((e) => (
+              <div
+                key={e.id}
+                className={cn(
+                  "rounded-xl border border-white/[0.07] bg-[#101c3c]/45 py-2.5 pl-3 pr-3",
+                  severityLeftBar(e.severity),
+                )}
+              >
+                <p className="text-sm font-semibold text-[#edf2ff]">
+                  {WEEK_RISK_TITLES[e.label]}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-[#98a4bf]">
+                  {riskNarrative(e)}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
+      {footer ? <div className="mt-5 border-t border-white/[0.08] pt-5">{footer}</div> : null}
     </div>
   );
 }

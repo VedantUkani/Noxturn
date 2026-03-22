@@ -38,47 +38,50 @@ function WeekOverviewDayCard({
   return (
     <div
       className={cn(
-        "flex min-h-[140px] flex-col rounded-2xl border border-white/[0.07] bg-[#101c3c]/50 shadow-sm transition-colors",
+        "flex min-h-[128px] flex-col rounded-2xl border bg-[#0a1228]/60 transition-all duration-200",
         selected
-          ? "border-[#45e0d4]/35 bg-[#0c2a3d]/40 ring-1 ring-[#45e0d4]/25"
-          : "hover:border-white/[0.11]",
+          ? "border-[#45e0d4]/45 bg-[#0a1f30]/55 shadow-[0_0_0_1px_rgba(69,224,212,0.12),0_16px_48px_-20px_rgba(69,224,212,0.2)]"
+          : "border-white/[0.06] hover:border-white/[0.12] hover:bg-[#0a1228]/80",
       )}
     >
       <button
         type="button"
         onClick={() => onSelectDay(day.dayKey)}
-        className="flex w-full flex-1 flex-col p-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[#45e0d4]/50"
+        className="flex w-full flex-1 flex-col rounded-2xl p-3.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#45e0d4]/55"
       >
-        <div>
-          <p className="text-sm font-semibold text-[#edf2ff]">
+        <div className="flex items-baseline justify-between gap-2 border-b border-white/[0.06] pb-2.5">
+          <span className="text-[15px] font-semibold tracking-tight text-[#edf2ff]">
             {day.weekdayLabel}
-          </p>
-          <p className="text-[11px] text-[#7d89a6]">{day.dateLabel}</p>
+          </span>
+          <span className="shrink-0 text-[11px] tabular-nums text-[#7d89a6]">
+            {day.dateLabel}
+          </span>
         </div>
 
-        <div className="mt-3 min-h-[3.25rem] flex-1 space-y-1.5">
+        <div className="mt-2.5 min-h-[2.75rem] flex-1 space-y-1.5">
           {shiftsShow.length === 0 ? (
-            <p className="text-[11px] leading-snug text-[#5c657c]">
-              No shift starting this day
-            </p>
+            <p className="text-[11px] leading-snug text-[#5c657c]">Off / no start</p>
           ) : (
             shiftsShow.map((s) => (
               <div
                 key={s.id}
                 className={cn(
-                  "truncate rounded-lg px-2 py-1 text-[10px] font-medium leading-tight ring-1 ring-white/[0.06]",
+                  "truncate rounded-md px-2 py-1 text-[10px] font-medium leading-tight",
                   blockTypeClasses(s.blockType, s.kind),
                 )}
               >
-                <span className="opacity-80">
+                <span className="tabular-nums opacity-90">
                   {formatShortTime(s.startTime)}
-                </span>{" "}
-                · {s.title}
+                </span>
+                <span className="text-white/50"> · </span>
+                <span>{s.title}</span>
               </div>
             ))
           )}
           {shiftMore > 0 ? (
-            <p className="text-[10px] text-[#7d89a6]">+{shiftMore} more</p>
+            <p className="text-[10px] font-medium text-[#45e0d4]/80">
+              +{shiftMore} more
+            </p>
           ) : null}
         </div>
       </button>
@@ -94,17 +97,21 @@ function WeekColorKey() {
   ];
   return (
     <div
-      className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/[0.06] pt-4 text-[10px] text-[#98a4bf]"
+      className="flex flex-wrap items-center gap-x-1 gap-y-2 border-t border-white/[0.08] pt-4 text-[10px] text-[#7d89a6]"
       id="week-legend"
     >
-      <span className="font-medium text-[#7d89a6]">Shift colors</span>
-      {items.map((it) => (
+      {items.map((it, i) => (
         <span key={it.label} className="inline-flex items-center gap-2">
+          {i > 0 ? (
+            <span className="mx-2 text-white/[0.15]" aria-hidden>
+              ·
+            </span>
+          ) : null}
           <span
-            className={cn("h-2.5 w-6 shrink-0 rounded-sm ring-1", it.cls)}
+            className={cn("h-2 w-5 shrink-0 rounded-sm ring-1", it.cls)}
             aria-hidden
           />
-          {it.label}
+          <span className="text-[#98a4bf]">{it.label}</span>
         </span>
       ))}
     </div>
@@ -133,8 +140,8 @@ export function WeekOverviewGrid({
   }, [data]);
 
   return (
-    <div className={cn("space-y-5", className)}>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 lg:gap-3">
+    <div className={cn("space-y-4", className)}>
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 lg:gap-3">
         {data.days.map((day: WeekDayColumn) => (
           <WeekOverviewDayCard
             key={day.dayKey}
