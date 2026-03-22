@@ -1,3 +1,6 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+sentence-transformers
 fastapi
 uvicorn
 pydantic
@@ -5,7 +8,6 @@ python-dotenv
 supabase
 openai
 anthropic
-sentence-transformers
 openpyxl
 python-multipart
 icalendar
