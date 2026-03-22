@@ -26,6 +26,7 @@ export type TodayDashboardState = LiveDashboardState & TodayDashboardActions;
 
 export function useTodayDashboard(
   initial: TodayDashboardPayload,
+  onApiTaskEvent?: (taskId: string, status: "completed" | "skipped") => Promise<void>,
 ): TodayDashboardState {
   const [state, setState] = useState(() => initialLiveState(initial));
 
@@ -59,12 +60,18 @@ export function useTodayDashboard(
   }, []);
 
   const completeTask = useCallback(
-    (id: string) => dispatch({ type: "TASK_COMPLETE", taskId: id }),
-    [dispatch],
+    (id: string) => {
+      dispatch({ type: "TASK_COMPLETE", taskId: id });
+      onApiTaskEvent?.(id, "completed");
+    },
+    [dispatch, onApiTaskEvent],
   );
   const skipTask = useCallback(
-    (id: string) => dispatch({ type: "TASK_SKIP", taskId: id }),
-    [dispatch],
+    (id: string) => {
+      dispatch({ type: "TASK_SKIP", taskId: id });
+      onApiTaskEvent?.(id, "skipped");
+    },
+    [dispatch, onApiTaskEvent],
   );
   const markTaskMissed = useCallback(
     (id: string) => dispatch({ type: "TASK_MISSED", taskId: id }),
