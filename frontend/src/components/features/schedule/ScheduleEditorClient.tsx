@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { BlockType, ScheduleBlockInput } from "@/lib/types";
 import {
+  getOrCreateUserId,
   getStoredScheduleBlocks,
   storeScheduleBlocks,
 } from "@/lib/session";
+import { postPlansGenerateClaude } from "@/lib/noxturn-api";
 import { cn } from "@/lib/utils";
 import { ScheduleImportSection } from "./ScheduleImportSection";
 
@@ -17,6 +19,9 @@ const BLOCK_OPTIONS: { value: BlockType; label: string }[] = [
   { value: "transition_day", label: "Transition" },
 ];
 
+const PLAN_DATE_KEY = "noxturn_last_plan_date";
+const PROFILE_KEY = "noxturn_profile";
+
 function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
@@ -25,7 +30,6 @@ function toDatetimeLocalValue(d: Date) {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
-/** `datetime-local` value → ISO (interpreted in local timezone). */
 function fromDatetimeLocalValue(s: string) {
   const d = new Date(s);
   if (Number.isNaN(d.getTime())) return "";
@@ -82,25 +86,82 @@ function sortByStart(a: ScheduleBlockInput, b: ScheduleBlockInput) {
   return a.start_time.localeCompare(b.start_time);
 }
 
+function getCommuteMinutes(): number {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    if (!raw) return 30;
+    const p = JSON.parse(raw) as { commuteMinutes?: number };
+    return p.commuteMinutes ?? 30;
+  } catch {
+    return 30;
+  }
+}
+
+type ReplanStatus = "idle" | "pending" | "done" | "error";
+
 export function ScheduleEditorClient() {
   const [blocks, setBlocks] = useState<ScheduleBlockInput[]>([]);
   const [ready, setReady] = useState(false);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState(defaultDraft);
   const [error, setError] = useState<string | null>(null);
+  const [replanStatus, setReplanStatus] = useState<ReplanStatus>("idle");
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setBlocks(normalizeBlocks(getStoredScheduleBlocks()));
     setReady(true);
   }, []);
 
+  /** Clears plan date and debounce-fires Claude replan after every schedule mutation. */
+  const triggerReplan = useCallback((updatedBlocks: ScheduleBlockInput[]) => {
+    // Invalidate cached plan date so Today page re-fetches on next visit
+    try { localStorage.removeItem(PLAN_DATE_KEY); } catch { /* ignore */ }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (doneTimerRef.current) clearTimeout(doneTimerRef.current);
+    setReplanStatus("pending");
+
+    debounceRef.current = setTimeout(async () => {
+      const userId = getOrCreateUserId();
+      if (!userId || updatedBlocks.length === 0) {
+        setReplanStatus("idle");
+        return;
+      }
+      try {
+        await postPlansGenerateClaude({
+          user_id: userId,
+          blocks: updatedBlocks,
+          commute_minutes: getCommuteMinutes(),
+          plan_hours: 24,
+        });
+        setReplanStatus("done");
+        doneTimerRef.current = setTimeout(() => setReplanStatus("idle"), 4000);
+      } catch {
+        setReplanStatus("error");
+        doneTimerRef.current = setTimeout(() => setReplanStatus("idle"), 5000);
+      }
+    }, 1800);
+  }, []);
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (doneTimerRef.current) clearTimeout(doneTimerRef.current);
+    };
+  }, []);
+
   const mergeImported = useCallback((incoming: ScheduleBlockInput[]) => {
     setBlocks((prev) => {
       const next = [...prev, ...incoming].sort(sortByStart);
       storeScheduleBlocks(next);
+      triggerReplan(next);
       return next;
     });
-  }, []);
+  }, [triggerReplan]);
 
   const openAdd = () => {
     setDraft(defaultDraft());
@@ -135,6 +196,7 @@ export function ScheduleEditorClient() {
     setBlocks((prev) => {
       const next = [...prev, block].sort(sortByStart);
       storeScheduleBlocks(next);
+      triggerReplan(next);
       return next;
     });
     setDraft(defaultDraft());
@@ -146,6 +208,7 @@ export function ScheduleEditorClient() {
     setBlocks((prev) => {
       const next = prev.filter((b) => b.id !== id);
       storeScheduleBlocks(next);
+      triggerReplan(next);
       return next;
     });
   };
@@ -155,7 +218,46 @@ export function ScheduleEditorClient() {
       <ScheduleImportSection onBlocksImported={mergeImported} />
 
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-sm font-semibold text-slate-200">Your shifts</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-semibold text-slate-200">Your shifts</h2>
+          {replanStatus !== "idle" ? (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all",
+                replanStatus === "pending" &&
+                  "bg-[#141f42] text-[#86c9ff]",
+                replanStatus === "done" &&
+                  "bg-[#45e0d4]/15 text-[#45e0d4]",
+                replanStatus === "error" &&
+                  "bg-rose-500/10 text-rose-300",
+              )}
+            >
+              {replanStatus === "pending" ? (
+                <>
+                  <span
+                    className="h-2.5 w-2.5 animate-spin rounded-full border border-current border-t-transparent"
+                    aria-hidden
+                  />
+                  Updating plan…
+                </>
+              ) : replanStatus === "done" ? (
+                <>
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
+                  </svg>
+                  Plan updated
+                </>
+              ) : (
+                <>
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 4v4M6 9.5v.5" />
+                  </svg>
+                  Update failed — will retry on Today page
+                </>
+              )}
+            </span>
+          ) : null}
+        </div>
         <button
           type="button"
           onClick={openAdd}

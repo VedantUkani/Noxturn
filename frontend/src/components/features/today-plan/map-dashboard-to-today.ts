@@ -14,23 +14,24 @@ const SLOT_ORDER: {
   categories: TaskCategory[];
   title: string;
 }[] = [
-  { id: "sleep", categories: ["sleep", "nap"], title: "Sleep Block" },
-  { id: "light", categories: ["light_timing"], title: "Light Timing" },
-  { id: "caffeine", categories: ["caffeine_cutoff"], title: "Caffeine Cutoff" },
+  { id: "sleep",    categories: ["sleep", "nap"],     title: "Sleep Block" },
+  { id: "light",    categories: ["light_timing"],      title: "Light Timing" },
+  { id: "caffeine", categories: ["caffeine_cutoff"],   title: "Caffeine Cutoff" },
+  { id: "social",   categories: ["social"],            title: "Social Interaction" },
 ];
 
 function categoryAccent(category: TaskCategory): string {
   switch (category) {
-    case "sleep":
-      return "Sleep focus";
-    case "nap":
-      return "Rest window";
-    case "light_timing":
-      return "Light timing";
-    case "caffeine_cutoff":
-      return "Caffeine cutoff";
-    default:
-      return category.replace(/_/g, " ");
+    case "sleep":        return "Sleep focus";
+    case "nap":          return "Rest window";
+    case "light_timing": return "Light timing";
+    case "caffeine_cutoff": return "Caffeine cutoff";
+    case "social":       return "Social connection";
+    case "relaxation":   return "Wind-down";
+    case "movement":     return "Movement";
+    case "mindfulness":  return "Mindfulness";
+    case "meal":         return "Meal timing";
+    default:             return category.replace(/_/g, " ");
   }
 }
 
@@ -61,6 +62,35 @@ function rhythmCopy(label: string, score: number): string {
   }
 }
 
+/** Extracts the first sentence from a longer description string. */
+function firstSentence(text: string): string {
+  const trimmed = text.trim();
+  const match = trimmed.match(/^[^.!?]+[.!?]/);
+  return match ? match[0].trim() : trimmed.slice(0, 120);
+}
+
+function slotValue(
+  id: TodayRecommendationId,
+  task: DashboardTodayResponse["anchor_tasks"][number],
+): string {
+  const time = fmtTime(task.scheduled_time);
+  const dur = task.duration_minutes;
+  switch (id) {
+    case "sleep":
+      return `${time} · ${dur} min rest`;
+    case "caffeine":
+      return `Cutoff by ${time}`;
+    case "social":
+      return `${time} · ${dur} min connection`;
+    case "light":
+    default: {
+      // Keep the task title (it's already very descriptive from the backend)
+      const shortTitle = task.title.length > 36 ? task.title.slice(0, 34) + "…" : task.title;
+      return `${time} · ${shortTitle}`;
+    }
+  }
+}
+
 function recommendationForSlot(
   slot: (typeof SLOT_ORDER)[number],
   tasks: DashboardTodayResponse["anchor_tasks"],
@@ -68,13 +98,15 @@ function recommendationForSlot(
   const fallback = todayDemo.recommendations.find((r) => r.id === slot.id)!;
   const task = tasks.find((t) => slot.categories.includes(t.category));
   if (!task) return fallback;
+
+  const rawNote =
+    task.description?.trim() || task.source_reason?.trim() || fallback.note;
+
   return {
     id: slot.id,
     title: slot.title,
-    value: `${fmtTime(task.scheduled_time)} · ${task.title}`,
-    note:
-      (task.description?.trim() || task.source_reason?.trim() || fallback.note) ??
-      fallback.note,
+    value: slotValue(slot.id, task),
+    note: firstSentence(rawNote),
   };
 }
 

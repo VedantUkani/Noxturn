@@ -112,37 +112,100 @@ class RulePlanner:
             ))
             base_idx += 1
 
-        # 2. light_timing — bright-light block after waking from night-shift recovery
+        # 2. light_timing — context-aware: avoid light when heading to bed during the day
+        #    (night shift ending 03:00–12:59), seek light at estimated wake time.
+        #    For day/evening shifts ending in the afternoon or night, standard morning-light task.
         if labels & {"rapid_flip", "low_recovery"} and ep_end:
-            light_time = ep_end + timedelta(minutes=30)
-            tasks.append(PlanTask(
-                id=uuid4(),
-                category=TaskCategory.light_timing,
-                title="Bright light exposure on waking",
-                description=(
-                    "Immediately after waking, get 15–20 min of bright natural or lamp light "
-                    "(≥10,000 lux). This resets your circadian anchor after night-shift disruption."
-                ),
-                scheduled_time=light_time,
-                duration_minutes=20,
-                anchor_flag=False,
-                optional_flag=False,
-                source_reason="Bright light after night-shift recovery accelerates circadian realignment.",
-                sort_order=base_idx,
-            ))
-            base_idx += 1
+            ep_end_hour = ep_end.hour  # 0-23
 
-        # 3. relaxation — decompression within 1h of shift end
+            if 3 <= ep_end_hour < 13:
+                # Night shift ending: worker is going to sleep during the day.
+                # Step 1 — avoid bright light immediately (blocks melatonin).
+                tasks.append(PlanTask(
+                    id=uuid4(),
+                    category=TaskCategory.light_timing,
+                    title="Block out light — going to sleep now",
+                    description=(
+                        "Close blackout curtains and wear an eye mask before lying down. "
+                        "Bright daylight suppresses melatonin and will prevent you from falling "
+                        "asleep — darkness is the priority right now."
+                    ),
+                    scheduled_time=ep_end + timedelta(minutes=15),
+                    duration_minutes=5,
+                    anchor_flag=False,
+                    optional_flag=False,
+                    source_reason=(
+                        "Night shift ends during daylight hours — bright light exposure now "
+                        "would suppress melatonin and block recovery sleep onset."
+                    ),
+                    sort_order=base_idx,
+                ))
+                base_idx += 1
+
+                # Step 2 — seek bright light at estimated wake (ep_end + ~7.5 h).
+                estimated_wake = ep_end + timedelta(hours=7, minutes=30)
+                tasks.append(PlanTask(
+                    id=uuid4(),
+                    category=TaskCategory.light_timing,
+                    title="Bright light on waking — 15 min outdoors",
+                    description=(
+                        "Step outside or sit by a bright window for 15 minutes as soon as you wake. "
+                        "This anchors your circadian clock to the correct local time and makes "
+                        "tonight's sleep easier to initiate at a sensible hour."
+                    ),
+                    scheduled_time=estimated_wake,
+                    duration_minutes=15,
+                    anchor_flag=False,
+                    optional_flag=False,
+                    source_reason=(
+                        "Bright light on waking after night-shift recovery sleep resets "
+                        "the circadian phase and accelerates realignment."
+                    ),
+                    sort_order=base_idx,
+                ))
+                base_idx += 1
+            else:
+                # Day/evening shift — seek bright natural light shortly after waking.
+                light_time = ep_end + timedelta(minutes=30)
+                tasks.append(PlanTask(
+                    id=uuid4(),
+                    category=TaskCategory.light_timing,
+                    title="Bright light exposure on waking",
+                    description=(
+                        "Get 15–20 min of bright natural or lamp light (≥10,000 lux) after waking. "
+                        "This resets your circadian anchor after shift disruption."
+                    ),
+                    scheduled_time=light_time,
+                    duration_minutes=20,
+                    anchor_flag=False,
+                    optional_flag=False,
+                    source_reason=(
+                        "Bright light after recovery sleep accelerates circadian realignment."
+                    ),
+                    sort_order=base_idx,
+                ))
+                base_idx += 1
+
+        # 3. relaxation — decompression within 1h of shift end (before sleep for night workers)
         if episodes and ep_end:
-            relax_time = ep_end + timedelta(minutes=60)
+            relax_time = ep_end + timedelta(minutes=30)
+            relax_desc = (
+                "10-minute decompression: dim lights, avoid screens, do light stretching "
+                "or breathing exercises. Cortisol needs time to drop before sleep."
+            )
+            # Night shift ending during the day: decompression is pre-sleep, make that explicit
+            ep_end_hour = ep_end.hour
+            if 3 <= ep_end_hour < 13:
+                relax_desc = (
+                    "10-minute wind-down before bed: dim all lights, avoid phone screens, "
+                    "do slow breathing or light stretching. Your body is still in shift mode — "
+                    "cortisol needs 20–30 min to drop enough for sleep to start."
+                )
             tasks.append(PlanTask(
                 id=uuid4(),
                 category=TaskCategory.relaxation,
-                title="Decompression wind-down",
-                description=(
-                    "10-minute decompression: dim lights, avoid screens, do light stretching "
-                    "or breathing exercises. Cortisol needs time to drop before sleep."
-                ),
+                title="Decompression wind-down before sleep",
+                description=relax_desc,
                 scheduled_time=relax_time,
                 duration_minutes=10,
                 anchor_flag=False,

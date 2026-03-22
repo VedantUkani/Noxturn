@@ -38,7 +38,14 @@ async function postMultipart(
   form.append("file", file);
   form.append("user_id", userId);
   form.append("commute_minutes", String(commuteMinutes));
-  const res = await fetch(url, { method: "POST", body: form, cache: "no-store" });
+
+  const headers: Record<string, string> = {};
+  if (typeof window !== "undefined") {
+    const jwt = localStorage.getItem("noxturn_backend_jwt");
+    if (jwt) headers["Authorization"] = `Bearer ${jwt}`;
+  }
+
+  const res = await fetch(url, { method: "POST", body: form, headers, cache: "no-store" });
   const text = await res.text();
   if (!res.ok) {
     throw new ApiError(

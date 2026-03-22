@@ -147,3 +147,37 @@ export const SEVERITY_RANK: Record<Severity, number> = {
   high: 3,
   critical: 4,
 };
+
+export type ReplanResponse = {
+  updated_plan: PlanGenerateResponse;
+  changes_summary: string;
+  what_changed: string[];
+  why_changed: string;
+};
+
+export type RecoveryDailyBlock = {
+  day: string;   // "MON"
+  date: string;  // "2026-03-17"
+  protected: number;
+  total: number;
+};
+
+export type RecoveryTrendPoint = {
+  week_label: string;
+  value: number;
+};
+
+export type RecoveryAnalyticsResponse = {
+  protected_count: number;
+  protected_total: number;
+  snapshot_label: string;
+  headline_mood: string;
+  light_consistency_pct: number;
+  caffeine_cutoff_pct: number;
+  trend_points: RecoveryTrendPoint[];
+  trend_stable: boolean;
+  trend_volatility: string;
+  daily_blocks: RecoveryDailyBlock[];
+  supportive_quote: string;
+  bottom_insight: string;
+};

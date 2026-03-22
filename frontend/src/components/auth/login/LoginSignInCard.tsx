@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { markAuthenticated } from "@/lib/auth-browser";
+import { syncBackendAuth } from "@/lib/backend-auth";
 import {
   displayNameFromEmail,
   persistSessionIdentity,
@@ -113,10 +114,16 @@ export function LoginSignInCard({ postLoginDestination }: LoginSignInCardProps) 
   );
 
   const continueToApp = useCallback(
-    (identity: { displayName: string; email: string }) => {
+    async (identity: { displayName: string; email: string }) => {
       persistSessionIdentity(identity);
       setPending(true);
       markAuthenticated();
+      // Sync with backend auth to obtain backend JWT for protected API calls
+      try {
+        await syncBackendAuth(identity.email, identity.displayName);
+      } catch {
+        /* non-fatal — app still works, API calls may 401 until resolved */
+      }
       try {
         sessionStorage.setItem(POST_ONBOARDING_DEST_KEY, postLoginDestination);
       } catch {

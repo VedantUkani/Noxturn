@@ -9,14 +9,16 @@ const Ctx = createContext<TodayDashboardState | null>(null);
 
 type TodayDashboardProviderProps = {
   initial: TodayDashboardPayload;
+  onApiTaskEvent?: (taskId: string, status: "completed" | "skipped") => Promise<void>;
   children: ReactNode;
 };
 
 export function TodayDashboardProvider({
   initial,
+  onApiTaskEvent,
   children,
 }: TodayDashboardProviderProps) {
-  const value = useTodayDashboard(initial);
+  const value = useTodayDashboard(initial, onApiTaskEvent);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
