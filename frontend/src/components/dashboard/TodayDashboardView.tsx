@@ -21,33 +21,6 @@ export function TodayDashboardView() {
 
   return (
     <div className={todaySectionStack}>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7d89a6]">
-          Demo signals
-        </span>
-        <button
-          type="button"
-          onClick={d.exhaustionCheckIn}
-          className="rounded-lg border border-white/[0.1] bg-[#101c3c]/80 px-2.5 py-1 text-[11px] text-[#98a4bf] transition-colors hover:border-white/[0.16] hover:text-[#edf2ff]"
-        >
-          Fatigue check-in
-        </button>
-        <button
-          type="button"
-          onClick={d.simulatePoorWearableImport}
-          className="rounded-lg border border-white/[0.1] bg-[#101c3c]/80 px-2.5 py-1 text-[11px] text-[#98a4bf] transition-colors hover:border-white/[0.16] hover:text-[#edf2ff]"
-        >
-          Low recovery sync
-        </button>
-        <button
-          type="button"
-          onClick={d.resetDemo}
-          className="rounded-lg border border-white/[0.08] bg-transparent px-2.5 py-1 text-[11px] text-[#7d89a6] transition-colors hover:border-white/[0.14] hover:text-[#edf2ff]"
-        >
-          Reset demo
-        </button>
-      </div>
-
       {d.banner ? (
         <PlanUpdateBanner
           message={d.banner.message}
