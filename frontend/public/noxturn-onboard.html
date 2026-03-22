@@ -369,20 +369,6 @@
                   <option value="none">No specific constraint</option>
                 </select>
               </div>
-              <button type="button" id="buddy-toggle" class="flex w-full items-start gap-3 rounded-[22px] border border-[#45e0d4]/20 bg-[#0c1f3d]/35 p-4 text-left transition-all">
-                <div
-                  id="buddy-box"
-                  class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-[#45e0d4] bg-[#45e0d4]"
-                >
-                  <svg class="h-3 w-3 text-[#04112d]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-                <div>
-                  <div class="text-sm font-medium text-[#edf2ff]">Enable buddy check-ins</div>
-                  <div class="mt-0.5 text-xs text-[#7d89a6]">Receive check-in reminders from your support network</div>
-                </div>
-              </button>
             </div>
             <div class="mt-8 flex justify-between">
               <button
@@ -578,7 +564,6 @@
         var role = "nurse";
         var commute = 35;
         var constraint = "cant_sleep_before_9am";
-        var buddy = true;
         var scheduleMode = "paste";
         var manualShifts = [];
         var importSuccess = null;
@@ -841,25 +826,6 @@
         el("constraint-select").addEventListener("change", function () {
           constraint = el("constraint-select").value;
           renderSummary();
-        });
-
-        el("buddy-toggle").addEventListener("click", function () {
-          buddy = !buddy;
-          var box = el("buddy-box");
-          var bt = el("buddy-toggle");
-          if (buddy) {
-            box.className =
-              "flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-[#45e0d4] bg-[#45e0d4]";
-            box.innerHTML =
-              '<svg class="h-3 w-3 text-[#04112d]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
-            bt.className =
-              "flex w-full items-start gap-3 rounded-[22px] border border-[#45e0d4]/20 bg-[#0c1f3d]/35 p-4 text-left transition-all";
-          } else {
-            box.className = "h-5 w-5 shrink-0 rounded border-2 border-white/[0.15]";
-            box.innerHTML = "";
-            bt.className =
-              "flex w-full items-start gap-3 rounded-[22px] border border-white/[0.06] bg-[#141f42] p-4 text-left transition-all";
-          }
         });
 
         el("btn-s1-next").addEventListener("click", function () {

@@ -39,26 +39,18 @@ const STEP_META: Record<
   3: {
     title: "Sleep preferences",
     description:
-      "Sleep constraints and optional buddy check-ins — carried over from the classic flow.",
+      "Sleep constraints that shape recovery timing in your plan.",
   },
   4: {
-    title: "Import your schedule",
+    title: "Bring in your rota",
     description:
-      "Paste CSV-style lines or add shifts manually — then import, or skip and finish.",
+      "Use the same calendar, file, and manual tools as Roster & schedule — or skip and finish.",
   },
 };
 
 export function OnboardingWizard() {
   const router = useRouter();
-  const {
-    step,
-    draft,
-    patchDraft,
-    goNext,
-    goBack,
-    addShift,
-    removeShift,
-  } = useOnboardingWizard();
+  const { step, draft, patchDraft, goNext, goBack } = useOnboardingWizard();
 
   const [error, setError] = useState<string | null>(null);
   const [finishing, setFinishing] = useState(false);
@@ -85,7 +77,7 @@ export function OnboardingWizard() {
     setError(null);
     if (!canFinishSchedule(draft)) {
       setError(
-        "Check “I’ll set up my schedule next”, or complete Parse & import / Import shifts.",
+        "Add at least one shift (import or +), or check “I’ll set up my schedule in the app next.”",
       );
       return;
     }
@@ -93,13 +85,15 @@ export function OnboardingWizard() {
 
     // Save onboarding profile to localStorage so dashboard can read it
     try {
-      localStorage.setItem("noxturn_profile", JSON.stringify({
-        roleId: draft.roleId,
-        commuteMinutes: draft.commuteMinutes,
-        sleepConstraint: draft.sleepConstraint,
-        buddyOptIn: draft.buddyOptIn,
-        savedAt: new Date().toISOString(),
-      }));
+      localStorage.setItem(
+        "noxturn_profile",
+        JSON.stringify({
+          roleId: draft.roleId,
+          commuteMinutes: draft.commuteMinutes,
+          sleepConstraint: draft.sleepConstraint,
+          savedAt: new Date().toISOString(),
+        }),
+      );
     } catch { /* ignore */ }
 
     markOnboardingComplete();
@@ -152,12 +146,7 @@ export function OnboardingWizard() {
         <PreferencesStep draft={draft} onChange={patchDraft} />
       ) : null}
       {step === 4 ? (
-        <ScheduleStep
-          draft={draft}
-          onChange={patchDraft}
-          onAddShift={addShift}
-          onRemoveShift={removeShift}
-        />
+        <ScheduleStep draft={draft} onChange={patchDraft} />
       ) : null}
 
       <OnboardingNavigation
