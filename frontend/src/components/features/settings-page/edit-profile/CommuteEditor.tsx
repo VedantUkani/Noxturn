@@ -117,16 +117,6 @@ export function CommuteEditor({
         </select>
       </div>
 
-      <p
-        id="commute-hint"
-        className="rounded-xl border border-white/[0.06] bg-[#101c3c]/50 px-3 py-2.5 text-xs leading-relaxed text-[#7d89a6]"
-      >
-        With a{" "}
-        <span className="font-medium text-[#edf2ff]">{minutes} minute</span>{" "}
-        commute, plan for at least{" "}
-        <span className="font-medium text-[#edf2ff]">{hintHours}h</span> between
-        shifts to reduce short-turnaround load.
-      </p>
       {error ? (
         <p id="commute-error" className="text-sm text-[#ff8a8a]" role="alert">
           {error}

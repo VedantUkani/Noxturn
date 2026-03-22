@@ -62,15 +62,6 @@ export function SettingsTopBar({ data, className }: SettingsTopBarProps) {
         </Link>
         <AccessibilityMenu variant="compact" />
         <SettingsMenu />
-        <Link
-          href={SETTINGS_LOGIN_HREF}
-          className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/[0.1] bg-gradient-to-br from-[#6ea8ff]/40 to-[#45e0d4]/25 focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#45e0d4]/35",
-          )}
-          aria-label={data.avatarAlt}
-        >
-          <span className="h-9 w-9 rounded-full bg-[#141f42] ring-1 ring-white/10" />
-        </Link>
       </div>
     </div>
   );

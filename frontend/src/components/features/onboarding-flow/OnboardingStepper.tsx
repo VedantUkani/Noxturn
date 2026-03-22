@@ -9,17 +9,17 @@ type OnboardingStepperProps = {
 
 export function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
   return (
-    <nav aria-label="Onboarding progress" className="mb-10 w-full">
-      <ol className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-4 gap-y-3 sm:gap-x-6 md:gap-x-8">
+    <nav aria-label="Onboarding progress" className="mb-8 w-full">
+      <ol className="mx-auto flex max-w-3xl items-center justify-center gap-x-1 sm:gap-x-2">
         {ONBOARDING_STEP_LABELS.map((label, i) => {
           const n = (i + 1) as OnboardingStepIndex;
           const done = currentStep > n;
           const active = currentStep === n;
           return (
-            <li key={label} className="flex items-center gap-2">
+            <li key={label} className="flex items-center gap-1 sm:gap-1.5">
               <span
                 className={cn(
-                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold tabular-nums transition-colors",
+                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums transition-colors",
                   done && "bg-[#45e0d4] text-[#04112d]",
                   active &&
                     !done &&
@@ -34,7 +34,7 @@ export function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
               </span>
               <span
                 className={cn(
-                  "text-xs font-semibold sm:text-sm",
+                  "text-[11px] font-semibold whitespace-nowrap",
                   active ? "text-[#edf2ff]" : "text-[#7d89a6]",
                 )}
               >
@@ -42,7 +42,7 @@ export function OnboardingStepper({ currentStep }: OnboardingStepperProps) {
               </span>
               {i < ONBOARDING_STEP_LABELS.length - 1 ? (
                 <span
-                  className="ml-1 hidden h-px w-6 bg-white/[0.1] sm:ml-2 sm:inline-block md:w-10"
+                  className="ml-0.5 inline-block h-px w-4 shrink-0 bg-white/[0.1] sm:w-6"
                   aria-hidden
                 />
               ) : null}
