@@ -15,14 +15,14 @@ import { clearAuthenticated } from "@/lib/auth-browser";
 import { cn } from "@/lib/utils";
 
 const iconBtnClass =
-  "relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors duration-200 ease-out hover:bg-slate-800/85 hover:text-slate-200 focus-visible:outline focus-visible:ring-2 focus-visible:ring-teal-400/45";
+  "relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#98a4bf] transition-colors duration-200 ease-out hover:bg-white/[0.06] hover:text-[#edf2ff] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#45e0d4]/45";
 
 const PANEL_Z = 200;
 const SCRIM_Z = PANEL_Z - 1;
 const TRANSITION_MS = 320;
 
 const linkRowClass =
-  "block w-full border-b border-slate-800/90 px-4 py-3.5 text-left transition-colors duration-200 hover:bg-[#111827] focus-visible:outline focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-400/40";
+  "block w-full border-b border-white/[0.06] px-4 py-3.5 text-left text-[#edf2ff] transition-colors duration-200 hover:bg-white/[0.04] focus-visible:outline focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#45e0d4]/40";
 
 export function SettingsMenu() {
   const router = useRouter();
@@ -143,7 +143,7 @@ export function SettingsMenu() {
           aria-modal="true"
           aria-label="Settings"
           className={cn(
-            "absolute max-h-[min(80vh,480px)] w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border-2 border-slate-500 shadow-[0_32px_64px_-12px_rgba(0,0,0,1)] transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
+            "absolute max-h-[min(80vh,480px)] w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/[0.08] shadow-[0_32px_64px_-12px_rgba(0,0,0,1)] transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
             entered
               ? "translate-y-0 scale-100 opacity-100"
               : "translate-y-2 scale-[0.98] opacity-0",
@@ -152,54 +152,54 @@ export function SettingsMenu() {
             zIndex: PANEL_Z,
             top: panelPos.top,
             right: panelPos.right,
-            backgroundColor: "#0a0f1a",
+            backgroundColor: "#141f42",
           }}
           onClick={(e) => e.stopPropagation()}
         >
           <div
-            className="border-b-2 border-slate-700 px-4 py-3.5"
-            style={{ backgroundColor: "#111827" }}
+            className="border-b border-white/[0.08] px-4 py-3.5"
+            style={{ backgroundColor: "#101c3c" }}
           >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-300">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#45e0d4]">
               Settings
             </p>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-200">
+            <p className="mt-1.5 text-xs leading-relaxed text-[#98a4bf]">
               Roster, evidence, and session — keep everything aligned with your
               shifts.
             </p>
           </div>
           <nav
             className="overflow-y-auto overscroll-contain pb-1"
-            style={{ backgroundColor: "#0a0f1a" }}
+            style={{ backgroundColor: "#141f42" }}
             aria-label="Settings links"
           >
             <Link
               href="/schedule"
               className={linkRowClass}
-              style={{ backgroundColor: "#0a0f1a" }}
+              style={{ backgroundColor: "#141f42" }}
               onClick={closeWithAnimation}
             >
-              <span className="text-sm font-semibold text-white">
+              <span className="text-sm font-semibold text-[#edf2ff]">
                 Roster &amp; schedule
               </span>
-              <span className="mt-1 block text-[12px] leading-snug text-slate-400">
+              <span className="mt-1 block text-[12px] leading-snug text-[#98a4bf]">
                 Shifts, calendar import, and uploads.
               </span>
             </Link>
             <Link
               href="/evidence"
               className={cn(linkRowClass, "border-b-0")}
-              style={{ backgroundColor: "#0a0f1a" }}
+              style={{ backgroundColor: "#141f42" }}
               onClick={closeWithAnimation}
             >
-              <span className="text-sm font-semibold text-white">
+              <span className="text-sm font-semibold text-[#edf2ff]">
                 Evidence library
               </span>
-              <span className="mt-1 block text-[12px] leading-snug text-slate-400">
+              <span className="mt-1 block text-[12px] leading-snug text-[#98a4bf]">
                 Browse references behind recommendations.
               </span>
             </Link>
-            <div className="mx-4 my-3 h-px bg-slate-800" aria-hidden />
+            <div className="mx-4 my-3 h-px bg-white/[0.08]" aria-hidden />
             <button
               type="button"
               className="mx-2 mb-2 w-[calc(100%-1rem)] rounded-xl border border-rose-900/50 bg-rose-950/25 px-4 py-2.5 text-left text-sm font-medium text-rose-100/90 transition-colors hover:border-rose-800/60 hover:bg-rose-950/40 focus-visible:outline focus-visible:ring-2 focus-visible:ring-rose-400/35"
@@ -225,7 +225,7 @@ export function SettingsMenu() {
           aria-label="Open settings"
           className={cn(
             iconBtnClass,
-            showOverlay && "bg-slate-800/90 text-teal-200",
+            showOverlay && "bg-white/[0.08] text-[#45e0d4]",
           )}
         >
           <IconCog className="h-[18px] w-[18px]" />

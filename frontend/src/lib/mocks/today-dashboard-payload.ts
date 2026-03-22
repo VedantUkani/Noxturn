@@ -1,3 +1,9 @@
+/**
+ * Builds `TodayDashboardPayload` from the dashboard API or from local demo data.
+ * Anchor tasks, vitals, live-sync, and next-best fields from `payloadFromDashboardApi`
+ * originate from the planner agent’s plan; `mockSupportTasks` is frontend-only filler
+ * until support tasks are fully API-backed.
+ */
 import type { PlanTask } from "../types";
 import type {
   TodayDashboardPayload,
@@ -52,6 +58,7 @@ function mockSupportTasks(): DashboardTask[] {
   ];
 }
 
+/** Maps persisted/API `next_best_action` (from Claude or rule planner) into the hero card. */
 export function nextBestFromApi(nba: DashboardTodayResponse["next_best_action"]): TodayNextBestHero {
   const catLabel = nba.category.replace(/_/g, " ");
   return {

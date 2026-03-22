@@ -34,7 +34,7 @@ export const DASHBOARD_NAV: readonly DashboardNavItem[] = [
 /** Short label for the dashboard top bar (not the same as nav label). */
 export function dashboardPageHeading(pathname: string): string {
   const map: Record<string, string> = {
-    "/week": "Week map",
+    "/week": "Circadian injury map",
     "/today": "Today",
     "/dashboard": "Today",
     "/recovery": "Recovery",

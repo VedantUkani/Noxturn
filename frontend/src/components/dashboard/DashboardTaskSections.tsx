@@ -20,8 +20,8 @@ export function DashboardTaskSections() {
     <div className="space-y-8">
       <section>
         <div className="mb-3">
-          <h3 className="text-sm font-semibold text-slate-200">Anchor tasks</h3>
-          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
+          <h3 className="text-sm font-semibold text-[#edf2ff]">Anchor tasks</h3>
+          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[#98a4bf]">
             These protect sleep and recovery windows — when one shifts, the plan
             may reprioritize what you see next.
           </p>
@@ -43,8 +43,8 @@ export function DashboardTaskSections() {
 
       <section>
         <div className="mb-3">
-          <h3 className="text-sm font-semibold text-slate-200">Support tasks</h3>
-          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-slate-500">
+          <h3 className="text-sm font-semibold text-[#edf2ff]">Support tasks</h3>
+          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[#98a4bf]">
             Helpful when you have spare attention — skipping them won&apos;t
             restructure your plan the way anchor changes can.
           </p>

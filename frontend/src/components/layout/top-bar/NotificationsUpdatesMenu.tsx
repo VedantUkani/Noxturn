@@ -12,7 +12,7 @@ import { IconBell } from "@/components/icons/NavIcons";
 import { cn } from "@/lib/utils";
 
 const iconBtnClass =
-  "relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors duration-200 ease-out hover:bg-slate-800/85 hover:text-slate-200 focus-visible:outline focus-visible:ring-2 focus-visible:ring-teal-400/45";
+  "relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#98a4bf] transition-colors duration-200 ease-out hover:bg-white/[0.06] hover:text-[#edf2ff] focus-visible:outline focus-visible:ring-2 focus-visible:ring-[#45e0d4]/45";
 
 type FeedItem = {
   id: string;
@@ -164,7 +164,7 @@ export function NotificationsUpdatesMenu() {
           aria-modal="true"
           aria-label="Notifications and updates"
           className={cn(
-            "absolute max-h-[min(72vh,440px)] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border-2 border-slate-500 shadow-[0_32px_64px_-12px_rgba(0,0,0,1)] transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
+            "absolute max-h-[min(72vh,440px)] w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/[0.08] shadow-[0_32px_64px_-12px_rgba(0,0,0,1)] transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
             entered
               ? "translate-y-0 scale-100 opacity-100"
               : "translate-y-2 scale-[0.98] opacity-0",
@@ -173,50 +173,50 @@ export function NotificationsUpdatesMenu() {
             zIndex: PANEL_Z,
             top: panelPos.top,
             right: panelPos.right,
-            backgroundColor: "#0a0f1a",
+            backgroundColor: "#141f42",
           }}
           onClick={(e) => e.stopPropagation()}
         >
           <div
-            className="border-b-2 border-slate-700 px-4 py-3.5"
-            style={{ backgroundColor: "#111827" }}
+            className="border-b border-white/[0.08] px-4 py-3.5"
+            style={{ backgroundColor: "#101c3c" }}
           >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-300">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#45e0d4]">
               Notifications &amp; updates
             </p>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-200">
+            <p className="mt-1.5 text-xs leading-relaxed text-[#98a4bf]">
               Product nudges and plan-related notes stay here — calm, no spam.
             </p>
           </div>
           <ul
-            className="max-h-[min(56vh,360px)] divide-y-2 divide-slate-800 overflow-y-auto overscroll-contain"
-            style={{ backgroundColor: "#0a0f1a" }}
+            className="max-h-[min(56vh,360px)] divide-y divide-white/[0.06] overflow-y-auto overscroll-contain"
+            style={{ backgroundColor: "#141f42" }}
           >
             {DEMO_FEED.map((item) => (
               <li
                 key={item.id}
-                className="px-4 py-4 transition-colors duration-200 hover:bg-[#111827]"
-                style={{ backgroundColor: "#0a0f1a" }}
+                className="px-4 py-4 transition-colors duration-200 hover:bg-white/[0.04]"
+                style={{ backgroundColor: "#141f42" }}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-semibold leading-snug text-white">
+                  <p className="text-sm font-semibold leading-snug text-[#edf2ff]">
                     {item.title}
                   </p>
                   <span
                     className={cn(
                       "shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
                       item.kind === "update"
-                        ? "bg-teal-600/40 text-teal-50 ring-1 ring-teal-400/50"
-                        : "bg-slate-600 text-slate-50 ring-1 ring-slate-500",
+                        ? "bg-[#45e0d4]/20 text-[#edf2ff] ring-1 ring-[#45e0d4]/35"
+                        : "bg-[#101c3c] text-[#98a4bf] ring-1 ring-white/[0.08]",
                     )}
                   >
                     {item.kind === "update" ? "Update" : "Notice"}
                   </span>
                 </div>
-                <p className="mt-2 text-[13px] leading-relaxed text-slate-200">
+                <p className="mt-2 text-[13px] leading-relaxed text-[#98a4bf]">
                   {item.body}
                 </p>
-                <p className="mt-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                <p className="mt-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7d89a6]">
                   {item.time}
                 </p>
               </li>
@@ -239,13 +239,13 @@ export function NotificationsUpdatesMenu() {
           aria-label={`Notifications and updates, ${unreadCount} items`}
           className={cn(
             iconBtnClass,
-            showOverlay && "bg-slate-800/90 text-teal-200",
+            showOverlay && "bg-white/[0.08] text-[#45e0d4]",
           )}
         >
           <IconBell className="h-[18px] w-[18px]" />
           {unreadCount > 0 ? (
             <span
-              className="absolute right-1 top-1 h-2 w-2 rounded-full bg-teal-400 shadow-[0_0_10px_rgba(45,212,191,0.55)]"
+              className="absolute right-1 top-1 h-2 w-2 rounded-full bg-[#45e0d4] shadow-[0_0_10px_rgba(69,224,212,0.55)]"
               aria-hidden
             />
           ) : null}

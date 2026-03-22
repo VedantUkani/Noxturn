@@ -30,8 +30,8 @@ export function PlanUpdateBanner({
       className={cn(
         "flex flex-col gap-2 rounded-2xl px-4 py-3",
         soft
-          ? "border border-slate-600/45 bg-slate-900/55 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"
-          : "border border-teal-400/35 bg-teal-400/[0.08] shadow-[0_0_40px_-16px_rgba(45,212,191,0.35),inset_0_1px_0_0_rgba(255,255,255,0.06)]",
+          ? "border border-white/[0.08] bg-[#141f42]/90 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"
+          : "border border-[#45e0d4]/35 bg-[#45e0d4]/[0.08] shadow-[0_0_40px_-16px_rgba(69,224,212,0.3),inset_0_1px_0_0_rgba(255,255,255,0.06)]",
         className,
       )}
     >
@@ -40,7 +40,7 @@ export function PlanUpdateBanner({
           <p
             className={cn(
               "text-sm leading-relaxed",
-              soft ? "text-slate-200/95" : "text-teal-50/95",
+              soft ? "text-[#edf2ff]/95" : "text-[#edf2ff]/95",
             )}
           >
             {message}
@@ -49,7 +49,7 @@ export function PlanUpdateBanner({
             <p
               className={cn(
                 "text-xs leading-relaxed",
-                soft ? "text-slate-400/95" : "text-teal-200/75",
+                soft ? "text-[#98a4bf]/95" : "text-[#86c9ff]/85",
               )}
             >
               {why}
@@ -59,7 +59,7 @@ export function PlanUpdateBanner({
             <p
               className={cn(
                 "text-[10px] font-medium uppercase tracking-[0.12em]",
-                soft ? "text-slate-500" : "text-teal-400/55",
+                soft ? "text-[#7d89a6]" : "text-[#45e0d4]/55",
               )}
             >
               {scopeNote}
@@ -72,8 +72,8 @@ export function PlanUpdateBanner({
           className={cn(
             "shrink-0 self-start rounded-lg p-1.5 transition-colors focus-visible:outline focus-visible:ring-2",
             soft
-              ? "text-slate-400 hover:bg-slate-800/80 hover:text-slate-100 focus-visible:ring-slate-500/50"
-              : "text-teal-200/80 hover:bg-teal-400/10 hover:text-teal-50 focus-visible:ring-teal-300/50",
+              ? "text-[#98a4bf] hover:bg-white/[0.06] hover:text-[#edf2ff] focus-visible:ring-[#45e0d4]/40"
+              : "text-[#86c9ff] hover:bg-[#45e0d4]/10 hover:text-[#edf2ff] focus-visible:ring-[#45e0d4]/45",
           )}
           aria-label="Dismiss plan update"
         >

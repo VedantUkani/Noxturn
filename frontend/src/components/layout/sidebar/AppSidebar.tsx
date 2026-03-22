@@ -29,18 +29,18 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col justify-between overflow-hidden px-4 py-4 lg:py-5">
+    <div className="flex h-full min-h-0 flex-1 flex-col justify-between overflow-hidden px-5 pb-6 pt-7">
       <div className="shrink-0 overflow-hidden">
         <div className="px-0.5">
           <Link
             href="/today"
             onClick={onNavigate}
-            className="group block rounded-xl outline-none ring-teal-400/50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#080d18]"
+            className="group block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#45e0d4]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08142f]"
           >
-            <span className="text-[1.05rem] font-semibold tracking-tight text-white drop-shadow-[0_1px_12px_rgba(45,212,191,0.12)]">
+            <span className="text-[1.05rem] font-bold tracking-tight text-[#edf2ff]">
               {APP_NAME}
             </span>
-            <span className="mt-0.5 block text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500 transition-colors group-hover:text-slate-400">
+            <span className="mt-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-[#45e0d4] transition-colors group-hover:text-[#45e0d4]/90">
               {APP_TAGLINE}
             </span>
           </Link>
@@ -48,7 +48,7 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
 
         <nav
           aria-label="Primary"
-          className="mt-6 flex flex-col gap-1 lg:mt-7"
+          className="mt-8 flex flex-col gap-1.5"
         >
           {DASHBOARD_NAV.map((item) => {
             const active = pathname === item.href;
@@ -68,7 +68,7 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
         </nav>
       </div>
 
-      <div className="shrink-0 border-t border-white/[0.06] bg-[#080d18]/95 pt-4">
+      <div className="shrink-0 border-t border-white/[0.06] bg-transparent pt-4">
         <div className="flex flex-col gap-2.5">
           <UserMiniProfileCard />
           <EvidenceLensButton onNavigate={onNavigate} />

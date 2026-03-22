@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Recovery / readiness strip. Copy and “LIVE SYNC” state mirror API vitals from the
+ * planner pipeline; band buttons on the right are demo controls that only tweak
+ * local `dashboard-live` simulation, not production agent output.
+ */
+
 import { IconBolt } from "@/components/icons/NavIcons";
 import { cn } from "@/lib/utils";
 import type { RecoverySimulationBand } from "@/lib/dashboard-types";
@@ -72,7 +78,7 @@ export function LiveSyncRecoveryCard({
   return (
     <section
       className={cn(
-        "relative flex h-full min-h-0 flex-col overflow-hidden bg-gradient-to-b from-slate-800/85 via-[#0f1628]/92 to-[#0a1020] p-6",
+        "relative flex h-full min-h-0 flex-col overflow-hidden bg-gradient-to-b from-[#141f42] via-[#101c3c] to-[#0c1734] p-6",
         todayCardShell,
         className,
       )}
@@ -88,7 +94,7 @@ export function LiveSyncRecoveryCard({
       />
 
       <div className="relative flex items-start justify-between gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-950/65 text-amber-200/90 ring-1 ring-amber-500/25 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f7c22c]/10 text-[#f7c22c] ring-1 ring-[#f7c22c]/25 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
           <IconBolt className={todayChipIconClass} aria-hidden />
         </div>
         {liveSync ? (
@@ -96,42 +102,42 @@ export function LiveSyncRecoveryCard({
             Live sync
           </span>
         ) : (
-          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-500">
+          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#7d89a6]">
             Paused
           </span>
         )}
       </div>
 
-      <p className="relative mt-2 text-[10px] font-medium uppercase tracking-[0.12em] text-slate-500">
+      <p className="relative mt-2 text-[10px] font-medium uppercase tracking-[0.12em] text-[#7d89a6]">
         Updated {fmtUpdated(lastUpdatedIso)}
       </p>
 
-      <p className="relative mt-3 text-[1.875rem] font-bold leading-none tracking-tight text-white md:text-[2.125rem]">
+      <p className="relative mt-3 text-[1.875rem] font-bold leading-none tracking-tight text-[#edf2ff] md:text-[2.125rem]">
         {hrv}
-        <span className="ml-1.5 text-[0.9375rem] font-semibold text-slate-500 md:text-base">
+        <span className="ml-1.5 text-[0.9375rem] font-semibold text-[#7d89a6] md:text-base">
           {metricLabel}
         </span>
       </p>
 
-      <div className="relative mt-4 rounded-xl border border-amber-500/18 bg-amber-950/[0.14] px-3.5 py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
-        <p className="text-[13px] leading-relaxed text-slate-300/95 md:text-sm md:leading-relaxed">
+      <div className="relative mt-4 rounded-xl border border-[#f7c22c]/18 bg-[#f7c22c]/[0.08] px-3.5 py-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
+        <p className="text-[13px] leading-relaxed text-[#edf2ff]/95 md:text-sm md:leading-relaxed">
           {message}
         </p>
-        <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+        <p className="mt-2 text-[11px] leading-relaxed text-[#98a4bf]">
           {planRelationLine}
         </p>
       </div>
 
       <div className="relative mt-auto pt-5 md:pt-6">
         <div className="flex items-baseline justify-between gap-2 text-[12px] md:text-[13px]">
-          <span className="font-medium text-slate-400">{readinessLabel}</span>
-          <span className="shrink-0 font-semibold tabular-nums text-slate-200">
+          <span className="font-medium text-[#98a4bf]">{readinessLabel}</span>
+          <span className="shrink-0 font-semibold tabular-nums text-[#edf2ff]">
             {readiness}
-            <span className="text-slate-500">/100</span>
+            <span className="text-[#7d89a6]">/100</span>
           </span>
         </div>
         <div
-          className="mt-2.5 h-[7px] overflow-hidden rounded-full bg-slate-900/95 ring-1 ring-white/[0.07]"
+          className="mt-2.5 h-[7px] overflow-hidden rounded-full bg-[#0d1833] ring-1 ring-white/[0.07]"
           role="progressbar"
           aria-valuenow={readiness}
           aria-valuemin={0}
@@ -150,7 +156,7 @@ export function LiveSyncRecoveryCard({
         <button
           type="button"
           onClick={onEvidenceClick}
-          className="relative mt-3 text-left text-[11px] font-medium text-teal-300/85 underline-offset-4 hover:underline"
+          className="relative mt-3 text-left text-[11px] font-medium text-[#86c9ff] underline-offset-4 hover:underline"
         >
           Evidence lens — recovery signal
         </button>
@@ -158,7 +164,7 @@ export function LiveSyncRecoveryCard({
 
       {onSelectBand ? (
         <div className="relative mt-4 border-t border-white/[0.06] pt-3">
-          <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-slate-600">
+          <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#7d89a6]">
             Demo recovery signal
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -172,8 +178,8 @@ export function LiveSyncRecoveryCard({
                 className={cn(
                   "rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors",
                   recoveryBand === band
-                    ? "border-teal-400/45 bg-teal-400/10 text-teal-100"
-                    : "border-slate-700/60 bg-slate-950/30 text-slate-400 hover:border-slate-600 hover:text-slate-200",
+                    ? "border-[#45e0d4]/45 bg-[#45e0d4]/10 text-[#45e0d4]"
+                    : "border-white/[0.1] bg-[#101c3c]/80 text-[#98a4bf] hover:border-white/[0.16] hover:text-[#edf2ff]",
                 )}
               >
                 {bandLabel(band)}

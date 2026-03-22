@@ -72,6 +72,15 @@ export function useTodayDashboard(
     return () => window.clearTimeout(t);
   }, [state.heroChangeHint]);
 
+  /** Recovery / check-in banners only — auto-clear so the feed stays readable. */
+  useEffect(() => {
+    if (!state.banner) return;
+    const t = window.setTimeout(() => {
+      setState((s) => applyLiveEvent(s, { type: "DISMISS_BANNER" }));
+    }, 7000);
+    return () => window.clearTimeout(t);
+  }, [state.banner]);
+
   useEffect(() => {
     const onLens = () => {
       setEvidenceLensFocus({ kind: "overview" });

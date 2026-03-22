@@ -1,3 +1,8 @@
+/**
+ * Client-side simulation for the Today demo: task taps, snooze, recovery bands,
+ * and vitals nudges. Production anchor tasks, live sync, and readiness come from
+ * the planner agent via the API — this module only mirrors interactions locally.
+ */
 import type {
   DashboardTask,
   RecoverySimulationBand,
@@ -358,21 +363,9 @@ export function applyLiveEvent(
         nextBest.linkedTaskId !== state.nextBest.linkedTaskId ||
         nextBest.titleLine1 !== state.nextBest.titleLine1;
       let recs = state.recommendations;
-      let banner: LiveBanner | null = null;
 
       if (task.anchor) {
         recs = touchRecommendations(recs);
-        banner = {
-          message: "Plan updated",
-          why: `Completed “${task.title}”. ${NEAR_TERM}`,
-          tone: "strong",
-        };
-      } else if (heroChanged) {
-        banner = {
-          message: "Plan refreshed after that step.",
-          why: NEAR_TERM,
-          tone: "soft",
-        };
       }
 
       return {
@@ -380,7 +373,8 @@ export function applyLiveEvent(
         tasks,
         nextBest,
         recommendations: recs,
-        banner: banner ?? state.banner,
+        /** Task actions surface in What changed + pulse; avoid duplicating a banner. */
+        banner: null,
         whatChanged: pushChange(state.whatChanged, {
           headline: task.anchor
             ? `Anchor completed: “${task.title}”.`
@@ -411,11 +405,7 @@ export function applyLiveEvent(
           nextBest,
           recommendations: touchRecommendations(state.recommendations),
           planMode: "recover",
-          banner: {
-            message: "Plan updated",
-            why: `Skipping an anchor shifts what matters most now. ${NEAR_TERM}`,
-            tone: "strong",
-          },
+          banner: null,
           whatChanged: pushChange(state.whatChanged, {
             headline: `Anchor skipped: “${task.title}”.`,
             reason: "Anchors carry more weight — next best action was rechecked.",
@@ -436,13 +426,7 @@ export function applyLiveEvent(
           source: "task",
         }),
         pulse: heroChanged,
-        banner: heroChanged
-          ? {
-              message: "Small plan update",
-              why: `That step was shaping what’s next. ${NEAR_TERM}`,
-              tone: "soft",
-            }
-          : state.banner,
+        banner: null,
         heroChangeHint: heroHint(prevHero, nextBest),
       };
     }
@@ -464,11 +448,7 @@ export function applyLiveEvent(
           nextBest,
           recommendations: touchRecommendations(state.recommendations),
           planMode: "recover",
-          banner: {
-            message: "Plan updated",
-            why: `That window passed; here’s what still fits. ${NEAR_TERM}`,
-            tone: "strong",
-          },
+          banner: null,
           whatChanged: pushChange(state.whatChanged, {
             headline: `Anchor window passed: “${task.title}”.`,
             reason: "We replanned the near-term without implying fault.",

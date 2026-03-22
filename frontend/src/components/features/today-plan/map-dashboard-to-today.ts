@@ -91,7 +91,9 @@ function mapStoredAvoidList(): TodayAvoidanceItem[] {
 }
 
 /**
- * Maps `GET /dashboard/today` JSON into the Today page view model (current UI).
+ * Maps `GET /dashboard/today` JSON into the Today page view model. Vitals, sync
+ * affordance, anchor-backed recommendations, and next-best copy all reflect the
+ * backend plan / agent — not hardcoded UI defaults.
  */
 export function mapDashboardToTodayView(d: DashboardTodayResponse): TodayViewModel {
   const nba = d.next_best_action;

@@ -3,6 +3,7 @@
 import type { DashboardTask } from "@/lib/dashboard-types";
 import { IconClock } from "@/components/icons/NavIcons";
 import { cn } from "@/lib/utils";
+import { nx } from "@/lib/ui-theme";
 
 function fmtWhen(iso: string): string {
   try {
@@ -42,10 +43,10 @@ export function DashboardTaskCard({
   return (
     <article
       className={cn(
-        "rounded-2xl border bg-slate-900/40 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] transition-opacity md:p-5",
+        "rounded-[22px] border border-white/[0.08] bg-[#141f42]/90 p-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] transition-opacity md:p-5",
         task.anchor
-          ? "border-teal-400/28 shadow-[0_0_36px_-20px_rgba(45,212,191,0.22),inset_0_1px_0_0_rgba(255,255,255,0.05)]"
-          : "border-slate-700/40",
+          ? "border-[#45e0d4]/28 shadow-[0_0_36px_-20px_rgba(69,224,212,0.2),inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+          : "",
         done && "opacity-60",
       )}
     >
@@ -56,35 +57,35 @@ export function DashboardTaskCard({
               className={cn(
                 "rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
                 task.anchor
-                  ? "bg-teal-400/15 text-teal-200/90"
-                  : "bg-slate-700/50 text-slate-400",
+                  ? "bg-[#45e0d4]/15 text-[#a8fff7]"
+                  : "bg-[#101c3c] text-[#7d89a6]",
               )}
             >
               {task.anchor ? "Anchor" : "Support"}
             </span>
-            <span className="text-[11px] text-slate-500">
+            <span className="text-[11px] text-[#7d89a6]">
               {fmtWhen(task.scheduled_time)} · {task.duration_minutes} min
             </span>
           </div>
-          <h4 className="mt-2 text-sm font-semibold text-slate-100 md:text-[15px]">
+          <h4 className="mt-2 text-sm font-semibold text-[#edf2ff] md:text-[15px]">
             {task.title}
           </h4>
           {snoozed && task.snoozedUntil ? (
-            <p className="mt-1 text-xs text-amber-200/80">
+            <p className="mt-1 text-xs text-[#f7c22c]/90">
               Snoozed until {fmtWhen(task.snoozedUntil)}
             </p>
           ) : null}
           {task.status === "skipped" ? (
-            <p className="mt-1 text-xs text-slate-500">Skipped</p>
+            <p className="mt-1 text-xs text-[#7d89a6]">Skipped</p>
           ) : null}
           {task.status === "replaced" ? (
-            <p className="mt-1 text-xs text-slate-500">Superseded by a newer step</p>
+            <p className="mt-1 text-xs text-[#7d89a6]">Superseded by a newer step</p>
           ) : null}
           {task.status === "completed" ? (
-            <p className="mt-1 text-xs text-teal-300/70">Completed</p>
+            <p className="mt-1 text-xs text-[#45e0d4]/85">Completed</p>
           ) : null}
           {task.status === "expired" ? (
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[#7d89a6]">
               Window passed — noted without judgment.
             </p>
           ) : null}
@@ -96,14 +97,20 @@ export function DashboardTaskCard({
           <button
             type="button"
             onClick={onComplete}
-            className="rounded-lg bg-teal-400/90 px-3 py-1.5 text-xs font-semibold text-slate-950 transition-colors hover:bg-teal-300"
+            className={cn(
+              "rounded-xl bg-[#45e0d4] px-3 py-1.5 text-xs font-bold text-[#04112d] transition hover:brightness-105",
+              nx.focusRing,
+            )}
           >
             Done
           </button>
           <button
             type="button"
             onClick={onSkip}
-            className="rounded-lg border border-slate-600/70 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:border-slate-500 hover:bg-slate-800/50"
+            className={cn(
+              "rounded-xl border border-white/[0.12] bg-[#101c3c] px-3 py-1.5 text-xs font-medium text-[#edf2ff] transition hover:border-white/[0.18]",
+              nx.focusRing,
+            )}
           >
             Skip
           </button>
@@ -111,7 +118,10 @@ export function DashboardTaskCard({
             <button
               type="button"
               onClick={onMissed}
-              className="rounded-lg px-2 py-1.5 text-[11px] font-medium text-slate-500 underline-offset-2 hover:text-slate-400 hover:underline"
+              className={cn(
+                "rounded-lg px-2 py-1.5 text-[11px] font-medium text-[#7d89a6] underline-offset-2 hover:text-[#98a4bf] hover:underline",
+                nx.focusRing,
+              )}
             >
               Missed window
             </button>
@@ -119,7 +129,10 @@ export function DashboardTaskCard({
           <button
             type="button"
             onClick={onSnooze}
-            className="inline-flex items-center gap-1 rounded-lg border border-slate-600/70 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:border-slate-500 hover:bg-slate-800/50"
+            className={cn(
+              "inline-flex items-center gap-1 rounded-xl border border-white/[0.12] bg-[#101c3c] px-3 py-1.5 text-xs font-medium text-[#edf2ff] transition hover:border-white/[0.18]",
+              nx.focusRing,
+            )}
           >
             <IconClock className="h-3.5 w-3.5" aria-hidden />
             Snooze
@@ -127,7 +140,10 @@ export function DashboardTaskCard({
           <button
             type="button"
             onClick={onDetails}
-            className="ml-auto rounded-lg px-3 py-1.5 text-xs font-medium text-teal-300/90 underline-offset-2 hover:underline"
+            className={cn(
+              "ml-auto rounded-lg px-3 py-1.5 text-xs font-medium text-[#86c9ff] underline-offset-2 hover:underline",
+              nx.focusRing,
+            )}
           >
             Details
           </button>
@@ -136,7 +152,10 @@ export function DashboardTaskCard({
         <button
           type="button"
           onClick={onDetails}
-          className="mt-3 text-xs font-medium text-teal-300/80 hover:underline"
+          className={cn(
+            "mt-3 text-xs font-medium text-[#86c9ff] hover:underline",
+            nx.focusRing,
+          )}
         >
           View details
         </button>
