@@ -6,6 +6,19 @@ import { TaskDetailSheet } from "./TaskDetailSheet";
 import { PlanUpdateBanner } from "./PlanUpdateBanner";
 import { cn } from "@/lib/utils";
 import { nx } from "@/lib/ui-theme";
+import { USER_PROFILE_SETTINGS_STORAGE_KEY } from "@/lib/user-profile-settings";
+
+function isFitbitConnected(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = window.localStorage.getItem(USER_PROFILE_SETTINGS_STORAGE_KEY);
+    if (!raw) return false;
+    const p = JSON.parse(raw) as { fitbitConnected?: boolean };
+    return p.fitbitConnected === true;
+  } catch {
+    return false;
+  }
+}
 
 function todayLabel(): string {
   return new Date().toLocaleDateString(undefined, {
@@ -35,6 +48,7 @@ export function TodayDashboardView() {
       ? null
       : d.tasks.find((t) => t.id === d.detailTaskId) ?? null;
 
+  const wearableConnected = isFitbitConnected();
   const readiness = Math.min(100, Math.max(0, d.vitals.readinessScore));
   const { bar, text, border } = readinessColor(readiness);
   const status = readinessStatus(readiness);
@@ -72,29 +86,33 @@ export function TodayDashboardView() {
               {pendingCount} pending
             </span>
           ) : null}
-          <div className={cn("flex flex-col items-end rounded-2xl border px-4 py-2", border, "bg-[#141f42]")}>
-            <div className="flex items-baseline gap-1">
-              <span className={cn("text-2xl font-bold tabular-nums", text)}>{readiness}</span>
-              <span className="text-xs text-[#7d89a6]">/ 100</span>
+          {wearableConnected && (
+            <div className={cn("flex flex-col items-end rounded-2xl border px-4 py-2", border, "bg-[#141f42]")}>
+              <div className="flex items-baseline gap-1">
+                <span className={cn("text-2xl font-bold tabular-nums", text)}>{readiness}</span>
+                <span className="text-xs text-[#7d89a6]">/ 100</span>
+              </div>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#7d89a6]">Readiness</span>
             </div>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#7d89a6]">Readiness</span>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Readiness bar */}
-      <div
-        className="-mt-3 h-[3px] w-full overflow-hidden rounded-full bg-[#0d1833]"
-        role="progressbar"
-        aria-valuenow={readiness}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
+      {/* Readiness bar — only shown when wearable is connected */}
+      {wearableConnected && (
         <div
-          className={cn("h-full rounded-full transition-[width] duration-700", bar)}
-          style={{ width: `${readiness}%` }}
-        />
-      </div>
+          className="-mt-3 h-[3px] w-full overflow-hidden rounded-full bg-[#0d1833]"
+          role="progressbar"
+          aria-valuenow={readiness}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className={cn("h-full rounded-full transition-[width] duration-700", bar)}
+            style={{ width: `${readiness}%` }}
+          />
+        </div>
+      )}
 
       {/* ── Top row: Next action (8/12) + Vitals (4/12) ── */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch lg:gap-7">
@@ -129,13 +147,6 @@ export function TodayDashboardView() {
             >
               {d.nextBest.primaryCta}
             </button>
-            <button
-              type="button"
-              onClick={d.remindNextBest}
-              className="h-9 rounded-2xl border border-white/[0.12] bg-[#101c3c]/90 px-5 text-xs font-medium text-[#edf2ff] transition hover:border-white/[0.2] hover:bg-[#141f42]"
-            >
-              {d.nextBest.secondaryCta}
-            </button>
           </div>
         </section>
 
@@ -144,47 +155,54 @@ export function TodayDashboardView() {
           <div>
             <p className={cn(nx.labelUpper, "mb-3")}>Body Status</p>
 
-            {/* Status badge */}
-            <div className={cn("mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold",
-              readiness >= 70 ? "bg-emerald-400/10 text-emerald-400" :
-              readiness >= 40 ? "bg-amber-400/10 text-amber-400" :
-              "bg-rose-400/10 text-rose-400"
-            )}>
-              <span className={cn("h-2 w-2 rounded-full", bar)} />
-              {status.label}
-            </div>
+            {wearableConnected ? (
+              <>
+                {/* Status badge */}
+                <div className={cn("mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold",
+                  readiness >= 70 ? "bg-emerald-400/10 text-emerald-400" :
+                  readiness >= 40 ? "bg-amber-400/10 text-amber-400" :
+                  "bg-rose-400/10 text-rose-400"
+                )}>
+                  <span className={cn("h-2 w-2 rounded-full", bar)} />
+                  {status.label}
+                </div>
 
-            <p className="text-sm text-[#7d89a6]">{status.hint}</p>
+                <p className="text-sm text-[#7d89a6]">{status.hint}</p>
 
-            {/* HRV */}
-            <div className="mt-4 flex items-baseline gap-1.5">
-              <span className="text-3xl font-bold tabular-nums text-[#edf2ff]">{d.vitals.hrv}</span>
-              <span className="text-xs text-[#7d89a6]">HRV</span>
-            </div>
-            <p className="text-[10px] text-[#3a4560]">heart rate variability</p>
-          </div>
-
-          <div className="mt-5 space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-[#7d89a6]">Readiness</span>
-              <span className={cn("font-semibold tabular-nums", text)}>{readiness}%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-[#0d1833]">
-              <div
-                className={cn("h-full rounded-full transition-[width] duration-700", bar)}
-                style={{ width: `${readiness}%` }}
-              />
-            </div>
-            {d.vitals.liveSync ? (
-              <p className="pt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#45e0d4]/80">
-                Live sync active
-              </p>
+                {/* HRV */}
+                <div className="mt-4 flex items-baseline gap-1.5">
+                  <span className="text-3xl font-bold tabular-nums text-[#edf2ff]">{d.vitals.hrv}</span>
+                  <span className="text-xs text-[#7d89a6]">HRV</span>
+                </div>
+                <p className="text-[10px] text-[#3a4560]">heart rate variability</p>
+              </>
             ) : (
-              <p className="pt-1 text-[10px] uppercase tracking-[0.1em] text-[#3a4560]">
-                Sync paused
-              </p>
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.08] bg-[#0d1833]">
+                  <svg className="h-5 w-5 text-[#3a4560]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.348 14.652a3.75 3.75 0 010-5.304m5.304 0a3.75 3.75 0 010 5.304m-7.425 2.121a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-[#5c6a85]">No wearable connected</p>
+                <p className="mt-1 text-[11px] text-[#3a4560]">Connect Fitbit in Settings to see live HRV &amp; readiness</p>
+              </div>
             )}
           </div>
+
+          {wearableConnected && (
+            <div className="mt-5 space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#7d89a6]">Readiness</span>
+                <span className={cn("font-semibold tabular-nums", text)}>{readiness}%</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-[#0d1833]">
+                <div
+                  className={cn("h-full rounded-full transition-[width] duration-700", bar)}
+                  style={{ width: `${readiness}%` }}
+                />
+              </div>
+            </div>
+          )}
         </section>
       </div>
 

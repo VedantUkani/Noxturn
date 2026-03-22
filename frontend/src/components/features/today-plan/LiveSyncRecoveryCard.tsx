@@ -91,19 +91,10 @@ export function LiveSyncRecoveryCard({
         aria-hidden
       />
 
-      <div className="relative flex items-start justify-between gap-3">
+      <div className="relative flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f7c22c]/10 text-[#f7c22c] ring-1 ring-[#f7c22c]/25 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
           <IconBolt className={todayChipIconClass} aria-hidden />
         </div>
-        {liveSync ? (
-          <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/[0.1] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200/95">
-            Live sync
-          </span>
-        ) : (
-          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#7d89a6]">
-            Paused
-          </span>
-        )}
       </div>
 
       <p className="relative mt-2 text-[10px] font-medium uppercase tracking-[0.12em] text-[#7d89a6]">
