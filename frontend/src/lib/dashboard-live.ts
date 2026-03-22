@@ -50,8 +50,6 @@ type LiveEvent =
   | { type: "TASK_SKIP"; taskId: string }
   | { type: "TASK_MISSED"; taskId: string }
   | { type: "TASK_SNOOZE"; taskId: string; minutes: number }
-  | { type: "EXHAUSTION_CHECKIN" }
-  | { type: "POOR_WEARABLE_IMPORT" }
   | { type: "SIMULATE_RECOVERY"; band: RecoverySimulationBand }
   | { type: "DISMISS_BANNER" }
   | { type: "OPEN_DETAIL"; taskId: string }
@@ -189,26 +187,6 @@ function heroHint(prev: TodayNextBestHero, next: TodayNextBestHero): string | nu
   if (!next.linkedTaskId || prev.linkedTaskId === next.linkedTaskId) return null;
   if (!prev.titleLine1.trim()) return null;
   return `Previous next step was “${prev.titleLine1}”. Next best action has been updated.`;
-}
-
-function vitalsExhaustion(v: TodayDashboardPayload["vitals"]) {
-  return {
-    ...v,
-    readinessScore: Math.max(22, v.readinessScore - 14),
-    hrv: Math.max(16, v.hrv - 6),
-    message:
-      "You flagged heavy fatigue — we eased what the next stretch asks for.",
-  };
-}
-
-function vitalsPoorWearable(v: TodayDashboardPayload["vitals"]) {
-  return {
-    ...v,
-    readinessScore: Math.max(20, v.readinessScore - 18),
-    hrv: Math.max(14, v.hrv - 10),
-    message:
-      "Latest sync looks strained — timing shifts slightly for the hours ahead.",
-  };
 }
 
 export function initialLiveState(p: TodayDashboardPayload): LiveDashboardState {
@@ -464,62 +442,6 @@ export function applyLiveEvent(
           source: "task",
         }),
         pulse: heroChanged,
-        heroChangeHint: heroHint(prevHero, nextBest),
-      };
-    }
-
-    case "EXHAUSTION_CHECKIN": {
-      const vitals = vitalsExhaustion(state.vitals);
-      const prevHero = state.nextBest;
-      const nextBest = deriveNextBest(state.tasks, state.nextBest);
-      const band = inferBand(vitals.readinessScore);
-      return {
-        ...state,
-        vitals,
-        recoveryProfile: band,
-        vitalsSyncedAt: nowIso(),
-        nextBest,
-        recommendations: touchRecommendations(state.recommendations),
-        planRelationLine: planRelationForBand(band),
-        banner: {
-          message: "Plan updated",
-          why: `We eased the next stretch after your check-in. ${NEAR_TERM}`,
-          tone: "strong",
-        },
-        whatChanged: pushChange(state.whatChanged, {
-          headline: "Load softened for the next several hours.",
-          reason: "Fatigue check-in",
-          source: "check_in",
-        }),
-        pulse: true,
-        heroChangeHint: heroHint(prevHero, nextBest),
-      };
-    }
-
-    case "POOR_WEARABLE_IMPORT": {
-      const vitals = vitalsPoorWearable(state.vitals);
-      const prevHero = state.nextBest;
-      const nextBest = deriveNextBest(state.tasks, state.nextBest);
-      const band = inferBand(vitals.readinessScore);
-      return {
-        ...state,
-        vitals,
-        recoveryProfile: band,
-        vitalsSyncedAt: nowIso(),
-        nextBest,
-        recommendations: touchRecommendations(state.recommendations),
-        planRelationLine: planRelationForBand(band),
-        banner: {
-          message: "Plan updated",
-          why: `Recovery was lower than expected on the latest sync. ${NEAR_TERM}`,
-          tone: "strong",
-        },
-        whatChanged: pushChange(state.whatChanged, {
-          headline: "Tonight’s sleep block and caffeine cutoff were adjusted.",
-          reason: "Low recovery sync",
-          source: "recovery_sync",
-        }),
-        pulse: true,
         heroChangeHint: heroHint(prevHero, nextBest),
       };
     }
