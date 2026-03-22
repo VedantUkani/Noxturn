@@ -23,11 +23,47 @@ export async function signInWithGoogle(): Promise<void> {
     provider: "google",
     options: {
       redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
-      // calendar.readonly requires Google verification (weeks) — removed for demo
-      // scopes: "https://www.googleapis.com/auth/calendar.readonly",
     },
   });
   if (error) throw error;
+}
+
+/**
+ * Re-authenticates with Google requesting the calendar.readonly scope.
+ * After the redirect the auth/callback page detects the provider_token and
+ * redirects to /schedule so the user can immediately import their shifts.
+ */
+export async function connectGoogleCalendar(): Promise<void> {
+  if (!supabase) {
+    throw new Error("Supabase is not configured (NEXT_PUBLIC_SUPABASE_URL / ANON_KEY).");
+  }
+  try {
+    sessionStorage.setItem("noxturn_post_auth_dest", "/schedule");
+    sessionStorage.setItem("noxturn_calendar_connect", "google");
+  } catch { /* ignore */ }
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
+      scopes: "https://www.googleapis.com/auth/calendar.readonly",
+      queryParams: { access_type: "offline", prompt: "consent" },
+    },
+  });
+  if (error) throw error;
+}
+
+/** Returns the OAuth provider for the current session (e.g. "google", "azure"). */
+export async function getSessionProvider(): Promise<string | null> {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return (data.session?.user?.app_metadata?.provider as string) ?? null;
+}
+
+/** True if the current session has a provider_token (calendar access granted). */
+export async function hasCalendarToken(): Promise<boolean> {
+  if (!supabase) return false;
+  const { data } = await supabase.auth.getSession();
+  return Boolean(data.session?.provider_token);
 }
 
 export async function signInWithMicrosoft(): Promise<void> {

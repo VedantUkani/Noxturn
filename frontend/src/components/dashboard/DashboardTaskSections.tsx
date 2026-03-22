@@ -28,8 +28,9 @@ export function DashboardTaskSections() {
           <div className="flex items-center gap-2 border-b border-white/[0.05] px-5 py-3">
             <span className="h-1.5 w-1.5 rounded-full bg-[#45e0d4]" aria-hidden />
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#45e0d4]/80">
-              Anchor
+              Must Do
             </span>
+            <span className="ml-2 text-[10px] text-[#7d89a6]">priority sessions for today</span>
             <span className="ml-auto text-[10px] text-[#3a4560]">
               {anchors.length} task{anchors.length !== 1 ? "s" : ""}
             </span>
@@ -56,8 +57,9 @@ export function DashboardTaskSections() {
           <div className="flex items-center gap-2 border-b border-white/[0.05] px-5 py-3">
             <span className="h-1.5 w-1.5 rounded-full bg-[#3a4560]" aria-hidden />
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#7d89a6]/70">
-              Support
+              Additional
             </span>
+            <span className="ml-2 text-[10px] text-[#7d89a6]/50">nice to complete if energy allows</span>
             <span className="ml-auto text-[10px] text-[#3a4560]">
               {support.length} task{support.length !== 1 ? "s" : ""}
             </span>

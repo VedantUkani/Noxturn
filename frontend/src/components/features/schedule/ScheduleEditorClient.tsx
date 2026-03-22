@@ -154,9 +154,14 @@ export function ScheduleEditorClient() {
     };
   }, []);
 
-  const mergeImported = useCallback((incoming: ScheduleBlockInput[]) => {
+  const mergeImported = useCallback((incoming: ScheduleBlockInput[], onDone?: (added: number, skipped: number) => void) => {
     setBlocks((prev) => {
-      const next = [...prev, ...incoming].sort(sortByStart);
+      // Deduplicate: skip any incoming block whose start+end already exists
+      const existingKeys = new Set(prev.map((b) => `${b.start_time}|${b.end_time}`));
+      const fresh = incoming.filter((b) => !existingKeys.has(`${b.start_time}|${b.end_time}`));
+      onDone?.(fresh.length, incoming.length - fresh.length);
+      if (fresh.length === 0) return prev; // nothing new — no replan needed
+      const next = [...prev, ...fresh].sort(sortByStart);
       storeScheduleBlocks(next);
       triggerReplan(next);
       return next;

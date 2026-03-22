@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   eventsToBlocks,
+  fetchGoogleCalendarEvents,
   fetchOutlookCalendarEvents,
 } from "@/lib/calendarImport";
 import { fetchGoogleCalendarViaPopup } from "@/lib/googleCalendarOAuth";
@@ -20,6 +21,9 @@ import {
 } from "@/lib/schedule-import-api";
 import type { ScheduleBlockInput } from "@/lib/types";
 import {
+  connectGoogleCalendar,
+  getSessionProvider,
+  hasCalendarToken,
   isSupabaseConfigured,
   signInWithMicrosoft,
   supabase,
@@ -40,6 +44,7 @@ export function ScheduleImportSection({
   const [notice, setNotice] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [calendarReady, setCalendarReady] = useState(false);
+  const [provider, setProvider] = useState<string | null>(null);
 
   const refreshCalendarSession = useCallback(async () => {
     if (!supabase) {
@@ -48,18 +53,31 @@ export function ScheduleImportSection({
     }
     const { data } = await supabase.auth.getSession();
     setCalendarReady(Boolean(data.session?.provider_token));
+    setProvider((await getSessionProvider()) ?? null);
   }, []);
 
   useEffect(() => {
     void refreshCalendarSession();
     if (!supabase) return;
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       void refreshCalendarSession();
     });
     return () => subscription.unsubscribe();
   }, [refreshCalendarSession]);
+
+  // Auto-import after returning from Google calendar OAuth redirect
+  useEffect(() => {
+    const flag = typeof window !== "undefined"
+      ? sessionStorage.getItem("noxturn_calendar_autoimport")
+      : null;
+    if (!flag) return;
+    sessionStorage.removeItem("noxturn_calendar_autoimport");
+    void (async () => {
+      if (!(await hasCalendarToken())) return;
+      await pullGoogle();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const mergeFromApi = useCallback(
     (raw: ScheduleBlockInput[]) => {
@@ -114,13 +132,28 @@ export function ScheduleImportSection({
     setErr(null);
     setNotice(null);
     try {
-      const events = await fetchGoogleCalendarViaPopup(14);
+      let events;
+      // Use Supabase provider_token if already authorised with Google + calendar scope
+      if (calendarReady && provider === "google") {
+        events = await fetchGoogleCalendarEvents(14);
+      } else {
+        // Fall back to popup flow (needs NEXT_PUBLIC_GOOGLE_CLIENT_ID)
+        events = await fetchGoogleCalendarViaPopup(14);
+      }
       const blocks = eventsToBlocks(events, 30).map((b) => ({
         ...b,
         id: crypto.randomUUID(),
       }));
-      mergeCalendarBlocks(blocks);
+      mergeCalendarBlocks(blocks as ScheduleBlockInput[]);
     } catch (x) {
+      // Popup failed or no Client ID — request calendar permission via Supabase OAuth
+      if (isSupabaseConfigured()) {
+        try {
+          sessionStorage.setItem("noxturn_calendar_autoimport", "true");
+          await connectGoogleCalendar();
+          return; // will redirect to Google, then back to /schedule
+        } catch { /* fall through to show error */ }
+      }
       setErr(x instanceof Error ? x.message : "Google import failed.");
     } finally {
       setBusy(false);
@@ -137,7 +170,7 @@ export function ScheduleImportSection({
         ...b,
         id: crypto.randomUUID(),
       }));
-      mergeCalendarBlocks(blocks);
+      mergeCalendarBlocks(blocks as ScheduleBlockInput[]);
     } catch (x) {
       setErr(x instanceof Error ? x.message : "Outlook import failed.");
     } finally {
@@ -150,9 +183,7 @@ export function ScheduleImportSection({
     try {
       await signInWithMicrosoft();
     } catch (x) {
-      setErr(
-        x instanceof Error ? x.message : "Could not start Microsoft sign-in.",
-      );
+      setErr(x instanceof Error ? x.message : "Could not start Microsoft sign-in.");
     }
   };
 
