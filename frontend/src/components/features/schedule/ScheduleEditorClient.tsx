@@ -8,6 +8,7 @@ import {
   storeScheduleBlocks,
 } from "@/lib/session";
 import { postPlansGenerateClaude } from "@/lib/noxturn-api";
+import { getUserProfileForApi } from "@/lib/user-profile-settings";
 import { cn } from "@/lib/utils";
 import { ScheduleImportSection } from "./ScheduleImportSection";
 
@@ -136,6 +137,7 @@ export function ScheduleEditorClient() {
           blocks: updatedBlocks,
           commute_minutes: getCommuteMinutes(),
           plan_hours: 24,
+          user_profile: getUserProfileForApi(),
         });
         setReplanStatus("done");
         doneTimerRef.current = setTimeout(() => setReplanStatus("idle"), 4000);

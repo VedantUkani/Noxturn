@@ -202,6 +202,38 @@ export function saveUserProfileSettings(profile: UserProfileSettings): void {
   notifyIdentityChanged();
 }
 
+/**
+ * Returns the stored profile in the shape the backend's UserProfile schema expects.
+ * Safe to call client-side only. Returns null if no profile has been saved yet.
+ */
+export function getUserProfileForApi(): Record<string, unknown> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as Partial<UserProfileSettings>;
+    if (!p || typeof p !== "object") return null;
+    return {
+      role_id:               p.roleId ?? null,
+      role_specialty:        p.roleSpecialty ?? null,
+      chronotype:            p.chronotype ?? null,
+      preferred_sleep_hours: p.preferredSleepHours ?? null,
+      anchor_sleep_start:    p.anchorSleepStart ?? null,
+      anchor_sleep_end:      p.anchorSleepEnd ?? null,
+      sleep_constraint:      p.sleepConstraint ?? null,
+      caffeine_habit:        p.caffeineHabit ?? null,
+      transport_mode:        p.transportMode ?? null,
+      fitbit_connected:      p.fitbitConnected ?? null,
+      on_medications:        p.onMedications ?? null,
+      medication_details:    p.medicationDetails ?? null,
+      sleep_conditions:      p.sleepConditions ?? null,
+      medical_history:       p.medicalHistory ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /** Merge defaults so older stored blobs stay valid. */
 export function normalizeUserProfileSettings(
   partial: Partial<UserProfileSettings> | null | undefined,

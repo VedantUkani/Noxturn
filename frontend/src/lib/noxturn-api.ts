@@ -31,6 +31,7 @@ export async function postPlansGenerateClaude(body: {
   commute_minutes: number;
   plan_hours?: number;
   persona_id?: string | null;
+  user_profile?: Record<string, unknown> | null;
 }): Promise<PlanGenerateResponse> {
   return postJson<PlanGenerateResponse>("/plans/generate-claude", body);
 }
@@ -42,6 +43,7 @@ export async function postPlansReplan(body: {
   use_claude?: boolean;
   task_event?: { task_id: string; status: "completed" | "skipped" } | null;
   persona_id?: string | null;
+  user_profile?: Record<string, unknown> | null;
 }): Promise<ReplanResponse> {
   return postJson<ReplanResponse>("/plans/replan", body);
 }
