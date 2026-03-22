@@ -1,181 +1,211 @@
 "use client";
 
-import { useRef, useState } from "react";
-import type { OnboardingDraft } from "../types";
-import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { nx } from "@/lib/ui-theme";
+import type { OnboardingDraft } from "../types";
 
-const ACCEPTED = ".pdf,.jpg,.jpeg,.png,.webp";
-const MAX_MB = 10;
+const SLEEP_CONDITIONS = [
+  { id: "sleep_apnea", label: "Sleep apnea" },
+  { id: "insomnia",    label: "Insomnia" },
+  { id: "rls",         label: "Restless legs" },
+  { id: "hypersomnia", label: "Hypersomnia" },
+  { id: "none",        label: "None" },
+  { id: "other",       label: "Other" },
+];
+
+const MEDICAL_HISTORY = [
+  { id: "cardiovascular",     label: "Heart / cardiovascular" },
+  { id: "diabetes",           label: "Diabetes / blood sugar" },
+  { id: "anxiety_depression", label: "Anxiety / depression" },
+  { id: "chronic_fatigue",    label: "Chronic fatigue" },
+  { id: "hypertension",       label: "Hypertension" },
+  { id: "none",               label: "None of the above" },
+  { id: "other",              label: "Other" },
+];
 
 type Props = {
   draft: OnboardingDraft;
   onChange: (patch: Partial<OnboardingDraft>) => void;
 };
 
+const sectionCard = "rounded-2xl border border-white/[0.06] bg-[#0f1b3a]/70 p-4 sm:p-5 space-y-3";
+const inputCls = cn(
+  "w-full rounded-xl border border-white/[0.1] bg-[#0d1833]/90 px-3.5 py-2.5 text-sm text-[#edf2ff] placeholder:text-[#5c6a85]",
+  "focus:border-[#45e0d4]/45 focus:outline-none focus:ring-2 focus:ring-[#45e0d4]/25",
+);
+
+/** Toggle a chip. "none" clears everything else; "other" co-exists with selections. */
+function toggleItem(list: string[], id: string): string[] {
+  if (id === "none") return list.includes("none") ? [] : ["none"];
+  const withoutNone = list.filter((x) => x !== "none");
+  return withoutNone.includes(id)
+    ? withoutNone.filter((x) => x !== id)
+    : [...withoutNone, id];
+}
+
+/** Pull the free-text portion stored as "other:<text>" */
+function getOtherText(list: string[]): string {
+  const entry = list.find((x) => x.startsWith("other:"));
+  return entry ? entry.slice(6) : "";
+}
+
+/** Replace or add the "other:<text>" entry */
+function setOtherText(list: string[], text: string): string[] {
+  const without = list.filter((x) => !x.startsWith("other:") && x !== "other");
+  return text.trim() ? [...without, `other:${text}`] : without;
+}
+
+function hasOther(list: string[]): boolean {
+  return list.includes("other") || list.some((x) => x.startsWith("other:"));
+}
+
 export function HealthReportStep({ draft, onChange }: Props) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-
-  const handleFile = async (file: File) => {
-    setUploadError(null);
-
-    if (file.size > MAX_MB * 1024 * 1024) {
-      setUploadError(`File too large. Max size is ${MAX_MB} MB.`);
-      return;
-    }
-
-    if (!supabase) {
-      setUploadError("Supabase is not configured.");
-      return;
-    }
-
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user?.id;
-    if (!userId) {
-      setUploadError("You must be signed in to upload a health report.");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const ext = file.name.split(".").pop() ?? "pdf";
-      const path = `${userId}/report.${ext}`;
-
-      const { error } = await supabase.storage
-        .from("health-reports")
-        .upload(path, file, { upsert: true });
-
-      if (error) throw new Error(error.message);
-
-      onChange({
-        healthReportPath: path,
-        healthReportFileName: file.name,
-        healthReportSkipped: false,
-      });
-    } catch (e) {
-      setUploadError((e as Error).message);
-    } finally {
-      setUploading(false);
+  const toggleSleep = (id: string) => {
+    if (id === "other") {
+      const next = hasOther(draft.sleepConditions)
+        ? draft.sleepConditions.filter((x) => x !== "other" && !x.startsWith("other:"))
+        : [...draft.sleepConditions.filter((x) => x !== "none"), "other"];
+      onChange({ sleepConditions: next });
+    } else {
+      onChange({ sleepConditions: toggleItem(draft.sleepConditions, id) });
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (file) void handleFile(file);
+  const toggleMedical = (id: string) => {
+    if (id === "other") {
+      const next = hasOther(draft.medicalHistory)
+        ? draft.medicalHistory.filter((x) => x !== "other" && !x.startsWith("other:"))
+        : [...draft.medicalHistory.filter((x) => x !== "none"), "other"];
+      onChange({ medicalHistory: next });
+    } else {
+      onChange({ medicalHistory: toggleItem(draft.medicalHistory, id) });
+    }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file) void handleFile(file);
-  };
-
-  const handleRemove = async () => {
-    if (!supabase || !draft.healthReportPath) return;
-    await supabase.storage.from("health-reports").remove([draft.healthReportPath]);
-    onChange({ healthReportPath: null, healthReportFileName: null });
-  };
-
-  const uploaded = !!draft.healthReportPath;
+  const sleepOtherOn = hasOther(draft.sleepConditions);
+  const medicalOtherOn = hasOther(draft.medicalHistory);
 
   return (
     <div className="space-y-4">
-      <input
-        ref={fileRef}
-        type="file"
-        accept={ACCEPTED}
-        className="sr-only"
-        onChange={handleInputChange}
-      />
 
-      {uploaded ? (
-        <div className="flex items-center gap-4 rounded-[22px] border border-[#45e0d4]/40 bg-[#0c2a3d] p-5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#45e0d4]/10">
-            <svg className="h-5 w-5 text-[#45e0d4]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[#45e0d4]">Report uploaded</p>
-            <p className="mt-0.5 truncate text-xs text-[#7d89a6]">{draft.healthReportFileName}</p>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="text-xs text-[#98a4bf] hover:text-[#edf2ff] transition-colors"
-            >
-              Replace
-            </button>
-            <button
-              type="button"
-              onClick={handleRemove}
-              className="text-xs text-[#7d89a6] hover:text-[#ff8a8a] transition-colors"
-            >
-              Remove
-            </button>
-          </div>
+      {/* Medications */}
+      <div className={sectionCard}>
+        <p className={nx.labelUpper}>Current medications</p>
+        <p className="text-sm text-[#98a4bf]">Are you currently taking any medications?</p>
+        <div className="flex gap-3">
+          {([true, false] as const).map((val) => {
+            const on = draft.onMedications === val;
+            return (
+              <button
+                key={String(val)}
+                type="button"
+                onClick={() => onChange({ onMedications: val })}
+                className={cn(
+                  "flex-1 rounded-xl border py-2.5 text-sm font-medium transition-all",
+                  on
+                    ? "border-[#45e0d4] bg-[#0c2a3d] text-[#45e0d4] shadow-[0_0_0_1px_rgba(69,224,212,0.3)]"
+                    : "border-white/[0.08] bg-[#0d1833]/60 text-[#98a4bf] hover:border-white/[0.18] hover:text-[#edf2ff]",
+                  nx.focusRing,
+                )}
+              >
+                {val ? "Yes" : "No"}
+              </button>
+            );
+          })}
         </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          onDrop={handleDrop}
-          onDragOver={(e) => e.preventDefault()}
-          disabled={uploading}
-          className={cn(
-            "w-full rounded-[22px] border-2 border-dashed border-white/[0.12] bg-[#0d1530]/50 px-6 py-10",
-            "flex flex-col items-center gap-3 text-center transition-all",
-            "hover:border-[#45e0d4]/30 hover:bg-[#0c1f3d]/40",
-            uploading && "opacity-60 pointer-events-none",
-            nx.focusRing,
-          )}
-        >
-          {uploading ? (
-            <>
-              <svg className="h-8 w-8 animate-spin text-[#45e0d4]" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-              </svg>
-              <p className="text-sm text-[#98a4bf]">Uploading…</p>
-            </>
-          ) : (
-            <>
-              <svg className="h-8 w-8 text-[#7d89a6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <div>
-                <p className="text-sm font-medium text-[#edf2ff]">
-                  Upload health report
-                </p>
-                <p className="mt-1 text-xs text-[#7d89a6]">
-                  PDF, JPG, PNG up to {MAX_MB} MB — drag & drop or click
-                </p>
-              </div>
-            </>
-          )}
-        </button>
-      )}
+        {draft.onMedications === true && (
+          <input
+            type="text"
+            value={draft.medicationDetails}
+            onChange={(e) => onChange({ medicationDetails: e.target.value })}
+            placeholder="e.g. Melatonin, Beta blockers… (optional)"
+            className={inputCls}
+          />
+        )}
+      </div>
 
-      {uploadError && (
-        <p className="rounded-xl border border-red-800/40 bg-red-950/35 px-3 py-2.5 text-xs text-red-300">
-          {uploadError}
-        </p>
-      )}
+      {/* Sleep conditions */}
+      <div className={sectionCard}>
+        <p className={nx.labelUpper}>Sleep conditions</p>
+        <p className="text-sm text-[#98a4bf]">Any diagnosed or suspected conditions?</p>
+        <div className="flex flex-wrap gap-2">
+          {SLEEP_CONDITIONS.map((c) => {
+            const on = c.id === "other"
+              ? sleepOtherOn
+              : draft.sleepConditions.includes(c.id);
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => toggleSleep(c.id)}
+                className={cn(
+                  "rounded-xl border px-3.5 py-1.5 text-sm font-medium transition-all",
+                  on
+                    ? "border-[#45e0d4] bg-[#0c2a3d] text-[#45e0d4] shadow-[0_0_0_1px_rgba(69,224,212,0.25)]"
+                    : "border-white/[0.08] bg-[#0d1833]/60 text-[#98a4bf] hover:border-white/[0.18] hover:text-[#edf2ff]",
+                  nx.focusRing,
+                )}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+        {sleepOtherOn && (
+          <input
+            type="text"
+            autoFocus
+            value={getOtherText(draft.sleepConditions)}
+            onChange={(e) =>
+              onChange({ sleepConditions: setOtherText(draft.sleepConditions, e.target.value) })
+            }
+            placeholder="Describe your condition…"
+            className={inputCls}
+          />
+        )}
+      </div>
 
-      {!uploaded && (
-        <button
-          type="button"
-          onClick={() => onChange({ healthReportSkipped: true })}
-          className="w-full rounded-[22px] border border-white/[0.06] bg-transparent py-3 text-sm text-[#7d89a6] hover:text-[#98a4bf] hover:border-white/[0.1] transition-all"
-        >
-          {draft.healthReportSkipped ? "✓ Skipping for now" : "I don't have one right now"}
-        </button>
-      )}
+      {/* Medical history */}
+      <div className={sectionCard}>
+        <p className={nx.labelUpper}>Relevant medical history</p>
+        <p className="text-sm text-[#98a4bf]">Select anything that applies.</p>
+        <div className="flex flex-wrap gap-2">
+          {MEDICAL_HISTORY.map((c) => {
+            const on = c.id === "other"
+              ? medicalOtherOn
+              : draft.medicalHistory.includes(c.id);
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => toggleMedical(c.id)}
+                className={cn(
+                  "rounded-xl border px-3.5 py-1.5 text-sm font-medium transition-all",
+                  on
+                    ? "border-[#45e0d4] bg-[#0c2a3d] text-[#45e0d4] shadow-[0_0_0_1px_rgba(69,224,212,0.25)]"
+                    : "border-white/[0.08] bg-[#0d1833]/60 text-[#98a4bf] hover:border-white/[0.18] hover:text-[#edf2ff]",
+                  nx.focusRing,
+                )}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+        {medicalOtherOn && (
+          <input
+            type="text"
+            autoFocus
+            value={getOtherText(draft.medicalHistory)}
+            onChange={(e) =>
+              onChange({ medicalHistory: setOtherText(draft.medicalHistory, e.target.value) })
+            }
+            placeholder="Describe your condition…"
+            className={inputCls}
+          />
+        )}
+      </div>
+
     </div>
   );
 }

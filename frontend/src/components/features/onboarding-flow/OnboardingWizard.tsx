@@ -101,9 +101,11 @@ export function OnboardingWizard() {
         anchorNote: draft.anchorNote,
         sleepConstraint: draft.sleepConstraint,
         caffeineHabit: draft.caffeineHabit,
-        ouraConnected: draft.ouraConnected,
-        healthReportPath: draft.healthReportPath,
-        healthReportFileName: draft.healthReportFileName,
+        fitbitConnected: draft.fitbitConnected,
+        onMedications: draft.onMedications,
+        medicationDetails: draft.medicationDetails,
+        sleepConditions: draft.sleepConditions,
+        medicalHistory: draft.medicalHistory,
       };
       saveUserProfileSettings(profile);
     } catch {

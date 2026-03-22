@@ -15,7 +15,7 @@ function normalizeDraft(raw: Partial<OnboardingDraft>): OnboardingDraft {
   const base = defaultOnboardingDraft();
   // Strip any legacy fields
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { buddyCheckins, scheduleMode, scheduleNotes, scheduleDeferred, manualShifts, importComplete, ...rest } =
+  const { buddyCheckins, scheduleMode, scheduleNotes, scheduleDeferred, manualShifts, importComplete, healthReportPath, healthReportFileName, healthReportSkipped, ...rest } =
     raw as Partial<OnboardingDraft> & {
       buddyCheckins?: boolean;
       scheduleMode?: string;
@@ -23,6 +23,9 @@ function normalizeDraft(raw: Partial<OnboardingDraft>): OnboardingDraft {
       scheduleDeferred?: boolean;
       manualShifts?: unknown[];
       importComplete?: unknown;
+      healthReportPath?: unknown;
+      healthReportFileName?: unknown;
+      healthReportSkipped?: unknown;
     };
   return { ...base, ...rest };
 }
