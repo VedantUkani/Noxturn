@@ -117,12 +117,31 @@ class RiskComputeResponse(BaseModel):
     summary: str
 
 
+class UserProfile(BaseModel):
+    """Onboarding profile data passed with every plan generation request."""
+    role_id: Optional[str] = None            # nurse | paramedic | factory_worker | resident | other
+    role_specialty: Optional[str] = None     # e.g. "ICU nights", "Internal Medicine"
+    chronotype: Optional[str] = None         # early_bird | neutral | night_owl
+    preferred_sleep_hours: Optional[float] = None
+    anchor_sleep_start: Optional[str] = None  # HH:MM
+    anchor_sleep_end: Optional[str] = None
+    sleep_constraint: Optional[str] = None   # cant_sleep_before_9am | light_sensitive | short_sleep_risk | none
+    caffeine_habit: Optional[str] = None     # before_noon | afternoon_ok | late_sensitive | minimal
+    transport_mode: Optional[str] = None     # car | transit | walk_cycle | other
+    fitbit_connected: Optional[bool] = None
+    on_medications: Optional[bool] = None
+    medication_details: Optional[str] = None
+    sleep_conditions: Optional[List[str]] = None   # e.g. ["sleep_apnea", "insomnia"]
+    medical_history: Optional[List[str]] = None    # e.g. ["cardiovascular", "diabetes"]
+
+
 class PlanGenerateRequest(BaseModel):
     user_id: Optional[UUID] = None
     blocks: List[ScheduleBlock]
     commute_minutes: int = 30
     plan_hours: int = 48
     persona_id: Optional[str] = None
+    user_profile: Optional[UserProfile] = None
 
 
 class NextBestAction(BaseModel):
@@ -176,6 +195,7 @@ class ReplanRequest(BaseModel):
     task_event: Optional[TaskEventCreate] = None
     use_claude: bool = False
     persona_id: Optional[str] = None
+    user_profile: Optional[UserProfile] = None
 
 
 class ReplanResponse(BaseModel):
