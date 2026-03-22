@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ApiError } from "@/lib/api";
 import { fetchDashboardToday } from "@/lib/noxturn-api";
-import { getOrCreateUserId, setStoredPlanMode } from "@/lib/session";
+import { getOrCreateUserId } from "@/lib/session";
 import {
   payloadFromDashboardApi,
   payloadFromDemo,
@@ -26,8 +26,6 @@ export function TodayPageClient() {
       try {
         const d = await fetchDashboardToday(userId);
         if (cancelled) return;
-        setStoredPlanMode(d.plan_mode);
-        window.dispatchEvent(new Event("noxturn-plan-mode"));
         setInitial(payloadFromDashboardApi(d));
         setBoot((k) => k + 1);
       } catch (e) {

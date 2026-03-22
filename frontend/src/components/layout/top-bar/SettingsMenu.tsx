@@ -164,8 +164,7 @@ export function SettingsMenu() {
               Settings
             </p>
             <p className="mt-1.5 text-xs leading-relaxed text-[#98a4bf]">
-              Roster, workspace, and session — keep everything aligned with your
-              shifts.
+              Workspace and session — profile, preferences, and sign out.
             </p>
           </div>
           <nav
@@ -184,19 +183,6 @@ export function SettingsMenu() {
               </span>
               <span className="mt-1 block text-[12px] leading-snug text-[#98a4bf]">
                 Profile, sleep, wearables, and privacy.
-              </span>
-            </Link>
-            <Link
-              href="/schedule"
-              className={linkRowClass}
-              style={{ backgroundColor: "#141f42" }}
-              onClick={closeWithAnimation}
-            >
-              <span className="text-sm font-semibold text-[#edf2ff]">
-                Roster &amp; schedule
-              </span>
-              <span className="mt-1 block text-[12px] leading-snug text-[#98a4bf]">
-                Shifts, calendar import, and uploads.
               </span>
             </Link>
             <div className="mx-4 my-3 h-px bg-white/[0.08]" aria-hidden />

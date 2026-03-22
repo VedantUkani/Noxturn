@@ -77,7 +77,6 @@ export function payloadFromDashboardApi(d: DashboardTodayResponse): TodayDashboa
   const anchors = d.anchor_tasks.map(planTaskToDashboard);
   const tasks = [...anchors, ...mockSupportTasks()];
   return {
-    planMode: d.plan_mode,
     vitals: view.vitals,
     nextBest: nextBestFromApi(d.next_best_action),
     tasks,
@@ -89,7 +88,6 @@ export function payloadFromDashboardApi(d: DashboardTodayResponse): TodayDashboa
 export function payloadFromDemo(): TodayDashboardPayload {
   const linkedId = "demo-anchor-nap";
   return {
-    planMode: "protect",
     vitals: todayDemo.vitals,
     nextBest: {
       ...todayDemo.nextBestAction,

@@ -1,5 +1,4 @@
-/** Shown in the dashboard shell until real session data exists. */
-export const DEMO_PLAN_MODE_LABEL = "Protect";
+/** Fallback shell labels when no login session or saved profile exists yet. */
 export const DEMO_USER_NAME = "Alex Chen";
 export const DEMO_USER_ROLE = "Night Shift Lead";
 

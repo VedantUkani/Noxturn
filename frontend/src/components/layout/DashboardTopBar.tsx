@@ -10,10 +10,6 @@ export function DashboardTopBar() {
   const pathname = usePathname();
   const title = dashboardPageHeading(pathname);
   const isToday = pathname === "/today" || pathname === "/dashboard";
-  const isOnboardingFlow =
-    pathname === "/onboard" || pathname === "/onboarding";
-  const showModePill = !isToday && !isOnboardingFlow;
-
   return (
     <header
       className={cn(
@@ -27,7 +23,7 @@ export function DashboardTopBar() {
           {title}
         </h1>
       ) : null}
-      <TopUtilityBar showModePill={showModePill} />
+      <TopUtilityBar />
     </header>
   );
 }
