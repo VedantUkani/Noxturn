@@ -14,6 +14,13 @@ function fmtTime(iso: string): string {
   }
 }
 
+function fmtDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
 function CheckCircle({ done }: { done: boolean }) {
   if (done)
     return (
@@ -49,9 +56,8 @@ export function DashboardTaskCard({
     task.status === "expired" ||
     task.status === "replaced";
 
-  const timeLabel = task.scheduled_time
-    ? `${fmtTime(task.scheduled_time)} · ${task.duration_minutes}m`
-    : `${task.duration_minutes}m`;
+  const startLabel = task.scheduled_time ? fmtTime(task.scheduled_time) : null;
+  const durationLabel = fmtDuration(task.duration_minutes);
 
   const statusNote =
     task.status === "completed" ? "Completed" :
@@ -83,18 +89,25 @@ export function DashboardTaskCard({
       </button>
 
       <div className="min-w-0 flex-1">
-        {/* Title + time */}
-        <div className="flex items-baseline justify-between gap-3">
-          <p
-            className={cn(
-              "text-sm font-medium leading-snug",
-              done ? "text-[#7d89a6] line-through" : "text-[#edf2ff]",
-            )}
-          >
-            {task.title}
-          </p>
-          <span className="shrink-0 text-[11px] tabular-nums text-[#7d89a6]">
-            {timeLabel}
+        {/* Title */}
+        <p
+          className={cn(
+            "text-sm font-medium leading-snug",
+            done ? "text-[#7d89a6] line-through" : "text-[#edf2ff]",
+          )}
+        >
+          {task.title}
+        </p>
+
+        {/* Start time + duration */}
+        <div className="mt-1 flex items-center gap-2">
+          {startLabel ? (
+            <span className="text-xs font-semibold text-[#45e0d4]">
+              Start {startLabel}
+            </span>
+          ) : null}
+          <span className={cn("text-xs tabular-nums", startLabel ? "text-[#7d89a6]" : "font-semibold text-[#45e0d4]")}>
+            {startLabel ? `· ${durationLabel}` : durationLabel}
           </span>
         </div>
 

@@ -54,6 +54,21 @@ function AuthCallbackInner() {
       }
 
       markAuthenticated();
+
+      // If this was a calendar-connect OAuth flow, redirect to /schedule
+      let postDest: string | null = null;
+      try {
+        postDest = sessionStorage.getItem("noxturn_post_auth_dest");
+        sessionStorage.removeItem("noxturn_post_auth_dest");
+        sessionStorage.removeItem("noxturn_calendar_connect");
+      } catch { /* ignore */ }
+
+      if (postDest) {
+        router.replace(postDest);
+        router.refresh();
+        return;
+      }
+
       try {
         sessionStorage.setItem(POST_ONBOARDING_DEST_KEY, "/today");
       } catch {
