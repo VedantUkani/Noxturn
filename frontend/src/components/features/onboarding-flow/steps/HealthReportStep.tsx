@@ -167,13 +167,6 @@ export function HealthReportStep({ draft, onChange }: Props) {
         </p>
       )}
 
-      <div className="rounded-[22px] border border-white/[0.04] bg-[#0d1530]/40 p-4">
-        <p className="text-xs text-[#7d89a6] leading-relaxed">
-          <span className="font-medium text-[#98a4bf]">What to upload?</span>{" "}
-          Any medical clearance, sleep study result, or shift fitness certificate. Noxturn uses this to detect sleep conditions (e.g. apnea), flagging them as additional risk factors in your recovery plan. File is stored encrypted in your private storage.
-        </p>
-      </div>
-
       {!uploaded && (
         <button
           type="button"

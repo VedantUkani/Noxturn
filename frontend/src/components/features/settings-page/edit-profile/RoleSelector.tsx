@@ -80,9 +80,6 @@ export function RoleSelector({
               <span className={cn("block text-sm font-semibold transition-colors", selected ? "text-[#45e0d4]" : "text-[#edf2ff]")}>
                 {opt.title}
               </span>
-              <span className="mt-1 block text-xs leading-relaxed text-[#7d89a6]">
-                {opt.description}
-              </span>
             </button>
           );
         })}

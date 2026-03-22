@@ -1,18 +1,17 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { SETTINGS_PAGE_MOCK } from "./settings-mock-data";
-import { DataPrivacyCard } from "./DataPrivacyCard";
-import { EditProfilePanel } from "./edit-profile/EditProfilePanel";
-import { ProfileAccountCard } from "./ProfileAccountCard";
+import { ProfileAccountCardEditable } from "./ProfileAccountCardEditable";
+import { SleepPreferencesCardEditable } from "./SleepPreferencesCardEditable";
 import { SettingsFooterRow } from "./SettingsFooterRow";
 import { SettingsHeader } from "./SettingsHeader";
 import { SettingsTopBar } from "./SettingsTopBar";
-import { SleepPreferencesCard } from "./SleepPreferencesCard";
-import { useUserSettingsViewModel } from "./useUserSettingsViewModel";
 import { WearableSyncCard } from "./WearableSyncCard";
+import { useUserSettingsViewModel } from "./useUserSettingsViewModel";
 import type { SettingsPageViewModel } from "./types";
 import type { UserProfileSettings } from "@/lib/user-profile-settings";
+import { persistUserProfileSettings } from "@/lib/user-profile-settings";
 
 type SettingsPageContentProps = {
   /** Pass server-fetched model later; defaults to mock. */
@@ -25,10 +24,10 @@ export function SettingsPageContent({
   const { data, effectiveProfile, commitProfile } = useUserSettingsViewModel({
     base: baseData,
   });
-  const [editOpen, setEditOpen] = useState(false);
 
-  const handleSaved = useCallback(
-    (profile: UserProfileSettings) => {
+  const handleSave = useCallback(
+    async (profile: UserProfileSettings) => {
+      await persistUserProfileSettings(profile);
       commitProfile(profile);
     },
     [commitProfile],
@@ -39,28 +38,17 @@ export function SettingsPageContent({
       <SettingsTopBar data={data.topBar} />
       <SettingsHeader data={data.header} />
 
-      <EditProfilePanel
-        open={editOpen}
-        initialProfile={effectiveProfile}
-        onClose={() => setEditOpen(false)}
-        onSaved={handleSaved}
-      />
-
       <div className="flex flex-col gap-8">
-        <ProfileAccountCard
-          data={data.profile}
-          onEditProfile={() => setEditOpen(true)}
+        <ProfileAccountCardEditable
+          profile={effectiveProfile}
+          onSave={handleSave}
         />
-        <SleepPreferencesCard data={data.sleep} />
-
-        <div className="grid gap-8 lg:grid-cols-12 lg:items-stretch">
-          <div className="lg:col-span-8">
-            <WearableSyncCard data={data.wearables} />
-          </div>
-          <div className="lg:col-span-4">
-            <DataPrivacyCard data={data.privacy} />
-          </div>
-        </div>
+        <SleepPreferencesCardEditable
+          data={data.sleep}
+          profile={effectiveProfile}
+          onSave={handleSave}
+        />
+        <WearableSyncCard data={data.wearables} />
       </div>
 
       <SettingsFooterRow data={data.footer} />
