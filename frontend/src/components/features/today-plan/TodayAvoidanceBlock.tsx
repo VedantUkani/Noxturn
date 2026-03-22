@@ -6,13 +6,9 @@ import { TodayWarningSectionIcon, todayAvoidanceIcons } from "./today-icons";
 
 type TodayAvoidanceBlockProps = {
   items: readonly TodayAvoidanceItem[];
-  onEvidence?: (id: string) => void;
 };
 
-export function TodayAvoidanceBlock({
-  items,
-  onEvidence,
-}: TodayAvoidanceBlockProps) {
+export function TodayAvoidanceBlock({ items }: TodayAvoidanceBlockProps) {
   if (items.length === 0) return null;
 
   return (
@@ -24,9 +20,6 @@ export function TodayAvoidanceBlock({
             icon={todayAvoidanceIcons[item.icon]}
             title={item.title}
             detail={item.detail}
-            onEvidence={
-              onEvidence ? () => onEvidence(item.id) : undefined
-            }
           />
         ))}
       </div>

@@ -32,7 +32,6 @@ export type LiveSyncRecoveryCardProps = {
   planRelationLine?: string;
   className?: string;
   onSelectBand?: (band: RecoverySimulationBand) => void;
-  onEvidenceClick?: () => void;
 };
 
 function fmtUpdated(iso: string): string {
@@ -71,7 +70,6 @@ export function LiveSyncRecoveryCard({
   planRelationLine = "Readiness supports your current anchors — optional steps stay available.",
   className,
   onSelectBand,
-  onEvidenceClick,
 }: LiveSyncRecoveryCardProps) {
   const readiness = Math.min(100, Math.max(0, readinessScore));
 
@@ -151,16 +149,6 @@ export function LiveSyncRecoveryCard({
           />
         </div>
       </div>
-
-      {onEvidenceClick ? (
-        <button
-          type="button"
-          onClick={onEvidenceClick}
-          className="relative mt-3 text-left text-[11px] font-medium text-[#86c9ff] underline-offset-4 hover:underline"
-        >
-          Evidence lens — recovery signal
-        </button>
-      ) : null}
 
       {onSelectBand ? (
         <div className="relative mt-4 border-t border-white/[0.06] pt-3">

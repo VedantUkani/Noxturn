@@ -1,3 +1,4 @@
+import { AccessibilityMenu } from "@/components/accessibility";
 import { TodayModePill } from "./TodayModePill";
 import { NotificationsUpdatesMenu } from "./NotificationsUpdatesMenu";
 import { SettingsMenu } from "./SettingsMenu";
@@ -9,7 +10,8 @@ type TopUtilityBarProps = {
 
 export function TopUtilityBar({ showModePill = true }: TopUtilityBarProps) {
   return (
-    <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+    <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-2.5">
+      <AccessibilityMenu variant="compact" />
       {showModePill ? (
         <>
           <TodayModePill className="hidden sm:inline-flex" />

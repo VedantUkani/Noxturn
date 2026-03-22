@@ -14,7 +14,6 @@ export type RecoveryRecommendationCardProps = {
   /** Supporting copy in the bottom inset strip. */
   note: string;
   className?: string;
-  onEvidence?: () => void;
 };
 
 export function RecoveryRecommendationCard({
@@ -23,7 +22,6 @@ export function RecoveryRecommendationCard({
   value,
   note,
   className,
-  onEvidence,
 }: RecoveryRecommendationCardProps) {
   return (
     <article
@@ -55,15 +53,6 @@ export function RecoveryRecommendationCard({
           <p className="text-[11px] leading-relaxed text-[#7d89a6] md:text-xs md:leading-relaxed">
             {note}
           </p>
-          {onEvidence ? (
-            <button
-              type="button"
-              onClick={onEvidence}
-              className="mt-2 text-[11px] font-medium text-[#86c9ff] underline-offset-4 hover:underline"
-            >
-              Evidence lens
-            </button>
-          ) : null}
         </div>
       </div>
     </article>

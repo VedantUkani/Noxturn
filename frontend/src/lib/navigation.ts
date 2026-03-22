@@ -39,7 +39,9 @@ export function dashboardPageHeading(pathname: string): string {
     "/dashboard": "Today",
     "/recovery": "Recovery",
     "/sandbox": "Sandbox",
-    "/evidence": "Evidence lens",
+    "/settings": "Settings",
+    "/onboarding": "Welcome",
+    "/onboard": "Onboarding",
   };
   return map[pathname] ?? "Noxturn";
 }

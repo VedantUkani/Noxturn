@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useTodayDashboardContext } from "@/contexts/TodayDashboardContext";
 import { TodayAvoidanceBlock } from "@/components/features/today-plan/TodayAvoidanceBlock";
 import { TodayRecommendationsRow } from "@/components/features/today-plan/TodayRecommendationsRow";
@@ -12,8 +11,6 @@ import { WhatChangedPanel } from "./WhatChangedPanel";
 import { TodayModeMenu } from "./TodayModeMenu";
 import { DashboardTaskSections } from "./DashboardTaskSections";
 import { TaskDetailSheet } from "./TaskDetailSheet";
-import { EvidenceLensSheet } from "./EvidenceLensSheet";
-import { buildEvidenceLensPanel } from "@/lib/evidence-lens";
 import { cn } from "@/lib/utils";
 
 export function TodayDashboardView() {
@@ -22,29 +19,6 @@ export function TodayDashboardView() {
     d.detailTaskId === null
       ? null
       : d.tasks.find((t) => t.id === d.detailTaskId) ?? null;
-
-  const evidencePanel = useMemo(
-    () =>
-      buildEvidenceLensPanel(d.evidenceLensFocus, {
-        tasks: d.tasks,
-        nextBest: d.nextBest,
-        recommendations: d.recommendations,
-        avoid: d.avoid,
-        readinessScore: d.vitals.readinessScore,
-        recoveryMessage: d.vitals.message,
-        planMode: d.planMode,
-      }),
-    [
-      d.evidenceLensFocus,
-      d.tasks,
-      d.nextBest,
-      d.recommendations,
-      d.avoid,
-      d.vitals.readinessScore,
-      d.vitals.message,
-      d.planMode,
-    ],
-  );
 
   return (
     <div className={todaySectionStack}>
@@ -100,13 +74,6 @@ export function TodayDashboardView() {
           changeHint={d.heroChangeHint}
           onPrimaryClick={d.startNextBest}
           onSecondaryClick={d.remindNextBest}
-          onEvidenceClick={() =>
-            d.openEvidenceLens(
-              d.nextBest.linkedTaskId
-                ? { kind: "task", taskId: d.nextBest.linkedTaskId }
-                : { kind: "overview" },
-            )
-          }
           className={cn(
             d.pulse && "animate-reweave-emphasis ring-1 ring-[#45e0d4]/30",
           )}
@@ -125,41 +92,19 @@ export function TodayDashboardView() {
           recoveryBand={d.recoveryProfile}
           planRelationLine={d.planRelationLine}
           onSelectBand={d.simulateRecoveryBand}
-          onEvidenceClick={() => d.openEvidenceLens({ kind: "recovery" })}
         />
       </div>
 
       <DashboardTaskSections />
 
-      <TodayRecommendationsRow
-        items={d.recommendations}
-        pulse={d.pulse}
-        onEvidence={(id) => d.openEvidenceLens({ kind: "recommendation", id })}
-      />
+      <TodayRecommendationsRow items={d.recommendations} pulse={d.pulse} />
 
-      <TodayAvoidanceBlock
-        items={d.avoid}
-        onEvidence={(id) => d.openEvidenceLens({ kind: "avoid", id })}
-      />
+      <TodayAvoidanceBlock items={d.avoid} />
 
       <TaskDetailSheet
         task={detailTask}
         open={d.detailTaskId !== null}
         onClose={d.closeTaskDetail}
-        onOpenEvidence={
-          detailTask
-            ? () => {
-                d.closeTaskDetail();
-                d.openEvidenceLens({ kind: "task", taskId: detailTask.id });
-              }
-            : undefined
-        }
-      />
-
-      <EvidenceLensSheet
-        open={d.evidenceLensOpen}
-        panel={evidencePanel}
-        onClose={d.closeEvidenceLens}
       />
     </div>
   );

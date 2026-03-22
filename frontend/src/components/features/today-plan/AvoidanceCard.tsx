@@ -12,7 +12,6 @@ export type AvoidanceCardProps = {
   /** Supporting explanation — calm, non-judgmental copy works best. */
   detail: string;
   className?: string;
-  onEvidence?: () => void;
 };
 
 export function AvoidanceCard({
@@ -20,7 +19,6 @@ export function AvoidanceCard({
   title,
   detail,
   className,
-  onEvidence,
 }: AvoidanceCardProps) {
   return (
     <article
@@ -51,15 +49,6 @@ export function AvoidanceCard({
         <p className="mt-2 text-[12px] leading-relaxed text-[#98a4bf] md:text-[13px] md:leading-relaxed">
           {detail}
         </p>
-        {onEvidence ? (
-          <button
-            type="button"
-            onClick={onEvidence}
-            className="mt-2.5 text-[11px] font-medium text-[#86c9ff] underline-offset-4 hover:underline"
-          >
-            Evidence lens
-          </button>
-        ) : null}
       </div>
     </article>
   );

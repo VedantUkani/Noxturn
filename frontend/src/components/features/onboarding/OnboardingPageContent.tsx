@@ -1,291 +1,291 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { APP_NAME } from "@/lib/constants";
-import {
-  hasCompletedOnboarding,
-  markOnboardingComplete,
-  POST_ONBOARDING_DEST_KEY,
-} from "@/lib/onboarding-flag";
+import { POST_ONBOARDING_DEST_KEY } from "@/lib/onboarding-flag";
+import { nxMarketing } from "@/lib/ui-theme";
 import { cn } from "@/lib/utils";
 
-export function OnboardingPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [show, setShow] = useState(false);
+function IconShield({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+      />
+    </svg>
+  );
+}
 
-  const devPreview =
-    process.env.NODE_ENV === "development" &&
-    searchParams.get("preview") === "1";
+function IconActivity({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+      aria-hidden
+    >
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </svg>
+  );
+}
+
+function IconZap({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+      aria-hidden
+    >
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
+  );
+}
+
+function IconMoon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+      />
+    </svg>
+  );
+}
+
+function IconCalendar({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+      aria-hidden
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  );
+}
+
+const FEATURES = [
+  {
+    Icon: IconShield,
+    title: "4-Risk Detection",
+    desc: "Detects rapid flips, short turnarounds, low recovery windows, and unsafe drive events in your shift schedule.",
+  },
+  {
+    Icon: IconActivity,
+    title: "AI Recovery Plans",
+    desc: "Rule-based and Claude AI planners generate personalised task schedules grounded in clinical circadian evidence.",
+  },
+  {
+    Icon: IconZap,
+    title: "Research-backed",
+    desc: "Plans draw on clinical sleep and circadian science so steps stay credible and actionable.",
+  },
+  {
+    Icon: IconMoon,
+    title: "Wearable Sync",
+    desc: "Import sleep hours, restlessness, and resting HR to calculate your recovery score and rhythm status.",
+  },
+  {
+    Icon: IconCalendar,
+    title: "Shift Sandbox",
+    desc: "Test hypothetical schedule changes before accepting them. See the projected strain delta instantly.",
+  },
+  {
+    Icon: IconShield,
+    title: "Persona-Aware",
+    desc: "Plans adapt to your role — nurse, paramedic, or factory worker — with tone and priorities matched to your context.",
+  },
+] as const;
+
+const STEPS = [
+  {
+    n: "01",
+    title: "Import your shifts",
+    desc: "Paste a schedule, add manually, or connect Google/Outlook Calendar.",
+  },
+  {
+    n: "02",
+    title: "Detect risk episodes",
+    desc: "The engine scans for 4 circadian risk patterns and calculates your strain score.",
+  },
+  {
+    n: "03",
+    title: "Get your recovery plan",
+    desc: "A clinical task schedule is generated — rule-based or via Claude AI with RAG.",
+  },
+  {
+    n: "04",
+    title: "Track & adapt",
+    desc: "Mark tasks done, log sleep data, and the plan proactively re-optimises.",
+  },
+] as const;
+
+export function OnboardingPageContent() {
+  const [postDest, setPostDest] = useState("/today");
 
   useEffect(() => {
-    if (devPreview) {
-      setShow(true);
-      return;
-    }
-    if (hasCompletedOnboarding()) {
-      let next = "/today";
-      try {
-        const s = sessionStorage.getItem(POST_ONBOARDING_DEST_KEY);
-        if (s && s.startsWith("/") && !s.startsWith("//")) next = s;
-        sessionStorage.removeItem(POST_ONBOARDING_DEST_KEY);
-      } catch {
-        /* ignore */
-      }
-      router.replace(next);
-      router.refresh();
-      return;
-    }
-    setShow(true);
-  }, [router, devPreview]);
-
-  if (!show) {
-    return (
-      <div className="flex w-full max-w-lg flex-col items-center gap-3 text-center">
-        <span
-          className="h-8 w-8 animate-spin rounded-full border-2 border-teal-400/20 border-t-teal-400"
-          aria-hidden
-        />
-        <p className="text-sm text-slate-500">Loading…</p>
-      </div>
-    );
-  }
-
-  function clearPostOnboardingHint() {
-    try {
-      sessionStorage.removeItem(POST_ONBOARDING_DEST_KEY);
-    } catch {
-      /* ignore */
-    }
-  }
-
-  function finish(path: string) {
-    markOnboardingComplete();
-    clearPostOnboardingHint();
-    router.replace(path);
-    router.refresh();
-  }
-
-  function onSkip() {
-    let next = "/today";
     try {
       const s = sessionStorage.getItem(POST_ONBOARDING_DEST_KEY);
-      if (s && s.startsWith("/") && !s.startsWith("//")) next = s;
+      if (s && s.startsWith("/") && !s.startsWith("//")) setPostDest(s);
     } catch {
       /* ignore */
     }
-    finish(next);
-  }
-
-  function onContinueSchedule() {
-    // Do not mark onboarding done — user may use Back from schedule to skip from welcome.
-    router.replace("/schedule");
-    router.refresh();
-  }
+  }, []);
 
   return (
-    <div className="relative w-full max-w-[28rem] px-2 sm:max-w-xl sm:px-0">
-      <div
-        className="pointer-events-none absolute -left-1/3 -top-40 h-72 w-[140%] max-w-none rounded-full bg-teal-400/[0.14] blur-[64px] sm:-left-1/4"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -right-1/4 top-1/3 h-48 w-48 rounded-full bg-indigo-500/[0.08] blur-3xl"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -bottom-28 left-1/4 h-64 w-64 rounded-full bg-cyan-400/[0.07] blur-[56px]"
-        aria-hidden
-      />
-
-      <div
-        className={cn(
-          "nox-onboarding-enter relative overflow-hidden rounded-3xl border border-white/[0.1]",
-          "bg-gradient-to-b from-[#172554]/[0.55] via-[#0f172a]/90 to-[#0a0f1c]/95",
-          "shadow-[0_40px_80px_-32px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.04)_inset]",
-          "backdrop-blur-xl",
-        )}
-      >
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_50%_at_50%_-10%,rgba(45,212,191,0.16),transparent_55%)]"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-teal-300/40 to-transparent"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-teal-400/10 blur-2xl"
-          aria-hidden
-        />
-
-        <div className="relative space-y-8 p-8 sm:space-y-9 sm:p-10">
-          <div className="flex flex-col items-center text-center">
-            <span
-              className={cn(
-                "mb-5 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5",
-                "bg-gradient-to-r from-teal-500/20 to-cyan-500/15 text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-100/95",
-                "ring-1 ring-teal-400/30 shadow-[0_0_24px_-8px_rgba(45,212,191,0.45)]",
-              )}
-            >
-              <span
-                className="h-1.5 w-1.5 rounded-full bg-teal-300 shadow-[0_0_8px_rgba(45,212,191,0.9)]"
-                aria-hidden
-              />
-              Welcome
-            </span>
-
-            <div
-              className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400/25 to-cyan-600/10 ring-1 ring-white/10 shadow-[0_12px_40px_-16px_rgba(45,212,191,0.35)]"
-              aria-hidden
-            >
-              <svg
-                className="h-7 w-7 text-teal-200/90"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                aria-hidden
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-                />
-              </svg>
+    <div className="min-h-0">
+      <div id="page-root" className="text-[#edf2ff]">
+        <section className="relative overflow-hidden pb-20 text-center sm:pb-24">
+          <div className={nxMarketing.heroGlow} aria-hidden />
+          <div className="relative z-[1] px-4 sm:px-6 md:px-8">
+            <div className={cn("mx-auto mb-8 max-w-2xl", nxMarketing.pill)}>
+              <span className="h-1.5 w-1.5 animate-pulse-dot rounded-full bg-[#45e0d4]" />
+              Built for healthcare & shift workers
             </div>
-
-            <h1 className="text-balance text-3xl font-semibold leading-[1.12] tracking-tight text-white sm:text-[2.125rem]">
-              Welcome —{" "}
-              <span className="bg-gradient-to-r from-teal-200 via-teal-100 to-cyan-200 bg-clip-text text-transparent">
-                let&apos;s line up your shifts
+            <h1 className="mx-auto max-w-4xl text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.35rem] lg:leading-[1.06]">
+              <span className="gradient-text block">Recover smarter</span>
+              <span className="mt-2 block text-[#edf2ff] sm:mt-3">
+                between your shifts.
               </span>
             </h1>
-            <p className="mx-auto mt-4 max-w-[22rem] text-pretty text-[15px] leading-relaxed text-slate-400 sm:max-w-none">
-              {APP_NAME} uses your rota to shape recovery and your day. Hook up a
-              calendar, drop in a file, or add blocks yourself — pick what feels
-              easiest.
+            <p className="mx-auto mb-12 mt-8 max-w-2xl text-lg leading-relaxed text-[#98a4bf] sm:mt-9 sm:text-xl sm:leading-relaxed">
+              Noxturn detects circadian risk in your shift schedule and builds an
+              AI-powered recovery plan backed by clinical evidence — so you can
+              protect your sleep, safety, and health.
             </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+              <Link href="/onboard" className={nxMarketing.primaryCtaLg}>
+                Start onboarding →
+              </Link>
+              <Link href={postDest} className={nxMarketing.secondaryCta}>
+                Open dashboard
+              </Link>
+            </div>
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
+        <section className={cn(nxMarketing.sectionBand, "py-10 sm:py-12")}>
+          <div
+            className={cn(
+              nxMarketing.contentWide,
+              "grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-10",
+            )}
+          >
             {[
-              {
-                step: "1",
-                label: "Schedule",
-                hint: "Bring in your blocks",
-                icon: (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5a2.25 2.25 0 002.25-2.25m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5a2.25 2.25 0 012.25 2.25v7.5"
-                  />
-                ),
-              },
-              {
-                step: "2",
-                label: "Week",
-                hint: "See how the week flows",
-                icon: (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3.75 6A2.25 2.25 0 016 3.75h3.75a2.25 2.25 0 012.25 2.25v3.75a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM17.25 6A2.25 2.25 0 0119.5 3.75H21a2.25 2.25 0 012.25 2.25v3.75A2.25 2.25 0 0121 12h-1.5a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h3.75a2.25 2.25 0 012.25 2.25V21a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25v-3.75zM17.25 15.75A2.25 2.25 0 0119.5 13.5H21a2.25 2.25 0 012.25 2.25V21a2.25 2.25 0 01-2.25 2.25h-1.5a2.25 2.25 0 01-2.25-2.25v-3.75z"
-                  />
-                ),
-              },
-              {
-                step: "3",
-                label: "Today",
-                hint: "What matters right now",
-                icon: (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
-                  />
-                ),
-              },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className={cn(
-                  "flex gap-3 rounded-2xl border border-slate-600/40 bg-slate-950/40 p-3.5",
-                  "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]",
-                  "sm:flex-col sm:items-center sm:text-center sm:gap-2 sm:p-4",
-                )}
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-200/95 ring-1 ring-teal-400/20 sm:h-11 sm:w-11">
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    aria-hidden
-                  >
-                    {item.icon}
-                  </svg>
-                </div>
-                <div className="min-w-0 flex-1 sm:flex-none">
-                  <p className="flex items-center gap-2 text-xs font-medium text-slate-500 sm:justify-center">
-                    <span className="font-mono text-[10px] text-teal-400/80">
-                      {item.step}
-                    </span>
-                    <span className="text-[13px] font-semibold text-slate-100">
-                      {item.label}
-                    </span>
-                  </p>
-                  <p className="mt-0.5 text-[12px] leading-snug text-slate-500 sm:mt-1">
-                    {item.hint}
-                  </p>
-                </div>
+              ["4", "Risk detectors"],
+              ["12", "Intervention cards"],
+              ["10", "Clinical sources"],
+              ["3", "Shift personas"],
+            ].map(([num, label]) => (
+              <div key={label} className="text-center">
+                <div className={nxMarketing.statNumber}>{num}</div>
+                <div className="mt-1.5 text-xs text-[#7d89a6]">{label}</div>
               </div>
             ))}
           </div>
+        </section>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-            <button
-              type="button"
-              onClick={onContinueSchedule}
-              className={cn(
-                "inline-flex min-h-[3rem] flex-1 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold outline-none transition-[transform,box-shadow,background-color] duration-200",
-                "bg-gradient-to-b from-teal-300 to-teal-500 text-slate-950",
-                "shadow-[0_0_0_1px_rgba(45,212,191,0.4),0_16px_40px_-14px_rgba(45,212,191,0.55)]",
-                "hover:from-teal-200 hover:to-teal-400 hover:shadow-[0_0_0_1px_rgba(45,212,191,0.55),0_20px_48px_-14px_rgba(45,212,191,0.6)]",
-                "active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-teal-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0f1c]",
-              )}
-            >
-              Add my schedule
-              <svg
-                className="h-4 w-4 opacity-90"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-                aria-hidden
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={onSkip}
-              className={cn(
-                "inline-flex min-h-[3rem] flex-1 items-center justify-center rounded-2xl border border-slate-500/50 bg-slate-900/50 px-5 text-sm font-medium text-slate-200 outline-none backdrop-blur-sm transition-[border-color,background-color,color] duration-200",
-                "hover:border-slate-400/60 hover:bg-slate-800/60 hover:text-white",
-                "focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0f1c]",
-              )}
-            >
-              Explore the app
-            </button>
+        <section className={cn(nxMarketing.contentWide, "py-20 sm:py-24")}>
+          <p className={nxMarketing.eyebrow}>Features</p>
+          <h2 className={cn("mb-12 max-w-2xl", nxMarketing.heading2)}>
+            Everything you need to recover well
+          </h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((f) => {
+              const I = f.Icon;
+              return (
+                <div key={f.title} className={nxMarketing.featureCard}>
+                  <div className={nxMarketing.featureIcon}>
+                    <I className="h-5 w-5" />
+                  </div>
+                  <h3 className="mb-1.5 text-sm font-semibold text-[#edf2ff]">
+                    {f.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-[#98a4bf]">
+                    {f.desc}
+                  </p>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        </section>
+
+        <section className={cn(nxMarketing.sectionBand, "py-20 sm:py-24")}>
+          <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 md:px-8">
+            <p className={nxMarketing.eyebrow}>How it works</p>
+            <h2 className={cn("mb-12 max-w-xl", nxMarketing.heading2)}>
+              Four steps to better recovery
+            </h2>
+            <div className="space-y-6">
+              {STEPS.map((s, i) => (
+                <div key={s.n} className="flex items-start gap-5">
+                  <div className={nxMarketing.stepWatermark}>{s.n}</div>
+                  <div
+                    className={cn(
+                      "flex-1",
+                      i < STEPS.length - 1 && "border-b border-white/[0.06] pb-6",
+                    )}
+                  >
+                    <h3 className="mb-1 text-sm font-semibold text-[#edf2ff]">
+                      {s.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed text-[#98a4bf]">
+                      {s.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className={cn(nxMarketing.contentNarrow, "py-24 text-center sm:py-28")}>
+          <h2 className="mb-4 text-3xl font-bold tracking-tight text-[#edf2ff]">
+            Ready to start?
+          </h2>
+          <p className="mb-10 text-[#98a4bf]">
+            Import your schedule in under 2 minutes and get a clinically-grounded
+            recovery plan.
+          </p>
+          <Link
+            href="/onboard"
+            className={cn(nxMarketing.primaryCtaLg, "px-8 py-3.5")}
+          >
+            Start now — it&apos;s free ›
+          </Link>
+        </section>
+
+        <footer className={nxMarketing.footer}>
+          Noxturn — Adaptive recovery for rotating shift teams
+        </footer>
       </div>
     </div>
   );

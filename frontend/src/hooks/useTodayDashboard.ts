@@ -9,8 +9,6 @@ import {
   initialLiveState,
   type LiveDashboardState,
 } from "@/lib/dashboard-live";
-import type { EvidenceLensFocus } from "@/lib/evidence-lens";
-import { NOXTURN_EVIDENCE_LENS_EVENT } from "@/lib/evidence-lens-events";
 
 export type TodayDashboardActions = {
   completeTask: (id: string) => void;
@@ -27,15 +25,9 @@ export type TodayDashboardActions = {
   simulatePoorWearableImport: () => void;
   simulateRecoveryBand: (band: RecoverySimulationBand) => void;
   resetDemo: () => void;
-  openEvidenceLens: (focus: EvidenceLensFocus) => void;
-  closeEvidenceLens: () => void;
 };
 
-export type TodayDashboardState = LiveDashboardState &
-  TodayDashboardActions & {
-    evidenceLensOpen: boolean;
-    evidenceLensFocus: EvidenceLensFocus;
-  };
+export type TodayDashboardState = LiveDashboardState & TodayDashboardActions;
 
 export function useTodayDashboard(
   initial: TodayDashboardPayload,
@@ -44,10 +36,6 @@ export function useTodayDashboard(
   baselineRef.current = initial;
 
   const [state, setState] = useState(() => initialLiveState(initial));
-  const [evidenceLensOpen, setEvidenceLensOpen] = useState(false);
-  const [evidenceLensFocus, setEvidenceLensFocus] = useState<EvidenceLensFocus>(
-    { kind: "overview" },
-  );
 
   useEffect(() => {
     setStoredPlanMode(state.planMode);
@@ -80,15 +68,6 @@ export function useTodayDashboard(
     }, 7000);
     return () => window.clearTimeout(t);
   }, [state.banner]);
-
-  useEffect(() => {
-    const onLens = () => {
-      setEvidenceLensFocus({ kind: "overview" });
-      setEvidenceLensOpen(true);
-    };
-    window.addEventListener(NOXTURN_EVIDENCE_LENS_EVENT, onLens);
-    return () => window.removeEventListener(NOXTURN_EVIDENCE_LENS_EVENT, onLens);
-  }, []);
 
   const dispatch = useCallback((event: Parameters<typeof applyLiveEvent>[1]) => {
     setState((s) => applyLiveEvent(s, event));
@@ -142,18 +121,7 @@ export function useTodayDashboard(
   );
 
   const resetDemo = useCallback(() => {
-    setEvidenceLensOpen(false);
-    setEvidenceLensFocus({ kind: "overview" });
     setState(initialLiveState(baselineRef.current));
-  }, []);
-
-  const openEvidenceLens = useCallback((focus: EvidenceLensFocus) => {
-    setEvidenceLensFocus(focus);
-    setEvidenceLensOpen(true);
-  }, []);
-
-  const closeEvidenceLens = useCallback(() => {
-    setEvidenceLensOpen(false);
   }, []);
 
   const startNextBest = useCallback(() => {
@@ -185,8 +153,6 @@ export function useTodayDashboard(
   return useMemo(
     () => ({
       ...state,
-      evidenceLensOpen,
-      evidenceLensFocus,
       completeTask,
       skipTask,
       markTaskMissed,
@@ -201,13 +167,9 @@ export function useTodayDashboard(
       simulatePoorWearableImport,
       simulateRecoveryBand,
       resetDemo,
-      openEvidenceLens,
-      closeEvidenceLens,
     }),
     [
       state,
-      evidenceLensOpen,
-      evidenceLensFocus,
       completeTask,
       skipTask,
       markTaskMissed,
@@ -222,8 +184,6 @@ export function useTodayDashboard(
       simulatePoorWearableImport,
       simulateRecoveryBand,
       resetDemo,
-      openEvidenceLens,
-      closeEvidenceLens,
     ],
   );
 }

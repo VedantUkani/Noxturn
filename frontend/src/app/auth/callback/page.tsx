@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { markAuthenticated } from "@/lib/auth-browser";
+import { POST_ONBOARDING_DEST_KEY } from "@/lib/onboarding-flag";
 import { supabase } from "@/lib/supabase";
 
 function AuthCallbackInner() {
@@ -10,7 +12,7 @@ function AuthCallbackInner() {
 
   useEffect(() => {
     if (!supabase) {
-      router.replace("/schedule");
+      router.replace("/");
       return;
     }
     void (async () => {
@@ -25,14 +27,21 @@ function AuthCallbackInner() {
         /* session may still be established via hash fragment */
         await supabase.auth.getSession();
       }
-      router.replace("/schedule");
+
+      markAuthenticated();
+      try {
+        sessionStorage.setItem(POST_ONBOARDING_DEST_KEY, "/today");
+      } catch {
+        /* ignore */
+      }
+      router.replace("/onboarding");
       router.refresh();
     })();
   }, [router, searchParams]);
 
   return (
-    <div className="flex min-h-[50vh] items-center justify-center px-4 text-sm text-slate-400">
-      Signing in to your calendar…
+    <div className="flex min-h-dvh items-center justify-center bg-[#04112d] px-4 text-sm text-[#98a4bf]">
+      Completing sign-in…
     </div>
   );
 }
@@ -41,7 +50,7 @@ export default function AuthCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[50vh] items-center justify-center text-slate-500">
+        <div className="flex min-h-dvh items-center justify-center bg-[#04112d] text-sm text-[#7d89a6]">
           Loading…
         </div>
       }

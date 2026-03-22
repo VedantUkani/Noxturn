@@ -15,7 +15,6 @@ export type HeroActionCardProps = {
   className?: string;
   onPrimaryClick?: () => void;
   onSecondaryClick?: () => void;
-  onEvidenceClick?: () => void;
 };
 
 export function HeroActionCard({
@@ -29,7 +28,6 @@ export function HeroActionCard({
   className,
   onPrimaryClick,
   onSecondaryClick,
-  onEvidenceClick,
 }: HeroActionCardProps) {
   return (
     <section
@@ -94,18 +92,6 @@ export function HeroActionCard({
           >
             {secondaryCta}
           </button>
-          {onEvidenceClick ? (
-            <button
-              type="button"
-              onClick={onEvidenceClick}
-              className={cn(
-                "text-xs font-medium text-[#86c9ff] underline-offset-4 hover:underline sm:ml-1",
-                todayFocusRing,
-              )}
-            >
-              Evidence lens
-            </button>
-          ) : null}
         </div>
       </div>
     </section>
