@@ -127,6 +127,8 @@ class PlanGenerateRequest(BaseModel):
 
 
 class NextBestAction(BaseModel):
+    """Hero + ordering hint for Today; authored by Claude (plan JSON) or rule planner."""
+
     task_id: UUID
     category: TaskCategory
     title: str
@@ -204,6 +206,8 @@ class WearableImportResponse(BaseModel):
 
 
 class DashboardTodayResponse(BaseModel):
+    """Today surface: plan mode, next-best, anchors, and recovery fields from the planner agent."""
+
     user_id: Optional[UUID] = None
     plan_mode: str
     next_best_action: NextBestAction
