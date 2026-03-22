@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { TodayDashboardPayload } from "@/lib/dashboard-types";
 import type { RecoverySimulationBand } from "@/lib/dashboard-types";
 import {
@@ -19,10 +19,7 @@ export type TodayDashboardActions = {
   dismissPlanBanner: () => void;
   startNextBest: () => void;
   remindNextBest: () => void;
-  exhaustionCheckIn: () => void;
-  simulatePoorWearableImport: () => void;
   simulateRecoveryBand: (band: RecoverySimulationBand) => void;
-  resetDemo: () => void;
 };
 
 export type TodayDashboardState = LiveDashboardState & TodayDashboardActions;
@@ -30,9 +27,6 @@ export type TodayDashboardState = LiveDashboardState & TodayDashboardActions;
 export function useTodayDashboard(
   initial: TodayDashboardPayload,
 ): TodayDashboardState {
-  const baselineRef = useRef(initial);
-  baselineRef.current = initial;
-
   const [state, setState] = useState(() => initialLiveState(initial));
 
   useEffect(() => {
@@ -93,23 +87,11 @@ export function useTodayDashboard(
     () => dispatch({ type: "DISMISS_BANNER" }),
     [dispatch],
   );
-  const exhaustionCheckIn = useCallback(
-    () => dispatch({ type: "EXHAUSTION_CHECKIN" }),
-    [dispatch],
-  );
-  const simulatePoorWearableImport = useCallback(
-    () => dispatch({ type: "POOR_WEARABLE_IMPORT" }),
-    [dispatch],
-  );
   const simulateRecoveryBand = useCallback(
     (band: RecoverySimulationBand) =>
       dispatch({ type: "SIMULATE_RECOVERY", band }),
     [dispatch],
   );
-
-  const resetDemo = useCallback(() => {
-    setState(initialLiveState(baselineRef.current));
-  }, []);
 
   const startNextBest = useCallback(() => {
     const id = state.nextBest.linkedTaskId;
@@ -149,10 +131,7 @@ export function useTodayDashboard(
       dismissPlanBanner,
       startNextBest,
       remindNextBest,
-      exhaustionCheckIn,
-      simulatePoorWearableImport,
       simulateRecoveryBand,
-      resetDemo,
     }),
     [
       state,
@@ -165,10 +144,7 @@ export function useTodayDashboard(
       dismissPlanBanner,
       startNextBest,
       remindNextBest,
-      exhaustionCheckIn,
-      simulatePoorWearableImport,
       simulateRecoveryBand,
-      resetDemo,
     ],
   );
 }
