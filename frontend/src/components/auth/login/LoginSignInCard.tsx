@@ -136,6 +136,26 @@ export function LoginSignInCard({ postLoginDestination }: LoginSignInCardProps) 
         setConfirmErr(null);
         setTermsErr(null);
         if (eErr || pErr) return;
+
+        setPending(true);
+        try {
+          const { supabase } = await import("@/lib/supabase");
+          if (supabase) {
+            const { error } = await supabase.auth.signInWithPassword({
+              email: email.trim(),
+              password,
+            });
+            if (error) {
+              setPending(false);
+              setFormError("Incorrect email or password. Please try again.");
+              return;
+            }
+          }
+        } catch {
+          setPending(false);
+          setFormError("Sign in failed. Please try again.");
+          return;
+        }
         continueToApp();
         return;
       }
