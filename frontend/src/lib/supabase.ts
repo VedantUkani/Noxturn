@@ -23,11 +23,8 @@ export async function signInWithGoogle(): Promise<void> {
     provider: "google",
     options: {
       redirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`,
-      scopes: "https://www.googleapis.com/auth/calendar.readonly",
-      queryParams: {
-        access_type: "offline",
-        prompt: "consent",
-      },
+      // calendar.readonly requires Google verification (weeks) — removed for demo
+      // scopes: "https://www.googleapis.com/auth/calendar.readonly",
     },
   });
   if (error) throw error;
