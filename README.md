@@ -1,8 +1,8 @@
-# Noxturn — Circadian Recovery Planner for Shift Workers
+# Noxturn - Circadian Recovery Planner for Shift Workers
 
 > **HackASU 2026**
 
-Noxturn is an AI-powered recovery planner built for nurses, paramedics, factory workers, and anyone working rotating shifts. It analyzes your schedule, detects circadian risk (rapid flips, short turnarounds, unsafe drive windows), and uses Claude AI to generate a personalized 24 hour recovery plan — calibrated to your chronotype, sleep conditions, and medical history.
+Noxturn is an AI-powered recovery planner built for nurses, paramedics, factory workers, and anyone working rotating shifts. It analyzes your schedule, detects circadian risk (rapid flips, short turnarounds, unsafe drive windows), and uses Claude AI to generate a personalized 24 hour recovery plan - calibrated to your chronotype, sleep conditions, and medical history.
 
 ---
 
@@ -10,11 +10,11 @@ Noxturn is an AI-powered recovery planner built for nurses, paramedics, factory 
 
 | Page | What it does |
 |---|---|
-| **Onboarding** | 5-step wizard — role, commute, sleep prefs, Fitbit, health context |
-| **Today** | AI-generated recovery plan — sleep anchors, light timing, caffeine cutoffs |
-| **Schedule** | Add/edit shift blocks — triggers plan regeneration |
+| **Onboarding** | 5-step wizard - role, commute, sleep prefs, Fitbit, health context |
+| **Today** | AI-generated recovery plan - sleep anchors, light timing, caffeine cutoffs |
+| **Schedule** | Add/edit shift blocks - triggers plan regeneration |
 | **Week** | 7-day recovery heatmap and injury risk map |
-| **Recovery** | Analytics — circadian strain score, HRV trends, recovery mode history |
+| **Recovery** | Analytics - circadian strain score, HRV trends, recovery mode history |
 | **Settings** | Inline editable profile, sleep prefs, wearable status |
 
 ---
@@ -31,8 +31,8 @@ Noxturn is an AI-powered recovery planner built for nurses, paramedics, factory 
 - **FastAPI** + **Uvicorn** (Python 3.11)
 - **Claude Haiku** (`claude-haiku-4-5-20251001`) for plan generation
 - **Supabase** (PostgreSQL) for users, plans, tasks, wearable data
-- **RAG pipeline** — sentence-transformers vector retrieval over clinical intervention cards
-- **Risk Engine** — 4 detectors: rapid flip, short turnaround, low recovery window, unsafe drive
+- **RAG pipeline** - sentence-transformers vector retrieval over clinical intervention cards
+- **Risk Engine** - 4 detectors: rapid flip, short turnaround, low recovery window, unsafe drive
 
 ---
 
@@ -92,7 +92,7 @@ pip install -r requirements.txt
 
 ### 2. Configure environment variables
 
-**Backend** — copy and fill in `backend/.env`:
+**Backend** - copy and fill in `backend/.env`:
 ```bash
 cp backend/.env.example backend/.env
 ```
@@ -107,7 +107,7 @@ ALLOWED_ORIGINS=http://localhost:3000
 OAUTHLIB_INSECURE_TRANSPORT=1
 ```
 
-**Frontend** — copy and fill in `frontend/.env.local`:
+**Frontend** - copy and fill in `frontend/.env.local`:
 ```bash
 cp frontend/.env.example frontend/.env.local
 ```
@@ -145,7 +145,7 @@ Open [http://localhost:3000](http://localhost:3000)
 1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
 2. Set root directory to `backend`
 3. Add all environment variables from above (set `ALLOWED_ORIGINS` to your Vercel URL)
-4. Railway auto-detects Python and uses the `Procfile` — always-on, no cold starts
+4. Railway auto-detects Python and uses the `Procfile` - always-on, no cold starts
 
 ### Frontend → Vercel
 
@@ -200,7 +200,7 @@ User's shift schedule
   tasks[], avoid_list, next_best_action
 ```
 
-The user's onboarding profile (role, chronotype, anchor sleep window, sleep conditions, medical history, medications) is injected into every Claude call so every task is personalised — not generic advice.
+The user's onboarding profile (role, chronotype, anchor sleep window, sleep conditions, medical history, medications) is injected into every Claude call so every task is personalised - not generic advice.
 
 ---
 
